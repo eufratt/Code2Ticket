@@ -54,7 +54,10 @@ class TicketModel {
       giveawayId: json['giveaway_id'] as String? ?? giveaway?['id'] as String? ?? '',
       giveawayTitle: giveaway?['title'] as String? ?? json['giveaway_title'] as String? ?? 'Giveaway',
       giveawayCategory: giveaway?['category'] as String? ?? 'General',
-      prizeDescription: giveaway?['prize_description'] as String? ?? '',
+      prizeDescription: giveaway?['prize_name'] as String? ??
+          giveaway?['prize_description'] as String? ??
+          giveaway?['description'] as String? ??
+          '',
       prizeValueUsd: parsedPrize,
       status: isWinner ? 'winner' : (json['status'] as String? ?? 'waiting_for_draw'),
       drawAt: drawDate,

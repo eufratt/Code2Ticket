@@ -21,7 +21,8 @@ class TicketRemoteDataSource {
               id,
               title,
               category,
-              prize_description,
+              prize_name,
+              description,
               prize_value_usd,
               draw_at,
               status
@@ -60,7 +61,8 @@ class TicketRemoteDataSource {
               id,
               title,
               category,
-              prize_description,
+              prize_name,
+              description,
               prize_value_usd,
               draw_at,
               status

@@ -33,7 +33,8 @@ class HomeGiveawayItem {
       id: json['id'] as String? ?? '',
       title: json['title'] as String? ?? 'Giveaway Event',
       category: json['category'] as String? ?? 'Umum',
-      prize: json['prize_description'] as String? ??
+      prize: json['prize_name'] as String? ??
+          json['prize_description'] as String? ??
           json['description'] as String? ??
           '',
       prizeValueUsd: parsedPrize,
