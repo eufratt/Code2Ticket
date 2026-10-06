@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../widgets/main_scaffold.dart';
+import '../../features/auth/presentation/controllers/auth_controller.dart';
+import '../../features/auth/presentation/controllers/auth_state.dart';
+import '../../features/auth/presentation/screens/splash_screen.dart';
+import '../../features/auth/presentation/screens/login_screen.dart';
+import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/discover/presentation/screens/discover_screen.dart';
 import '../../features/tickets/presentation/screens/tickets_screen.dart';
@@ -14,10 +19,72 @@ import '../../features/draw/presentation/screens/draw_screen.dart';
 final _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
 
 final routerProvider = Provider<GoRouter>((ref) {
+  final authNotifier = ValueNotifier<AuthState>(ref.read(authControllerProvider));
+  ref.listen<AuthState>(authControllerProvider, (_, next) {
+    authNotifier.value = next;
+  });
+  ref.onDispose(authNotifier.dispose);
+
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
-    initialLocation: '/home',
+    initialLocation: '/splash',
+    refreshListenable: authNotifier,
+    redirect: (context, state) {
+      final auth = ref.read(authControllerProvider);
+      final location = state.matchedLocation;
+      final isSplash = location == '/splash';
+      final isLogin = location == '/login';
+      final isRegister = location == '/register';
+      final isAuthRoute = isLogin || isRegister;
+
+      // 1. Initial & loading states stay on splash
+      if (auth is AuthInitial || auth is AuthLoading) {
+        return isSplash ? null : '/splash';
+      }
+
+      // 2. Unauthenticated: only allow auth routes, redirect protected routes to login
+      if (auth is Unauthenticated || auth is AuthError) {
+        return isAuthRoute ? null : '/login';
+      }
+
+      // 3. Authenticated
+      if (auth is Authenticated) {
+        // If biometric re-lock is required, lock at splash
+        if (auth.isBiometricRequired) {
+          return isSplash ? null : '/splash';
+        }
+        // If logged in, redirect away from splash, login, and register to /home
+        if (isAuthRoute || isSplash) {
+          return '/home';
+        }
+      }
+
+      return null;
+    },
     routes: [
+      // Splash Screen
+      GoRoute(
+        path: '/splash',
+        name: 'splash',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const SplashScreen(),
+      ),
+
+      // Auth Routes
+      GoRoute(
+        path: '/login',
+        name: 'login',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/register',
+        name: 'register',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const RegisterScreen(),
+      ),
+
+      // Bottom Navigation Tabs
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           return MainScaffold(navigationShell: navigationShell);
@@ -76,7 +143,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         ],
       ),
 
-      // Standalone Routes
+      // Standalone Protected Routes
       GoRoute(
         path: '/input-code',
         name: 'input-code',
