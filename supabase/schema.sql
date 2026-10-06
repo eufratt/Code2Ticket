@@ -190,7 +190,7 @@ CREATE OR REPLACE FUNCTION redeem_code(
 RETURNS JSONB
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = public, extensions
 AS $$
 DECLARE
     v_token_hash VARCHAR(64);
@@ -204,8 +204,12 @@ DECLARE
     v_cos_val DOUBLE PRECISION;
     v_distance_km DOUBLE PRECISION;
 BEGIN
-    -- 1. Validate Session Token
-    v_token_hash := encode(digest(p_session_token, 'sha256'), 'hex');
+    -- 1. Validate Session Token (handles both raw token and pre-hashed token)
+    IF length(p_session_token) = 64 AND p_session_token ~ '^[0-9a-fA-F]+$' THEN
+        v_token_hash := lower(p_session_token);
+    ELSE
+        v_token_hash := encode(extensions.digest(p_session_token::bytea, 'sha256'), 'hex');
+    END IF;
     
     SELECT user_id INTO v_user_id
     FROM sessions
@@ -429,3 +433,12 @@ CREATE POLICY "Public can view winners" ON winners FOR SELECT TO anon, authentic
 -- or custom session verification.
 CREATE POLICY "Anon can view tickets" ON tickets FOR SELECT TO anon, authenticated USING (true);
 CREATE POLICY "Anon can view game_scores" ON game_scores FOR SELECT TO anon, authenticated USING (true);
+
+-- Custom Auth Policies for users and sessions (without Supabase Auth service)
+CREATE POLICY "Anon can select users for login" ON users FOR SELECT TO anon, authenticated USING (true);
+CREATE POLICY "Anon can insert users for registration" ON users FOR INSERT TO anon, authenticated WITH CHECK (true);
+CREATE POLICY "Anon can manage sessions" ON sessions FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Anon can insert game_scores" ON game_scores FOR INSERT TO anon, authenticated WITH CHECK (true);
+CREATE POLICY "Anon can insert notifications" ON notifications FOR INSERT TO anon, authenticated WITH CHECK (true);
+CREATE POLICY "Anon can select notifications" ON notifications FOR SELECT TO anon, authenticated USING (true);
+CREATE POLICY "Anon can insert user_activity" ON user_activity FOR INSERT TO anon, authenticated WITH CHECK (true);
