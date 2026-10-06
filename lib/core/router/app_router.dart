@@ -17,6 +17,7 @@ import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/input_code/presentation/screens/input_code_screen.dart';
 import '../../features/ai_assistant/presentation/screens/ai_assistant_screen.dart';
 import '../../features/draw/presentation/screens/draw_screen.dart';
+import '../../features/draw/presentation/screens/draw_detail_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
 
@@ -175,6 +176,15 @@ final routerProvider = Provider<GoRouter>((ref) {
         name: 'draw',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const DrawScreen(),
+      ),
+      GoRoute(
+        path: '/draw/:id',
+        name: 'draw-detail',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final giveawayId = state.pathParameters['id'] ?? '';
+          return DrawDetailScreen(giveawayId: giveawayId);
+        },
       ),
     ],
   );

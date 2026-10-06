@@ -113,7 +113,7 @@ class HomeGiveawayHorizontalList extends StatelessWidget {
     }
 
     return InkWell(
-      onTap: () => context.push('/draw'),
+      onTap: () => context.push(item.id.isNotEmpty ? '/draw/${item.id}' : '/draw'),
       borderRadius: BorderRadius.circular(16),
       child: Container(
         width: 240,
