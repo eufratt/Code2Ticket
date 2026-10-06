@@ -5,6 +5,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/router/app_router.dart';
 import 'core/services/notification_service.dart';
+import 'core/services/timezone_service.dart';
 import 'core/theme/app_theme.dart';
 
 Future<void> main() async {
@@ -38,6 +39,9 @@ Future<void> main() async {
 
   // Initialize Local Notifications
   await NotificationService().init();
+
+  // Initialize Timezone Database
+  await TimezoneService.initialize();
 
   runApp(
     const ProviderScope(
