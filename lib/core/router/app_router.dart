@@ -10,6 +10,8 @@ import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/discover/presentation/screens/discover_screen.dart';
 import '../../features/tickets/presentation/screens/tickets_screen.dart';
+import '../../features/tickets/presentation/screens/ticket_detail_screen.dart';
+import '../../features/tickets/domain/models/ticket_model.dart';
 import '../../features/game/presentation/screens/game_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/input_code/presentation/screens/input_code_screen.dart';
@@ -143,7 +145,19 @@ final routerProvider = Provider<GoRouter>((ref) {
         ],
       ),
 
-      // Standalone Protected Routes
+      GoRoute(
+        path: '/tickets/:id',
+        name: 'ticket-detail',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final ticketId = state.pathParameters['id'] ?? '';
+          final extraTicket = state.extra as TicketModel?;
+          return TicketDetailScreen(
+            ticketId: ticketId,
+            initialTicket: extraTicket,
+          );
+        },
+      ),
       GoRoute(
         path: '/input-code',
         name: 'input-code',
