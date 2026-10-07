@@ -10,6 +10,7 @@ class HomeGiveawayHorizontalList extends StatelessWidget {
   final IconData icon;
   final List<HomeGiveawayItem> items;
   final VoidCallback? onSeeAll;
+  final String seeAllText;
 
   const HomeGiveawayHorizontalList({
     super.key,
@@ -18,6 +19,7 @@ class HomeGiveawayHorizontalList extends StatelessWidget {
     required this.icon,
     required this.items,
     this.onSeeAll,
+    this.seeAllText = 'Lihat Semua',
   });
 
   @override
@@ -65,9 +67,9 @@ class HomeGiveawayHorizontalList extends StatelessWidget {
               if (onSeeAll != null)
                 TextButton(
                   onPressed: onSeeAll,
-                  child: const Text(
-                    'Lihat Semua',
-                    style: TextStyle(fontSize: 12),
+                  child: Text(
+                    seeAllText,
+                    style: const TextStyle(fontSize: 12),
                   ),
                 ),
             ],
@@ -78,7 +80,7 @@ class HomeGiveawayHorizontalList extends StatelessWidget {
 
         // Horizontal Carousel
         SizedBox(
-          height: 195,
+          height: 205,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
@@ -116,7 +118,7 @@ class HomeGiveawayHorizontalList extends StatelessWidget {
       onTap: () => context.push(item.id.isNotEmpty ? '/draw/${item.id}' : '/draw'),
       borderRadius: BorderRadius.circular(16),
       child: Container(
-        width: 240,
+        width: 245,
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: isDark ? AppColors.darkCard : AppColors.lightCard,
@@ -135,7 +137,7 @@ class HomeGiveawayHorizontalList extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Top Row: Category + Prize Value
+            // Top Row: Category + Distance / Prize Value
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -155,7 +157,40 @@ class HomeGiveawayHorizontalList extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (item.prizeValueUsd > 0)
+                if (item.distanceKm != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: item.isWithinRadius
+                          ? AppColors.successGreen.withValues(alpha: 0.15)
+                          : AppColors.ticketGold.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.location_on,
+                          size: 11,
+                          color: item.isWithinRadius
+                              ? AppColors.successGreen
+                              : AppColors.ticketGold,
+                        ),
+                        const SizedBox(width: 2),
+                        Text(
+                          '${item.distanceKm!.toStringAsFixed(1)} km',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: item.isWithinRadius
+                                ? AppColors.successGreen
+                                : AppColors.ticketGold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                else if (item.prizeValueUsd > 0)
                   Text(
                     '\$${item.prizeValueUsd.toStringAsFixed(0)} USD',
                     style: const TextStyle(

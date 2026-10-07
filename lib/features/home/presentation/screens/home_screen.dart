@@ -129,7 +129,8 @@ class HomeScreen extends ConsumerWidget {
                     subtitle: 'Campaign merchant terdekat di sekitarmu',
                     icon: Icons.near_me_rounded,
                     items: summary.nearbyDraws,
-                    onSeeAll: () => context.go('/discover'),
+                    seeAllText: 'Buka Peta',
+                    onSeeAll: () => context.push('/map'),
                   ),
 
                   const SizedBox(height: 28),

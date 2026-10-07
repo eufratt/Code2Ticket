@@ -19,7 +19,10 @@ class HomeRepositoryImpl implements HomeRepository {
   }) : _hasher = hasher ?? PasswordHasher();
 
   @override
-  Future<HomeSummaryModel> getHomeSummary() async {
+  Future<HomeSummaryModel> getHomeSummary({
+    double? userLat,
+    double? userLng,
+  }) async {
     String? userId;
     try {
       final rawToken = await localDataSource.getSessionToken();
@@ -30,6 +33,10 @@ class HomeRepositoryImpl implements HomeRepository {
       }
     } catch (_) {}
 
-    return await remoteDataSource.fetchHomeSummary(userId);
+    return await remoteDataSource.fetchHomeSummary(
+      userId,
+      userLat: userLat,
+      userLng: userLng,
+    );
   }
 }

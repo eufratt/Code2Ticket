@@ -11,12 +11,18 @@ class MockHomeRepository implements HomeRepository {
   MockHomeRepository({required this.summaryToReturn});
 
   @override
-  Future<HomeSummaryModel> getHomeSummary() async {
+  Future<HomeSummaryModel> getHomeSummary({
+    double? userLat,
+    double? userLng,
+  }) async {
     return summaryToReturn;
   }
 }
 
 void main() {
+  setUpAll(() {
+    TestWidgetsFlutterBinding.ensureInitialized();
+  });
   group('Home Dashboard Tests', () {
     final now = DateTime.now();
 
