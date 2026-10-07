@@ -66,5 +66,9 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Aplikasi membutuhkan izin lokasi untuk memverifikasi keikutsertaan campaign undian berbasis wilayah dan menampilkan undian terdekat.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Aplikasi membutuhkan izin lokasi untuk memverifikasi keikutsertaan campaign undian berbasis wilayah dan menampilkan undian terdekat.</string>
 </dict>
 </plist>
