@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/services/location_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_text_field.dart';
@@ -18,6 +19,23 @@ class InputCodeScreen extends ConsumerStatefulWidget {
 
 class _InputCodeScreenState extends ConsumerState<InputCodeScreen> {
   final _codeController = TextEditingController();
+  UserLocation? _currentLocation;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkInitialLocation();
+  }
+
+  Future<void> _checkInitialLocation() async {
+    final locationService = ref.read(locationServiceProvider);
+    final loc = await locationService.getCurrentLocation(requestIfDenied: false);
+    if (mounted) {
+      setState(() {
+        _currentLocation = loc;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -25,7 +43,7 @@ class _InputCodeScreenState extends ConsumerState<InputCodeScreen> {
     super.dispose();
   }
 
-  void _handleValidate() {
+  Future<void> _handleValidate() async {
     FocusScope.of(context).unfocus();
     final code = _codeController.text.trim();
     if (code.isEmpty) {
@@ -38,7 +56,32 @@ class _InputCodeScreenState extends ConsumerState<InputCodeScreen> {
       return;
     }
 
-    ref.read(inputCodeControllerProvider.notifier).redeemCode(code);
+    final locationService = ref.read(locationServiceProvider);
+
+    // Request GPS location for geo-restricted validation
+    UserLocation loc = _currentLocation ??
+        await locationService.getCurrentLocation(requestIfDenied: true);
+
+    if (loc.status != LocationPermissionStatus.granted) {
+      loc = await locationService.getCurrentLocation(requestIfDenied: true);
+    }
+
+    if (mounted) {
+      setState(() {
+        _currentLocation = loc;
+      });
+    }
+
+    final double? lat =
+        loc.status == LocationPermissionStatus.granted ? loc.latitude : null;
+    final double? lng =
+        loc.status == LocationPermissionStatus.granted ? loc.longitude : null;
+
+    await ref.read(inputCodeControllerProvider.notifier).redeemCode(
+          code,
+          latitude: lat,
+          longitude: lng,
+        );
   }
 
   void _handleRedeemAnother() {
@@ -98,58 +141,56 @@ class _InputCodeScreenState extends ConsumerState<InputCodeScreen> {
     final isLoading = state is InputCodeLoading;
 
     return Column(
-      key: const ValueKey('input_form'),
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SizedBox(height: 12),
-
-        // Brand Icon Header
+        // Decorative Hero Icon / Header
         Center(
           child: Container(
-            width: 86,
-            height: 86,
+            width: 80,
+            height: 80,
             decoration: BoxDecoration(
               gradient: AppColors.ticketGradient,
-              shape: BoxShape.circle,
+              borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primaryPurple.withAlpha(70),
-                  blurRadius: 18,
-                  offset: const Offset(0, 6),
+                  color: AppColors.primaryPurple.withAlpha(80),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
                 ),
               ],
             ),
             child: const Icon(
               Icons.confirmation_number_rounded,
               color: Colors.white,
-              size: 44,
+              size: 40,
             ),
           ),
         ),
-
         const SizedBox(height: 24),
 
         Text(
-          'Klaim Tiket Undian Digital',
+          'Tukarkan Kode Undian',
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
+                letterSpacing: -0.5,
               ),
         ),
-
         const SizedBox(height: 8),
 
         Text(
-          'Masukkan kode partisipasi dari struk belanja, merchant, atau event sponsor untuk mendapatkan tiket undian resmi.',
+          'Masukkan kode partisipasi dari struk belanja, tiket acara, atau merchant partner untuk mendapatkan nomor tiket undian resmi.',
           textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: isDark
-                    ? AppColors.darkTextSecondary
-                    : AppColors.lightTextSecondary,
-              ),
+          style: TextStyle(
+            fontSize: 13,
+            color: isDark
+                ? AppColors.darkTextSecondary
+                : AppColors.lightTextSecondary,
+            height: 1.4,
+          ),
         ),
 
-        const SizedBox(height: 32),
+        const SizedBox(height: 28),
 
         // Error Banner (if any)
         if (state is InputCodeError) ...[
@@ -236,29 +277,71 @@ class _InputCodeScreenState extends ConsumerState<InputCodeScreen> {
           },
         ),
 
-        const SizedBox(height: 12),
+        const SizedBox(height: 14),
 
-        // Geo-location / Info Chip
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.darkCard : AppColors.lightCard,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: Colors.grey.withAlpha(50),
-            ),
+        // Geo-location / GPS Verification Status Card
+        _buildLocationStatusCard(isDark),
+
+        const SizedBox(height: 28),
+
+        // Validate Button
+        AppButton(
+          text: isLoading ? 'Memvalidasi Kode & Lokasi...' : 'Validasi & Klaim Tiket',
+          icon: Icons.check_circle_outline_rounded,
+          isLoading: isLoading,
+          onPressed: isLoading ? null : _handleValidate,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLocationStatusCard(bool isDark) {
+    final loc = _currentLocation;
+    final isGranted = loc?.status == LocationPermissionStatus.granted;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: isGranted
+            ? AppColors.successGreen.withValues(alpha: 0.08)
+            : isDark
+                ? AppColors.darkCard
+                : AppColors.lightCard,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isGranted
+              ? AppColors.successGreen.withValues(alpha: 0.3)
+              : Colors.grey.withAlpha(50),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Icon(
+            isGranted ? Icons.location_on_rounded : Icons.my_location_rounded,
+            size: 20,
+            color: isGranted ? AppColors.successGreen : AppColors.accentCyan,
           ),
-          child: Row(
-            children: [
-              const Icon(
-                Icons.my_location_rounded,
-                size: 18,
-                color: AppColors.accentCyan,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  'Koordinat GPS akan diverifikasi otomatis jika campaign memiliki pembatasan wilayah (geo-restricted).',
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isGranted
+                      ? 'GPS Aktif (${loc!.latitude.toStringAsFixed(3)}, ${loc.longitude.toStringAsFixed(3)})'
+                      : 'Verifikasi Lokasi (LBS)',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: isGranted ? AppColors.successGreen : null,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  isGranted
+                      ? 'Koordinat GPS Anda siap diverifikasi untuk undian berbasis radius wilayah.'
+                      : 'Izin GPS akan diverifikasi jika kode berasal dari campaign berbasis lokasi.',
                   style: TextStyle(
                     fontSize: 11,
                     color: isDark
@@ -266,21 +349,20 @@ class _InputCodeScreenState extends ConsumerState<InputCodeScreen> {
                         : AppColors.lightTextSecondary,
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-
-        const SizedBox(height: 28),
-
-        // Validate Button
-        AppButton(
-          text: isLoading ? 'Memvalidasi Kode...' : 'Validasi & Klaim Tiket',
-          icon: Icons.check_circle_outline_rounded,
-          isLoading: isLoading,
-          onPressed: isLoading ? null : _handleValidate,
-        ),
-      ],
+          if (!isGranted)
+            TextButton(
+              onPressed: () async {
+                final locationService = ref.read(locationServiceProvider);
+                final updated = await locationService.getCurrentLocation(requestIfDenied: true);
+                if (mounted) setState(() => _currentLocation = updated);
+              },
+              child: const Text('Cek GPS', style: TextStyle(fontSize: 12)),
+            ),
+        ],
+      ),
     );
   }
 }
