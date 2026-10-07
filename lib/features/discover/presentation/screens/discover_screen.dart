@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/services/currency_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/models/discover_filter_model.dart';
@@ -47,6 +48,13 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
       appBar: AppBar(
         title: const Text('Jelajahi Undian'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.map_outlined),
+            tooltip: 'Lihat Peta Undian',
+            onPressed: () {
+              context.push('/map');
+            },
+          ),
           // Currency switcher popup in AppBar
           PopupMenuButton<SupportedCurrency>(
             initialValue: selectedCurrency,

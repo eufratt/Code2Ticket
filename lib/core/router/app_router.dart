@@ -18,6 +18,7 @@ import '../../features/input_code/presentation/screens/input_code_screen.dart';
 import '../../features/ai_assistant/presentation/screens/ai_assistant_screen.dart';
 import '../../features/draw/presentation/screens/draw_screen.dart';
 import '../../features/draw/presentation/screens/draw_detail_screen.dart';
+import '../../features/map/presentation/screens/map_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
 
@@ -185,6 +186,12 @@ final routerProvider = Provider<GoRouter>((ref) {
           final giveawayId = state.pathParameters['id'] ?? '';
           return DrawDetailScreen(giveawayId: giveawayId);
         },
+      ),
+      GoRoute(
+        path: '/map',
+        name: 'map',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const MapScreen(),
       ),
     ],
   );
