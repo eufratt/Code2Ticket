@@ -73,6 +73,7 @@ Token dikirim lewat `Authorization: Bearer <token>`.
 | `GET /auth/me` | session | `rpc_validate_session` |
 | `PATCH /me` | session | `rpc_update_profile` |
 | `GET /giveaways` (`q,category,min_value,max_value,lat,lng,radius_km,deadline_days,status,sort,limit,offset`) | - | `rpc_search_giveaways` |
+| `GET /giveaways/:id` (404 `not_found` bila tidak ada) | - | (baru, tanpa padanan RPC) |
 | `GET /giveaways/:id/winners`, `/giveaways/:id/verification` | - | `rpc_get_winners`, `rpc_get_verification_data` |
 | `POST /codes/redeem` (`code,lat,lng`) | session | `rpc_redeem_code` |
 | `GET /tickets` | session | `rpc_get_my_tickets` |

@@ -1,11 +1,18 @@
 import { Router } from 'express';
-import { getVerificationData, getWinners, searchGiveaways, uuidSchema } from '../services/giveaways.js';
+import { getGiveaway, getVerificationData, getWinners, searchGiveaways, uuidSchema } from '../services/giveaways.js';
 import { invalid } from '../lib/util.js';
 
 export default function giveawayRoutes({ pool }) {
   const r = Router();
   // Publik (tanpa session), seperti rpc_search_giveaways / rpc_get_winners / rpc_get_verification_data.
   r.get('/', async (req, res) => res.json(await searchGiveaways(pool, req.query)));
+  // 404 bila tidak ada (id yang bukan UUID dianggap tidak ada).
+  r.get('/:id', async (req, res) => {
+    const id = uuidSchema.safeParse(req.params.id);
+    const g = id.success ? await getGiveaway(pool, id.data) : null;
+    if (!g) return res.status(404).json({ ok: false, error: 'not_found' });
+    res.json(g);
+  });
   r.get('/:id/winners', async (req, res) => {
     const id = uuidSchema.safeParse(req.params.id);
     res.json(id.success ? await getWinners(pool, id.data) : invalid('id'));

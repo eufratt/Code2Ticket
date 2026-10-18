@@ -66,6 +66,19 @@ export async function searchGiveaways(pool, query) {
   return r.rows;
 }
 
+// Satu giveaway (publik), bentuk sama dengan item daftar. Semua status, termasuk yang sudah di-draw.
+// distance_km selalu null (jarak hanya dihitung di daftar saat lat/lng diberikan). null bila tidak ada.
+export async function getGiveaway(pool, id) {
+  const r = await pool.query(
+    `select id, title, description, organizer, category, prize_name, prize_value_usd, latitude, longitude, address,
+            radius_km, start_at, end_at, draw_at, winner_count, ticket_counter as ticket_count, status,
+            null::numeric as distance_km
+       from giveaways where id = $1`,
+    [id],
+  );
+  return r.rows[0] ?? null;
+}
+
 // Hasil draw publik: pemenang dengan nama tersamar.
 export async function getWinners(pool, giveawayId) {
   const g = (await pool.query('select id, status from giveaways where id = $1', [giveawayId])).rows[0];
