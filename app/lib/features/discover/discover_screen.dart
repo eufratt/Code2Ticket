@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/location/location_service.dart';
 import '../../widgets/state_views.dart';
 import '../giveaways/giveaway_card.dart';
 import '../giveaways/giveaways_controller.dart' show LoadState;
 import 'discover_controller.dart';
 import 'discover_filters.dart';
+import 'manual_location_dialog.dart';
 
 /// S-DISC: pencarian (debounce 400 ms), filter, urutan, dan riwayat pencarian.
 class DiscoverScreen extends StatefulWidget {
@@ -99,6 +101,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
             ),
           ),
           _SortBar(controller: c),
+          if (c.locationProblem != null) _LocationBanner(controller: c),
           if (c.offline) OfflineBanner(cachedAt: c.cachedAt),
           Expanded(child: showHistory ? _History(controller: c, onPick: (q) => _useHistory(c, q)) : _Results(controller: c)),
         ],
@@ -129,6 +132,38 @@ class _SortBar extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         children: [
+          FilterChip(
+            key: const Key('nearby_chip'),
+            avatar: controller.locating
+                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                : const Icon(Icons.near_me, size: 18),
+            label: const Text('Terdekat'),
+            selected: f.nearby,
+            onSelected: controller.locating ? null : (on) => on ? controller.enableNearby() : controller.disableNearby(),
+          ),
+          if (f.nearby)
+            for (final km in const [5, 10, 25]) ...[
+              const SizedBox(width: 8),
+              ChoiceChip(
+                key: Key('radius_$km'),
+                label: Text('$km km'),
+                selected: f.nearbyRadiusKm == km,
+                onSelected: (_) => controller.setNearbyRadius(km),
+              ),
+            ],
+          if (controller.manualLabel != null) ...[
+            const SizedBox(width: 8),
+            InputChip(
+              key: const Key('manual_chip'),
+              avatar: const Icon(Icons.place, size: 18),
+              label: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 160),
+                child: Text(controller.manualLabel!, overflow: TextOverflow.ellipsis),
+              ),
+              onDeleted: controller.disableNearby,
+            ),
+          ],
+          const SizedBox(width: 8),
           PopupMenuButton<GiveawaySort>(
             key: const Key('sort_menu'),
             tooltip: 'Urutkan',
@@ -151,6 +186,47 @@ class _SortBar extends StatelessWidget {
               onDeleted: () => controller.setFilters(f.copyWith(category: null)),
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Alasan Terdekat tidak bisa dipakai (izin ditolak, ditolak permanen, layanan mati, posisi tak tersedia)
+/// beserta jalan keluarnya: izinkan/buka pengaturan, atau cari tempat secara manual.
+class _LocationBanner extends StatelessWidget {
+  const _LocationBanner({required this.controller});
+  final DiscoverController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final status = controller.locationProblem!;
+    final scheme = Theme.of(context).colorScheme;
+    final opensSettings = status == LocationStatus.deniedForever || status == LocationStatus.serviceOff;
+    return Container(
+      key: const Key('location_banner'),
+      width: double.infinity,
+      color: scheme.errorContainer,
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(locationStatusMessage(status), style: TextStyle(color: scheme.onErrorContainer)),
+          Wrap(spacing: 8, children: [
+            TextButton(
+              key: const Key('location_action'),
+              onPressed: opensSettings ? controller.openLocationSettings : controller.enableNearby,
+              child: Text(locationActionLabel(status)),
+            ),
+            TextButton(
+              key: const Key('manual_location'),
+              onPressed: () async {
+                final place = await showManualLocationDialog(context);
+                if (place != null) await controller.useManualPlace(place);
+              },
+              child: const Text('Cari tempat'),
+            ),
+          ]),
         ],
       ),
     );

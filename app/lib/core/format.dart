@@ -20,3 +20,6 @@ String formatUsd(double? v) {
   final grouped = parts[0].replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (_) => ',');
   return 'USD ${parts.length > 1 ? '$grouped.${parts[1]}' : grouped}';
 }
+
+/// Jarak dalam km dengan koma desimal: "2,3 km"; di bawah 100 m: "<0,1 km".
+String formatKm(double km) => km < 0.1 ? '<0,1 km' : '${km.toStringAsFixed(1).replaceAll('.', ',')} km';

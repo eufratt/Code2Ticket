@@ -48,6 +48,15 @@ class GiveawayCard extends StatelessWidget {
               ),
               Text('${g.ticketCount} tiket terbit · ${g.winnerCount} pemenang',
                   style: theme.textTheme.bodySmall),
+              if (g.distanceKm != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Row(children: [
+                    Icon(Icons.near_me, size: 14, color: theme.colorScheme.primary),
+                    const SizedBox(width: 4),
+                    Text(formatKm(g.distanceKm!), key: const Key('distance'), style: theme.textTheme.bodySmall),
+                  ]),
+                ),
             ],
           ),
         ),

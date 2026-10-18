@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:code2ticket/core/api/api_client.dart';
 import 'package:code2ticket/core/api/authed_api.dart';
+import 'package:code2ticket/core/geocoding/geocoder.dart';
+import 'package:code2ticket/core/location/location_service.dart';
 import 'package:code2ticket/features/auth/auth_controller.dart';
 import 'package:code2ticket/features/auth/auth_models.dart';
 import 'package:code2ticket/features/discover/discover_controller.dart';
@@ -11,11 +13,14 @@ import 'package:code2ticket/features/giveaways/giveaway_models.dart';
 import 'package:code2ticket/features/giveaways/giveaways_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:provider/provider.dart';
 
 import 'cache_test.dart' show gw;
 import 'input_code_test.dart' show FakeApi, FakeAuth, json;
 import 'models_test.dart' show giveawayJson;
+import 'support/fake_location.dart';
 import 'support/memory_cache.dart';
 
 Map<String, dynamic> listOf(List<Giveaway> gs, {double? distance}) => {
@@ -124,14 +129,17 @@ void main() {
     late FakeApi api;
     late FakeAuth auth;
     late MemoryCacheStore cache;
+    late FakeGateway gateway;
     var online = true;
     final requests = <Map<String, String>>[];
 
     DiscoverController make({Duration debounce = const Duration(milliseconds: 40), Duration? retry, int pageSize = 20}) {
       cache = MemoryCacheStore();
+      gateway = FakeGateway(permission: GatewayPermission.granted);
       auth = FakeAuth(api);
       auth.user = AppUser(id: 'u1', username: 'a', email: 'a@x.id', fullName: 'A', role: 'user', xp: 0, level: 1);
-      return DiscoverController(AuthedApi(api, auth), auth, cache, debounce: debounce, retryInterval: retry, pageSize: pageSize);
+      return DiscoverController(AuthedApi(api, auth), auth, cache, LocationService(gateway),
+          debounce: debounce, retryInterval: retry, pageSize: pageSize);
     }
 
     setUp(() {
@@ -281,16 +289,21 @@ void main() {
     late FakeAuth auth;
     late MemoryCacheStore cache;
     late DiscoverController controller;
+    late FakeGateway gateway;
+    late Geocoder geocoder;
 
     Future<void> pump(WidgetTester tester) async {
       cache = MemoryCacheStore();
       auth = FakeAuth(api);
       auth.user = AppUser(id: 'u1', username: 'a', email: 'a@x.id', fullName: 'A', role: 'user', xp: 0, level: 1);
-      controller = DiscoverController(AuthedApi(api, auth), auth, cache, retryInterval: null);
+      gateway = FakeGateway();
+      geocoder = Geocoder(client: MockClient((r) async => http.Response('[]', 200)), sleep: (_) async {});
+      controller = DiscoverController(AuthedApi(api, auth), auth, cache, LocationService(gateway), retryInterval: null);
       await tester.pumpWidget(MultiProvider(
         providers: [
           ChangeNotifierProvider<AuthController>.value(value: auth),
           ChangeNotifierProvider<DiscoverController>.value(value: controller),
+          Provider<Geocoder>.value(value: geocoder),
         ],
         child: const MaterialApp(home: DiscoverScreen()),
       ));

@@ -6,6 +6,8 @@ import 'core/api/api_client.dart';
 import 'core/api/authed_api.dart';
 import 'core/config.dart';
 import 'core/db/local_db.dart';
+import 'core/geocoding/geocoder.dart';
+import 'core/location/location_service.dart';
 import 'core/session/session_store.dart';
 import 'features/auth/auth_controller.dart';
 import 'features/discover/discover_controller.dart';
@@ -28,6 +30,8 @@ class _Code2TicketAppState extends State<Code2TicketApp> {
   late final AuthController _auth =
       AuthController(_api, SessionStore())..restore();
   late final AuthedApi _authed = AuthedApi(_api, _auth);
+  late final LocationService _location = LocationService(GeolocatorGateway());
+  late final Geocoder _geocoder = Geocoder();
   late final _router = buildRouter(_auth);
 
   @override
@@ -55,9 +59,11 @@ class _Code2TicketAppState extends State<Code2TicketApp> {
         Provider<LocalDb>.value(value: LocalDb.instance),
         ChangeNotifierProvider<AuthController>.value(value: _auth),
         Provider<AuthedApi>.value(value: _authed),
+        Provider<LocationService>.value(value: _location),
+        Provider<Geocoder>.value(value: _geocoder),
         ChangeNotifierProvider(create: (_) => GiveawaysController(_authed, _auth, LocalDb.instance)),
         ChangeNotifierProvider(create: (_) => TicketsController(_authed, _auth, LocalDb.instance)),
-        ChangeNotifierProvider(create: (_) => DiscoverController(_authed, _auth, LocalDb.instance)),
+        ChangeNotifierProvider(create: (_) => DiscoverController(_authed, _auth, LocalDb.instance, _location)),
       ],
       child: MaterialApp.router(
         title: 'Code2Ticket',

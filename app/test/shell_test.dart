@@ -1,5 +1,6 @@
 import 'package:code2ticket/app_router.dart';
 import 'package:code2ticket/core/api/authed_api.dart';
+import 'package:code2ticket/core/location/location_service.dart';
 import 'package:code2ticket/features/auth/auth_controller.dart';
 import 'package:code2ticket/features/discover/discover_controller.dart';
 import 'package:code2ticket/features/giveaways/giveaways_controller.dart';
@@ -9,6 +10,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
 import 'input_code_test.dart' show FakeApi, FakeAuth, json;
+import 'support/fake_location.dart';
 import 'support/memory_cache.dart';
 import 'models_test.dart' show giveawayJson, ticketJson;
 
@@ -27,7 +29,7 @@ Widget _createTestApp({required _Auth auth, required AuthedApi authed}) {
       Provider<AuthedApi>.value(value: authed),
       ChangeNotifierProvider(create: (_) => GiveawaysController(authed, auth, MemoryCacheStore(), retryInterval: null)),
       ChangeNotifierProvider(create: (_) => TicketsController(authed, auth, MemoryCacheStore(), retryInterval: null)),
-      ChangeNotifierProvider(create: (_) => DiscoverController(authed, auth, MemoryCacheStore(), retryInterval: null)),
+      ChangeNotifierProvider(create: (_) => DiscoverController(authed, auth, MemoryCacheStore(), LocationService(FakeGateway()), retryInterval: null)),
     ],
     child: MaterialApp.router(routerConfig: buildRouter(auth)),
   );

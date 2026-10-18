@@ -5,7 +5,9 @@ import 'package:flutter/foundation.dart';
 import '../../core/api/api_client.dart';
 import '../../core/api/authed_api.dart';
 import '../../core/db/cache_store.dart';
+import '../../core/geocoding/geocoder.dart';
 import '../../core/json.dart';
+import '../../core/location/location_service.dart';
 import '../../core/offline.dart';
 import '../auth/auth_controller.dart';
 import '../giveaways/giveaway_models.dart';
@@ -21,7 +23,8 @@ class DiscoverController extends ChangeNotifier with OfflineRetry {
   DiscoverController(
     this._api,
     this._auth,
-    this._cache, {
+    this._cache,
+    this._location, {
     this.retryInterval = const Duration(seconds: 20),
     this.debounce = const Duration(milliseconds: 400),
     this.pageSize = 20,
@@ -32,6 +35,7 @@ class DiscoverController extends ChangeNotifier with OfflineRetry {
   final AuthedApi _api;
   final AuthController _auth;
   final CacheStore _cache;
+  final LocationService _location;
   @override
   final Duration? retryInterval;
   final Duration debounce;
@@ -47,6 +51,13 @@ class DiscoverController extends ChangeNotifier with OfflineRetry {
   bool loadingMore = false;
   List<String> history = const [];
   UserPosition? position;
+
+  /// Alasan mode Terdekat tidak bisa dipakai (izin/layanan lokasi); null bila baik-baik saja.
+  LocationStatus? locationProblem;
+  bool locating = false;
+
+  /// Nama tempat bila posisi berasal dari pencarian manual (Nominatim), bukan GPS.
+  String? manualLabel;
 
   Timer? _debounceTimer;
   int _seq = 0; // hanya jawaban permintaan terbaru yang dipakai
@@ -107,6 +118,48 @@ class DiscoverController extends ChangeNotifier with OfflineRetry {
     }
     return search();
   }
+
+  /// Mode Terdekat dengan GPS. Meminta izin lokasi (saat dipakai) bila perlu; bila gagal, mode tetap mati
+  /// dan [locationProblem] berisi alasannya.
+  Future<void> enableNearby({int radiusKm = 10}) async {
+    locating = true;
+    notifyListeners();
+    final fix = await _location.locate();
+    locating = false;
+    if (!fix.ok) {
+      locationProblem = fix.status;
+      notifyListeners();
+      return;
+    }
+    locationProblem = null;
+    manualLabel = null;
+    position = (lat: fix.lat!, lng: fix.lng!);
+    await setFilters(filters.copyWith(nearbyRadiusKm: radiusKm, sort: GiveawaySort.nearest));
+  }
+
+  /// Mode Terdekat dari lokasi manual (hasil pencarian nama tempat).
+  Future<void> useManualPlace(Place p, {int radiusKm = 10}) {
+    locationProblem = null;
+    manualLabel = p.name;
+    position = (lat: p.lat, lng: p.lng);
+    return setFilters(filters.copyWith(nearbyRadiusKm: filters.nearbyRadiusKm ?? radiusKm, sort: GiveawaySort.nearest));
+  }
+
+  Future<void> setNearbyRadius(int km) => setFilters(filters.copyWith(nearbyRadiusKm: km));
+
+  Future<void> disableNearby() {
+    locationProblem = null;
+    manualLabel = null;
+    position = null;
+    return setFilters(filters.copyWith(
+      nearbyRadiusKm: null,
+      sort: filters.sort == GiveawaySort.nearest ? GiveawaySort.deadline : filters.sort,
+    ));
+  }
+
+  /// Membuka pengaturan yang sesuai dengan [locationProblem].
+  Future<bool> openLocationSettings() =>
+      locationProblem == null ? Future.value(false) : _location.openSettingsFor(locationProblem!);
 
   // ---------------------------------------------------------------- pemuatan
 
@@ -209,6 +262,9 @@ class DiscoverController extends ChangeNotifier with OfflineRetry {
       items = const [];
       history = const [];
       position = null;
+      manualLabel = null;
+      locationProblem = null;
+      locating = false;
       state = LoadState.idle;
       error = null;
       offline = false;
