@@ -10,7 +10,8 @@
     "start": "node src/server.js",
     "test": "vitest run",
     "create-admin": "node scripts/create-admin.js",
-    "verify-chain": "node scripts/verify-chain.js"
+    "verify-chain": "node scripts/verify-chain.js",
+    "demo-seed": "node scripts/demo-seed.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

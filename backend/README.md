@@ -25,6 +25,22 @@ npm start
   (draw dikunci per baris giveaway dan idempotent).
 - `npm run verify-chain` mengaudit seluruh hash-chain.
 
+## Data demo
+
+Membuat 2 giveaway aktif (satu gaming, satu travel; keduanya tanpa batas lokasi) dengan 10 kode tiap giveaway, lewat API (login admin + `POST /admin/giveaways` + `POST /admin/giveaways/:id/codes`). Kode hanya dicetak ke terminal. Akun harus admin (lihat `npm run create-admin`). Menjalankan ulang membuat giveaway baru.
+
+PowerShell (kredensial hanya di sesi terminal ini):
+
+```powershell
+$env:API_BASE_URL = "https://code2ticket.onrender.com"
+$env:ADMIN_USERNAME = "namamu"
+$env:ADMIN_PASSWORD = Read-Host "Password admin"   # tidak ditulis ke file
+npm run demo-seed
+Remove-Item Env:ADMIN_PASSWORD
+```
+
+Server gratis Render bisa butuh sekitar 1 menit untuk bangun pada permintaan pertama.
+
 ## Tes
 
 Butuh Postgres dengan ekstensi `pgcrypto` dan `pg_trgm`, serta Python 3 (tes kontrak memuat
