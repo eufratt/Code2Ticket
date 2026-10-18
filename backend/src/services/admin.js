@@ -1,0 +1,133 @@
+import { z } from 'zod';
+import { withTx } from '../db.js';
+import { appendBlock } from '../lib/chain.js';
+import { cpLen, fail, ok, parseInput, randomHex, sha256Hex } from '../lib/util.js';
+
+const CATEGORIES = ['tech', 'gaming', 'travel', 'fashion', 'food', 'lifestyle', 'other'];
+
+// Kesalahan nilai dari database yang dipetakan ke invalid_input (sama seperti blok exception SQL lama):
+// check_violation, not_null_violation, invalid_text_representation, datetime_field_overflow,
+// invalid_datetime_format, numeric_value_out_of_range.
+const INPUT_ERROR_CODES = new Set(['23514', '23502', '22P02', '22008', '22007', '22003']);
+
+const numLike = z.union([z.number().finite(), z.string().regex(/^-?\d+(\.\d+)?$/)]);
+// Waktu wajib menyertakan zona (Z atau +hh[:mm]) supaya tidak bergantung pada zona sesi database.
+const ts = z.string().max(64).regex(/(Z|[+-]\d{2}(:?\d{2})?)$/i);
+
+const fields = {
+  title: z.string().refine((s) => cpLen(s) >= 1 && cpLen(s) <= 120),
+  description: z.string().max(5000),
+  organizer: z.string().max(200),
+  category: z.enum(CATEGORIES),
+  prize_name: z.string().min(1).max(200),
+  prize_value_usd: numLike,
+  latitude: z.number().min(-90).max(90).nullable(),
+  longitude: z.number().min(-180).max(180).nullable(),
+  address: z.string().max(500).nullable(),
+  radius_km: numLike.nullable(),
+  start_at: ts,
+  end_at: ts,
+  draw_at: ts,
+  winner_count: z.number().int().min(1).max(100),
+  max_tickets_per_user: z.number().int().min(1),
+};
+const idField = z.union([z.uuid(), z.literal(''), z.null()]).optional();
+
+const createSchema = z.object({
+  id: idField,
+  title: fields.title, description: fields.description.nullish(), organizer: fields.organizer.nullish(),
+  category: fields.category, prize_name: fields.prize_name, prize_value_usd: fields.prize_value_usd,
+  latitude: fields.latitude.optional(), longitude: fields.longitude.optional(), address: fields.address.optional(),
+  radius_km: fields.radius_km.optional(), start_at: fields.start_at, end_at: fields.end_at, draw_at: fields.draw_at,
+  winner_count: fields.winner_count, max_tickets_per_user: fields.max_tickets_per_user.nullish(),
+});
+
+// Ubah: semua field opsional; null/absen = pertahankan (coalesce), kecuali lokasi/alamat/radius
+// yang boleh dikosongkan secara eksplisit.
+const updateSchema = z.object({
+  id: z.uuid(),
+  title: fields.title.nullish(), description: fields.description.nullish(), organizer: fields.organizer.nullish(),
+  category: fields.category.nullish(), prize_name: fields.prize_name.nullish(), prize_value_usd: fields.prize_value_usd.nullish(),
+  latitude: fields.latitude.optional(), longitude: fields.longitude.optional(), address: fields.address.optional(),
+  radius_km: fields.radius_km.optional(), start_at: ts.nullish(), end_at: ts.nullish(), draw_at: ts.nullish(),
+  winner_count: fields.winner_count.nullish(), max_tickets_per_user: fields.max_tickets_per_user.nullish(),
+});
+
+export async function upsertGiveaway(pool, admin, body) {
+  const b = body ?? {};
+  const creating = b.id == null || b.id === '';
+  const p = parseInput(creating ? createSchema : updateSchema, b);
+  if (p.error) return p.error;
+  try {
+    return await withTx(pool, (c) => (creating ? createGiveaway(c, admin, p.data) : updateGiveaway(c, p.data, b)));
+  } catch (e) {
+    if (INPUT_ERROR_CODES.has(e.code)) return fail('invalid_input', { detail: e.message });
+    throw e;
+  }
+}
+
+// Seed dibuat sekali di sini; hash-nya langsung di-commit ke hash-chain (dalam transaksi yang sama,
+// jadi giveaway yang gagal tidak meninggalkan seed/block yatim).
+async function createGiveaway(c, admin, d) {
+  const seed = randomHex(32);
+  const seedHash = sha256Hex(seed);
+  const g = await c.query(
+    `insert into giveaways(title, description, organizer, category, prize_name, prize_value_usd,
+        latitude, longitude, address, radius_km, start_at, end_at, draw_at, winner_count,
+        max_tickets_per_user, seed_hash, status, created_by)
+     values ($1, coalesce($2::text, ''), coalesce($3::text, ''), $4, $5, $6::numeric,
+        $7::float8, $8::float8, $9::text, $10::numeric, $11::timestamptz, $12::timestamptz, $13::timestamptz, $14::int,
+        coalesce($15::int, 10), $16,
+        case when now() < $11::timestamptz then 'upcoming' when now() < $12::timestamptz then 'active' else 'waiting_draw' end,
+        $17)
+     returning id`,
+    [d.title, d.description ?? null, d.organizer ?? null, d.category, d.prize_name, d.prize_value_usd,
+      d.latitude ?? null, d.longitude ?? null, d.address ?? null, d.radius_km ?? null, d.start_at, d.end_at, d.draw_at,
+      d.winner_count, d.max_tickets_per_user ?? null, seedHash, admin.id],
+  );
+  const id = g.rows[0].id;
+  await c.query('insert into giveaway_secrets(giveaway_id, seed) values ($1, $2)', [id, seed]);
+  await appendBlock(c, { block_type: 'commit', giveaway_id: id, seed_hash: seedHash, winner_count: d.winner_count });
+  return ok({ giveaway_id: id, created: true });
+}
+
+// Seed tidak pernah dibuat ulang saat mengubah.
+async function updateGiveaway(c, d, raw) {
+  const has = (k) => Object.hasOwn(raw, k);
+  const g = (
+    await c.query(
+      `select id, status, winner_count, now() >= start_at as started,
+              ($2::timestamptz is distinct from start_at) as start_changed
+         from giveaways where id = $1 for update`,
+      [d.id, has('start_at') ? (d.start_at ?? null) : null],
+    )
+  ).rows[0];
+  if (!g) return fail('not_found');
+  if (g.status === 'drawn') return fail('giveaway_drawn');
+  if (g.started) {
+    if (has('winner_count') && (d.winner_count ?? null) !== g.winner_count) return fail('winner_count_locked');
+    if (has('start_at') && g.start_changed) return fail('start_at_locked');
+  }
+  await c.query(
+    `update giveaways set
+        title = coalesce($2::text, title), description = coalesce($3::text, description),
+        organizer = coalesce($4::text, organizer), category = coalesce($5::text, category),
+        prize_name = coalesce($6::text, prize_name), prize_value_usd = coalesce($7::numeric, prize_value_usd),
+        latitude  = case when $8::boolean  then $9::float8  else latitude  end,
+        longitude = case when $10::boolean then $11::float8 else longitude end,
+        address   = case when $12::boolean then $13::text   else address   end,
+        radius_km = case when $14::boolean then $15::numeric else radius_km end,
+        start_at = coalesce($16::timestamptz, start_at), end_at = coalesce($17::timestamptz, end_at),
+        draw_at = coalesce($18::timestamptz, draw_at),
+        winner_count = coalesce($19::int, winner_count),
+        max_tickets_per_user = coalesce($20::int, max_tickets_per_user),
+        status = case when now() < coalesce($16::timestamptz, start_at) then 'upcoming'
+                      when now() < coalesce($17::timestamptz, end_at) then 'active' else 'waiting_draw' end
+      where id = $1`,
+    [d.id, d.title ?? null, d.description ?? null, d.organizer ?? null, d.category ?? null, d.prize_name ?? null,
+      d.prize_value_usd ?? null, has('latitude'), d.latitude ?? null, has('longitude'), d.longitude ?? null,
+      has('address'), d.address ?? null, has('radius_km'), d.radius_km ?? null, d.start_at ?? null, d.end_at ?? null,
+      d.draw_at ?? null, d.winner_count ?? null, d.max_tickets_per_user ?? null],
+  );
+  return ok({ giveaway_id: g.id, created: false });
+}
