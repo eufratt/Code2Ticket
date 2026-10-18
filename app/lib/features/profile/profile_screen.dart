@@ -50,7 +50,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Profil')),
       body: ListView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.fromLTRB(24, 24, 24, 140),
         children: [
           Text('Halo, ${u?.fullName ?? '-'}', style: Theme.of(context).textTheme.titleLarge),
           Text('@${u?.username} · ${u?.role} · Level ${u?.level}'),

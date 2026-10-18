@@ -48,7 +48,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ])
                 : ListView.builder(
-                    padding: const EdgeInsets.only(top: 8, bottom: 96),
+                    padding: const EdgeInsets.only(top: 8, bottom: 140),
                     itemCount: c.items.length,
                     itemBuilder: (_, i) => GiveawayCard(
                       giveaway: c.items[i],

@@ -1,16 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-/// Kerangka navigasi sesuai PRD bagian 8: Home, Discover | FAB Input Code | My Tickets, AI Assistant, Profile.
+/// Lokasi kustom FAB melayang di tengah horizontal, tepat di atas bottom navigation bar.
+class AboveNavCenterFloatLocation extends FloatingActionButtonLocation {
+  const AboveNavCenterFloatLocation({this.margin = 10.0});
+  final double margin;
+
+  @override
+  Offset getOffset(ScaffoldPrelayoutGeometry scaffoldGeometry) {
+    final double fabX = (scaffoldGeometry.scaffoldSize.width -
+            scaffoldGeometry.floatingActionButtonSize.width) /
+        2.0;
+    final double fabY = scaffoldGeometry.contentBottom -
+        scaffoldGeometry.floatingActionButtonSize.height -
+        margin;
+    return Offset(fabX, fabY);
+  }
+}
+
+/// Kerangka navigasi: 5 tab simetris sama lebar (Home, Discover, My Tickets, Asisten, Profil)
+/// dan 1 FAB melayang di tengah tepat di atas bar tanpa notch.
 class AppShell extends StatelessWidget {
   const AppShell({super.key, required this.navigationShell});
   final StatefulNavigationShell navigationShell;
 
-  static const _left = [
+  static const _tabs = [
     (Icons.home_outlined, Icons.home, 'Home'),
     (Icons.explore_outlined, Icons.explore, 'Discover'),
-  ];
-  static const _right = [
     (Icons.confirmation_number_outlined, Icons.confirmation_number, 'My Tickets'),
     (Icons.smart_toy_outlined, Icons.smart_toy, 'Asisten'),
     (Icons.person_outline, Icons.person, 'Profil'),
@@ -21,22 +37,31 @@ class AppShell extends StatelessWidget {
     final current = navigationShell.currentIndex;
     Widget item(int index, (IconData, IconData, String) d) {
       final selected = index == current;
+      final color = selected ? Theme.of(context).colorScheme.primary : null;
       return Expanded(
         child: InkWell(
           onTap: () => navigationShell.goBranch(index, initialLocation: index == current),
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 6),
+            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(selected ? d.$2 : d.$1,
-                    color: selected ? Theme.of(context).colorScheme.primary : null),
-                Text(d.$3,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                        fontSize: 11,
-                        color: selected ? Theme.of(context).colorScheme.primary : null)),
+                    size: 24,
+                    color: color),
+                const SizedBox(height: 2),
+                Text(
+                  d.$3,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+                    color: color,
+                  ),
+                ),
               ],
             ),
           ),
@@ -46,7 +71,7 @@ class AppShell extends StatelessWidget {
 
     return Scaffold(
       body: navigationShell,
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      floatingActionButtonLocation: const AboveNavCenterFloatLocation(margin: 10.0),
       floatingActionButton: FloatingActionButton(
         tooltip: 'Input Code',
         onPressed: () => context.push('/code'),
@@ -54,13 +79,10 @@ class AppShell extends StatelessWidget {
       ),
       bottomNavigationBar: BottomAppBar(
         padding: EdgeInsets.zero,
-        notchMargin: 6,
-        shape: const CircularNotchedRectangle(),
+        height: 64,
         child: Row(
           children: [
-            for (var i = 0; i < _left.length; i++) item(i, _left[i]),
-            const SizedBox(width: 72), // ruang untuk FAB
-            for (var i = 0; i < _right.length; i++) item(_left.length + i, _right[i]),
+            for (var i = 0; i < _tabs.length; i++) item(i, _tabs[i]),
           ],
         ),
       ),

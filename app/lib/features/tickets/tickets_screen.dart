@@ -53,7 +53,7 @@ class _TicketsScreenState extends State<TicketsScreen> {
                     ),
                   ])
                 : ListView(
-                    padding: const EdgeInsets.only(top: 8, bottom: 96),
+                    padding: const EdgeInsets.only(top: 8, bottom: 140),
                     children: [
                       for (final g in groups) _Group(giveawayId: g.key, tickets: g.value),
                     ],
