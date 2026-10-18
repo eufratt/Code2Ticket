@@ -1,6 +1,7 @@
 import 'package:code2ticket/app_router.dart';
 import 'package:code2ticket/core/api/authed_api.dart';
 import 'package:code2ticket/features/auth/auth_controller.dart';
+import 'package:code2ticket/features/discover/discover_controller.dart';
 import 'package:code2ticket/features/giveaways/giveaways_controller.dart';
 import 'package:code2ticket/features/tickets/tickets_controller.dart';
 import 'package:flutter/material.dart';
@@ -26,6 +27,7 @@ Widget _createTestApp({required _Auth auth, required AuthedApi authed}) {
       Provider<AuthedApi>.value(value: authed),
       ChangeNotifierProvider(create: (_) => GiveawaysController(authed, auth, MemoryCacheStore(), retryInterval: null)),
       ChangeNotifierProvider(create: (_) => TicketsController(authed, auth, MemoryCacheStore(), retryInterval: null)),
+      ChangeNotifierProvider(create: (_) => DiscoverController(authed, auth, MemoryCacheStore(), retryInterval: null)),
     ],
     child: MaterialApp.router(routerConfig: buildRouter(auth)),
   );
@@ -68,7 +70,7 @@ void main() {
 
     await tester.tap(find.text('Discover'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('Segera hadir'), findsOneWidget);
+    expect(find.byKey(const Key('search_field')), findsOneWidget);
 
     await tester.tap(find.text('My Tickets'));
     await tester.pumpAndSettle();

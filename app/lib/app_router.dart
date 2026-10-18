@@ -4,6 +4,7 @@ import 'features/auth/auth_controller.dart';
 import 'features/auth/biometric_lock_screen.dart';
 import 'features/auth/login_screen.dart';
 import 'features/auth/register_screen.dart';
+import 'features/discover/discover_screen.dart';
 import 'features/giveaways/giveaway_detail_screen.dart';
 import 'features/giveaways/giveaway_models.dart';
 import 'features/giveaways/home_screen.dart';
@@ -56,11 +57,7 @@ GoRouter buildRouter(AuthController auth) => GoRouter(
               GoRoute(path: '/home', builder: (_, _) => const HomeScreen()),
             ]),
             StatefulShellBranch(routes: [
-              GoRoute(
-                path: '/discover',
-                builder: (_, _) => const ComingSoonScreen(
-                    title: 'Discover', note: 'Pencarian, filter, dan peta dikerjakan di M4.'),
-              ),
+              GoRoute(path: '/discover', builder: (_, _) => const DiscoverScreen()),
             ]),
             StatefulShellBranch(routes: [
               GoRoute(path: '/tickets', builder: (_, _) => const TicketsScreen()),

@@ -8,6 +8,7 @@ import 'core/config.dart';
 import 'core/db/local_db.dart';
 import 'core/session/session_store.dart';
 import 'features/auth/auth_controller.dart';
+import 'features/discover/discover_controller.dart';
 import 'features/giveaways/giveaways_controller.dart';
 import 'features/tickets/tickets_controller.dart';
 
@@ -56,6 +57,7 @@ class _Code2TicketAppState extends State<Code2TicketApp> {
         Provider<AuthedApi>.value(value: _authed),
         ChangeNotifierProvider(create: (_) => GiveawaysController(_authed, _auth, LocalDb.instance)),
         ChangeNotifierProvider(create: (_) => TicketsController(_authed, _auth, LocalDb.instance)),
+        ChangeNotifierProvider(create: (_) => DiscoverController(_authed, _auth, LocalDb.instance)),
       ],
       child: MaterialApp.router(
         title: 'Code2Ticket',
