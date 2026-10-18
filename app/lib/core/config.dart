@@ -1,10 +1,7 @@
-/// Isi lewat --dart-define saat menjalankan aplikasi:
-/// flutter run --dart-define=SUPABASE_URL=https://xxxx.supabase.co --dart-define=SUPABASE_ANON_KEY=eyJ...
-/// Jangan pernah memakai service_role key di sini.
+/// Konfigurasi aplikasi dari --dart-define saat build/run:
+/// flutter run --dart-define=API_BASE_URL=https://code2ticket.onrender.com
 class AppConfig {
-  static const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
-  static const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+  static const apiBaseUrl = String.fromEnvironment('API_BASE_URL');
 
-  static bool get isConfigured =>
-      supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty;
+  static bool get isConfigured => apiBaseUrl.isNotEmpty;
 }

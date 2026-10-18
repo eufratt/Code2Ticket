@@ -42,6 +42,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthController>();
     return Scaffold(
       body: SafeArea(
         child: Center(
@@ -97,6 +98,17 @@ class _LoginScreenState extends State<LoginScreen> {
                             child: CircularProgressIndicator(strokeWidth: 2))
                         : const Text('Masuk'),
                   ),
+                  if (_busy && auth.isWakingUp) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      'Server sedang bangun, tunggu sebentar...',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                  ],
                   TextButton(
                     onPressed: _busy ? null : () => context.go('/register'),
                     child: const Text('Belum punya akun? Daftar'),

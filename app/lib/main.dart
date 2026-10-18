@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'app_router.dart';
-import 'core/api/rpc_client.dart';
+import 'core/api/api_client.dart';
 import 'core/config.dart';
 import 'core/session/session_store.dart';
 import 'features/auth/auth_controller.dart';
@@ -19,9 +19,9 @@ class Code2TicketApp extends StatefulWidget {
 }
 
 class _Code2TicketAppState extends State<Code2TicketApp> {
-  late final RpcClient _rpc = RpcClient();
+  late final ApiClient _api = ApiClient();
   late final AuthController _auth =
-      AuthController(_rpc, SessionStore())..restore();
+      AuthController(_api, SessionStore())..restore();
   late final _router = buildRouter(_auth);
 
   @override
@@ -33,8 +33,9 @@ class _Code2TicketAppState extends State<Code2TicketApp> {
             child: Padding(
               padding: EdgeInsets.all(24),
               child: Text(
-                'SUPABASE_URL / SUPABASE_ANON_KEY belum diisi.\n'
-                'Jalankan dengan --dart-define (lihat README_M2.md).',
+                'API_BASE_URL belum diisi.\n'
+                'Jalankan dengan:\n'
+                'flutter run --dart-define=API_BASE_URL=https://code2ticket.onrender.com',
                 textAlign: TextAlign.center,
               ),
             ),
@@ -44,7 +45,7 @@ class _Code2TicketAppState extends State<Code2TicketApp> {
     }
     return MultiProvider(
       providers: [
-        Provider<RpcClient>.value(value: _rpc),
+        Provider<ApiClient>.value(value: _api),
         ChangeNotifierProvider<AuthController>.value(value: _auth),
       ],
       child: MaterialApp.router(

@@ -1,6 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
-import '../../core/api/rpc_client.dart';
+import '../../core/api/api_client.dart';
 import '../../core/crypto/password_hasher.dart';
 import '../../core/session/session_store.dart';
 import 'auth_models.dart';
@@ -9,9 +11,11 @@ enum AuthStatus { unknown, signedOut, signedIn }
 
 /// Sumber kebenaran status login. Dipakai router (route guard) dan layar auth.
 class AuthController extends ChangeNotifier {
-  AuthController(this._rpc, this._store);
+  AuthController(this._api, this._store) {
+    _api.onSlowRequest = setWakingUp;
+  }
 
-  final RpcClient _rpc;
+  final ApiClient _api;
   final SessionStore _store;
 
   AuthStatus status = AuthStatus.unknown;
@@ -19,12 +23,22 @@ class AuthController extends ChangeNotifier {
   String? _token;
   String? get token => _token;
 
+  bool _isWakingUp = false;
+  bool get isWakingUp => _isWakingUp;
+
+  void setWakingUp(bool value) {
+    if (_isWakingUp != value) {
+      _isWakingUp = value;
+      notifyListeners();
+    }
+  }
+
   /// Dipanggil saat aplikasi dibuka: validasi token tersimpan ke server.
   Future<void> restore() async {
     final t = await _store.readToken();
     if (t == null) return _setSignedOut();
     try {
-      final r = await _rpc.call('rpc_validate_session', {'p_token': t});
+      final r = await _api.get('/auth/me', token: t);
       if (r['ok'] == true) {
         _token = t;
         user = AppUser.fromJson(r['user'] as Map<String, dynamic>);
@@ -33,8 +47,10 @@ class AuthController extends ChangeNotifier {
       } else {
         await _clear();
       }
+    } on InvalidSessionException {
+      await _clear();
     } on NetworkException {
-      // Offline: token tidak dihapus. Untuk M2, minta login ulang tanpa menghapus token.
+      // Offline: token tidak dihapus. Minta login ulang tanpa menghapus token.
       _setSignedOut();
     }
   }
@@ -48,12 +64,12 @@ class AuthController extends ChangeNotifier {
     try {
       final salt = PasswordHasher.generateSalt();
       final hash = PasswordHasher.hash(password, salt);
-      final r = await _rpc.call('rpc_register', {
-        'p_username': username.trim(),
-        'p_email': email.trim(),
-        'p_full_name': fullName.trim(),
-        'p_salt': salt,
-        'p_password_hash': hash,
+      final r = await _api.post('/auth/register', body: {
+        'username': username.trim(),
+        'email': email.trim(),
+        'full_name': fullName.trim(),
+        'salt': salt,
+        'password_hash': hash,
       });
       if (r['ok'] != true) return AuthResult.fail(authErrorMessage(r));
       return login(identifier: username, password: password);
@@ -65,10 +81,17 @@ class AuthController extends ChangeNotifier {
   Future<AuthResult> login(
       {required String identifier, required String password}) async {
     try {
-      final s = await _rpc.call('rpc_get_salt', {'p_identifier': identifier});
+      final s = await _api.post('/auth/salt', body: {
+        'identifier': identifier.trim(),
+      });
+      if (s['ok'] != true || s['salt'] == null) {
+        return AuthResult.fail(authErrorMessage(s));
+      }
       final hash = PasswordHasher.hash(password, s['salt'] as String);
-      final r = await _rpc
-          .call('rpc_login', {'p_identifier': identifier, 'p_password_hash': hash});
+      final r = await _api.post('/auth/login', body: {
+        'identifier': identifier.trim(),
+        'password_hash': hash,
+      });
       if (r['ok'] != true) return AuthResult.fail(authErrorMessage(r));
       _token = r['token'] as String;
       await _store.saveToken(_token!);
@@ -85,13 +108,13 @@ class AuthController extends ChangeNotifier {
     final t = _token;
     if (t != null) {
       try {
-        await _rpc.call('rpc_logout', {'p_token': t});
+        await _api.post('/auth/logout', token: t);
       } catch (_) {/* tetap logout lokal */}
     }
     await _clear();
   }
 
-  /// Dipanggil bila RPC bertoken melempar InvalidSessionException.
+  /// Dipanggil bila request bertoken melempar InvalidSessionException.
   Future<void> handleInvalidSession() => _clear();
 
   Future<void> _clear() async {

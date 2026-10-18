@@ -49,6 +49,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthController>();
     return Scaffold(
       appBar: AppBar(
         title: const Text('Daftar'),
@@ -134,6 +135,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           child: CircularProgressIndicator(strokeWidth: 2))
                       : const Text('Daftar'),
                 ),
+                if (_busy && auth.isWakingUp) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    'Server sedang bangun, tunggu sebentar...',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
