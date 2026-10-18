@@ -3,3 +3,6 @@
 !.env.example
 node_modules/
 *.log
+graphify-out/
+.claude/settings.local.json
+

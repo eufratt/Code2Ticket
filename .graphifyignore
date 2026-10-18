@@ -1,0 +1,15 @@
+node_modules/
+build/
+.dart_tool/
+.gradle/
+*.gradle
+android/build/
+android/.gradle/
+app/build/
+app/.dart_tool/
+app/android/.gradle/
+app/android/build/
+app/android/app/build/
+backend/node_modules/
+.git/
+graphify-out/
