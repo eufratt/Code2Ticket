@@ -1,9 +1,13 @@
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 
+import '../../features/giveaways/giveaway_models.dart';
+import '../../features/tickets/ticket_models.dart';
+import 'cache_store.dart';
+
 /// Basis data lokal SQLite (sqflite) untuk cache dan pengaturan aplikasi.
 /// Skema sesuai dengan Code2Ticket_ERD.md bagian SQLite schema.
-class LocalDb {
+class LocalDb implements CacheStore {
   LocalDb._();
   static final LocalDb instance = LocalDb._();
 
@@ -103,6 +107,119 @@ class LocalDb {
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
     }
+  }
+
+  // ---------------------------------------------------------------- cache giveaway / tiket
+
+  @override
+  Future<void> saveGiveaways(List<Giveaway> items) async {
+    final db = await database;
+    final now = DateTime.now();
+    await db.transaction((txn) async {
+      final batch = txn.batch();
+      for (final g in items) {
+        batch.insert('cached_giveaways', g.toRow(now), conflictAlgorithm: ConflictAlgorithm.replace);
+      }
+      await batch.commit(noResult: true);
+    });
+  }
+
+  @override
+  Future<List<Giveaway>> loadGiveaways() async {
+    final db = await database;
+    final rows = await db.query('cached_giveaways', orderBy: 'end_at ASC');
+    return [for (final r in rows) ?Giveaway.tryParse(r)];
+  }
+
+  @override
+  Future<Giveaway?> loadGiveaway(String id) async {
+    final db = await database;
+    final rows = await db.query('cached_giveaways', where: 'id = ?', whereArgs: [id], limit: 1);
+    return rows.isEmpty ? null : Giveaway.tryParse(rows.first);
+  }
+
+  @override
+  Future<DateTime?> giveawaysUpdatedAt() async {
+    final db = await database;
+    final r = await db.rawQuery('SELECT MAX(cached_at) AS t FROM cached_giveaways');
+    return DateTime.tryParse(r.first['t'] as String? ?? '')?.toLocal();
+  }
+
+  @override
+  Future<void> replaceTickets(String userId, List<Ticket> items) async {
+    final db = await database;
+    final now = DateTime.now();
+    await db.transaction((txn) async {
+      await txn.delete('cached_tickets', where: 'user_id = ?', whereArgs: [userId]);
+      final batch = txn.batch();
+      for (final t in items) {
+        batch.insert('cached_tickets', t.toRow(userId, now), conflictAlgorithm: ConflictAlgorithm.replace);
+      }
+      await batch.commit(noResult: true);
+    });
+  }
+
+  @override
+  Future<List<Ticket>> loadTickets(String userId) async {
+    final db = await database;
+    final rows = await db.query('cached_tickets',
+        where: 'user_id = ?', whereArgs: [userId], orderBy: 'created_at DESC, ticket_number DESC');
+    return [for (final r in rows) ?Ticket.tryParse(r)];
+  }
+
+  @override
+  Future<DateTime?> ticketsUpdatedAt(String userId) async {
+    final db = await database;
+    final r = await db.rawQuery('SELECT MAX(cached_at) AS t FROM cached_tickets WHERE user_id = ?', [userId]);
+    return DateTime.tryParse(r.first['t'] as String? ?? '')?.toLocal();
+  }
+
+  // ---------------------------------------------------------------- riwayat pencarian
+
+  @override
+  Future<List<String>> recentSearches(String userId, {int limit = 10}) async {
+    final db = await database;
+    final rows = await db.query('search_history',
+        columns: ['query'], where: 'user_id = ?', whereArgs: [userId], orderBy: 'id DESC', limit: limit);
+    return [for (final r in rows) r['query'] as String];
+  }
+
+  /// Kata yang sama dipindah ke paling atas; hanya 10 terakhir yang disimpan.
+  @override
+  Future<void> addSearch(String userId, String query) async {
+    final q = query.trim();
+    if (q.isEmpty) return;
+    final db = await database;
+    await db.transaction((txn) async {
+      await txn.delete('search_history', where: 'user_id = ? AND query = ?', whereArgs: [userId, q]);
+      await txn.insert('search_history',
+          {'user_id': userId, 'query': q, 'created_at': DateTime.now().toUtc().toIso8601String()});
+      await txn.rawDelete(
+        'DELETE FROM search_history WHERE user_id = ? AND id NOT IN '
+        '(SELECT id FROM search_history WHERE user_id = ? ORDER BY id DESC LIMIT 10)',
+        [userId, userId],
+      );
+    });
+  }
+
+  @override
+  Future<void> deleteSearch(String userId, String query) async {
+    final db = await database;
+    await db.delete('search_history', where: 'user_id = ? AND query = ?', whereArgs: [userId, query]);
+  }
+
+  @override
+  Future<void> clearSearches(String userId) async {
+    final db = await database;
+    await db.delete('search_history', where: 'user_id = ?', whereArgs: [userId]);
+  }
+
+  @override
+  Future<void> clearUserData({String? userId}) async {
+    final db = await database;
+    await db.delete('cached_giveaways');
+    await db.delete('cached_tickets');
+    if (userId != null) await clearSearches(userId);
   }
 
   Future<void> close() async {

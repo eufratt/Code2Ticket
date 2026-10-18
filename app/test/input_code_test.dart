@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
+import 'support/memory_cache.dart';
 import 'models_test.dart' show redeemOk, ticketJson;
 
 /// ApiClient palsu: mencatat panggilan dan menjawab lewat [handler]. Tanpa jaringan.
@@ -70,7 +71,7 @@ void main() {
   Future<void> pumpScreen(WidgetTester tester) async {
     auth = FakeAuth(api);
     final authed = AuthedApi(api, auth);
-    tickets = TicketsController(authed, auth);
+    tickets = TicketsController(authed, auth, MemoryCacheStore(), retryInterval: null);
     await tester.pumpWidget(MultiProvider(
       providers: [
         ChangeNotifierProvider<AuthController>.value(value: auth),
@@ -197,7 +198,7 @@ void main() {
             ],
           });
       auth = FakeAuth(api);
-      tickets = TicketsController(AuthedApi(api, auth), auth);
+      tickets = TicketsController(AuthedApi(api, auth), auth, MemoryCacheStore(), retryInterval: null);
       await tickets.load();
       expect(tickets.state, LoadState.loaded);
       expect(tickets.items, hasLength(3));
@@ -213,7 +214,7 @@ void main() {
         throw NetworkException('Tidak ada koneksi internet.');
       });
       auth = FakeAuth(api);
-      tickets = TicketsController(AuthedApi(api, auth), auth);
+      tickets = TicketsController(AuthedApi(api, auth), auth, MemoryCacheStore(), retryInterval: null);
       await tickets.load();
       expect(tickets.state, LoadState.error);
       expect(tickets.error, 'Tidak ada koneksi internet.');
@@ -226,7 +227,7 @@ void main() {
     test('load bersamaan memakai satu permintaan', () async {
       api = FakeApi((m, p, b) async => {'ok': true, 'data': []});
       auth = FakeAuth(api);
-      tickets = TicketsController(AuthedApi(api, auth), auth);
+      tickets = TicketsController(AuthedApi(api, auth), auth, MemoryCacheStore(), retryInterval: null);
       await Future.wait([tickets.load(), tickets.load(), tickets.load()]);
       expect(api.calls.where((c) => c.path == '/tickets'), hasLength(1));
     });

@@ -10,8 +10,8 @@ import 'giveaway_card.dart';
 import 'giveaway_models.dart';
 import 'giveaways_controller.dart';
 
-/// S-GW-DETAIL (bagian M3): info, hadiah, jadwal draw (WIB), jumlah tiket saya, tombol Input Code.
-/// Countdown, 4 zona, kurs, dan hasil/verifikasi menyusul.
+/// S-GW-DETAIL (bagian ini): info, hadiah, jadwal draw (WIB), jumlah tiket saya, tombol Input Code.
+/// Data dari GET /giveaways/:id; offline -> dari cache. Countdown, 4 zona, kurs, hasil/verifikasi menyusul.
 class GiveawayDetailScreen extends StatefulWidget {
   const GiveawayDetailScreen({super.key, required this.giveawayId, this.initial});
   final String giveawayId;
@@ -22,30 +22,39 @@ class GiveawayDetailScreen extends StatefulWidget {
 
 class _GiveawayDetailScreenState extends State<GiveawayDetailScreen> {
   Giveaway? _g;
-  bool _loading = false;
+  bool _loading = false, _offline = false, _notFound = false;
+  DateTime? _cachedAt;
+  String? _error;
+  bool _logged = false;
 
   @override
   void initState() {
     super.initState();
-    _g = widget.initial;
+    _g = widget.initial; // tampil langsung; dimuat ulang dari server di latar
     final tickets = context.read<TicketsController>();
     if (tickets.state == LoadState.idle) Future.microtask(tickets.load);
-    if (_g == null) {
-      _find();
-    } else {
-      _logView(_g!);
-    }
+    _fetch();
   }
 
-  Future<void> _find() async {
-    setState(() => _loading = true);
-    final g = await context.read<GiveawaysController>().find(widget.giveawayId);
+  Future<void> _fetch() async {
+    setState(() {
+      _loading = _g == null;
+      _error = null;
+    });
+    final r = await context.read<GiveawaysController>().fetchOne(widget.giveawayId);
     if (!mounted) return;
     setState(() {
-      _g = g;
       _loading = false;
+      _notFound = r.notFound;
+      _error = r.error;
+      _offline = r.offline;
+      _cachedAt = r.cachedAt;
+      if (r.giveaway != null) _g = r.giveaway;
     });
-    if (g != null) _logView(g);
+    if (_g != null && !_logged) {
+      _logged = true;
+      _logView(_g!);
+    }
   }
 
   /// Gagal mencatat aktivitas tidak boleh mengganggu layar.
@@ -61,11 +70,16 @@ class _GiveawayDetailScreenState extends State<GiveawayDetailScreen> {
     final g = _g;
     return Scaffold(
       appBar: AppBar(title: const Text('Detail Giveaway')),
-      body: g == null
-          ? (_loading
+      body: g != null
+          ? Column(children: [
+              if (_offline) OfflineBanner(cachedAt: _cachedAt),
+              Expanded(child: _Body(giveaway: g)),
+            ])
+          : _loading
               ? const LoadingView()
-              : ErrorRetryView(message: 'Giveaway tidak ditemukan.', onRetry: _find))
-          : _Body(giveaway: g),
+              : _notFound
+                  ? const EmptyView(icon: Icons.search_off, message: 'Giveaway tidak ditemukan.')
+                  : ErrorRetryView(message: _error ?? 'Gagal memuat giveaway.', onRetry: _fetch),
       bottomNavigationBar: g == null
           ? null
           : SafeArea(

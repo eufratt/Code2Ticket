@@ -4,20 +4,30 @@ import 'package:flutter/foundation.dart';
 
 import '../../core/api/api_client.dart';
 import '../../core/api/authed_api.dart';
+import '../../core/db/cache_store.dart';
 import '../../core/json.dart';
+import '../../core/offline.dart';
 import '../auth/auth_controller.dart';
 import '../giveaways/giveaways_controller.dart' show LoadState;
 import 'redeem_messages.dart';
 import 'ticket_models.dart';
 
-/// Tiket milik pengguna + penukaran kode. Dikosongkan saat logout.
-class TicketsController extends ChangeNotifier {
-  TicketsController(this._api, this._auth) {
+/// Tiket milik pengguna + penukaran kode. Online -> simpan ke cache (per pengguna); jaringan gagal ->
+/// tampilkan cache. Dikosongkan saat logout.
+class TicketsController extends ChangeNotifier with OfflineRetry {
+  TicketsController(this._api, this._auth, this._cache, {this.retryInterval = const Duration(seconds: 20)}) {
     _auth.addListener(_onAuth);
   }
 
   final AuthedApi _api;
   final AuthController _auth;
+  final CacheStore _cache;
+  @override
+  final Duration? retryInterval;
+
+  /// true bila [items] berasal dari cache; [cachedAt] = kapan terakhir diperbarui dari server.
+  bool offline = false;
+  DateTime? cachedAt;
 
   List<Ticket> items = const [];
   LoadState state = LoadState.idle;
@@ -37,12 +47,18 @@ class TicketsController extends ChangeNotifier {
     return out;
   }
 
-  Future<void> load() => _inflight ??= _load().whenComplete(() => _inflight = null);
+  Future<void> load() => _inflight ??= _load(silent: false).whenComplete(() => _inflight = null);
 
-  Future<void> _load() async {
-    state = LoadState.loading;
-    error = null;
-    notifyListeners();
+  @override
+  Future<void> reloadSilently() => _inflight ??= _load(silent: true).whenComplete(() => _inflight = null);
+
+  Future<void> _load({required bool silent}) async {
+    if (!silent) {
+      state = LoadState.loading;
+      error = null;
+      notifyListeners();
+    }
+    final uid = _auth.user?.id;
     try {
       final r = await _api.get('/tickets');
       if (r['ok'] == false) {
@@ -50,11 +66,25 @@ class TicketsController extends ChangeNotifier {
       }
       items = parseList(r['data'], Ticket.tryParse);
       state = LoadState.loaded;
+      offline = false;
+      cachedAt = null;
+      cancelRetry();
+      if (uid != null && _auth.status != AuthStatus.signedOut) await bestEffort(() => _cache.replaceTickets(uid, items));
     } on InvalidSessionException {
       return; // AuthedApi sudah logout; router pindah ke Login
     } on NetworkException catch (e) {
-      error = e.message;
-      state = LoadState.error;
+      if (silent) return;
+      final cached = uid == null ? null : await bestEffort(() => _cache.loadTickets(uid));
+      if (cached != null && cached.isNotEmpty) {
+        items = cached;
+        offline = true;
+        cachedAt = await bestEffort(() => _cache.ticketsUpdatedAt(uid!));
+        state = LoadState.loaded;
+        scheduleRetry();
+      } else {
+        error = e.message;
+        state = LoadState.error;
+      }
     }
     notifyListeners();
   }
@@ -89,6 +119,9 @@ class TicketsController extends ChangeNotifier {
       items = const [];
       state = LoadState.idle;
       error = null;
+      offline = false;
+      cachedAt = null;
+      cancelRetry();
       notifyListeners();
     }
   }

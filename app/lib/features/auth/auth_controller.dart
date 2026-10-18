@@ -184,6 +184,10 @@ class AuthController extends ChangeNotifier {
   Future<void> handleInvalidSession() => _clear();
 
   Future<void> _clear() async {
+    // Cache giveaway/tiket dan riwayat pencarian milik pengguna ikut dihapus. Gagal menghapus tidak boleh menahan logout.
+    try {
+      await _db.clearUserData(userId: user?.id);
+    } catch (_) {}
     await _store.clear();
     _setSignedOut();
   }

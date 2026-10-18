@@ -40,7 +40,10 @@ class _TicketsScreenState extends State<TicketsScreen> {
         LoadState.idle || LoadState.loading when c.items.isEmpty => const LoadingView(),
         LoadState.error when c.items.isEmpty =>
           ErrorRetryView(message: c.error ?? 'Gagal memuat.', onRetry: c.load),
-        _ => RefreshIndicator(
+        _ => Column(children: [
+          if (c.offline) OfflineBanner(cachedAt: c.cachedAt),
+          Expanded(
+            child: RefreshIndicator(
             onRefresh: c.load,
             child: groups.isEmpty
                 ? ListView(children: const [
@@ -59,6 +62,8 @@ class _TicketsScreenState extends State<TicketsScreen> {
                     ],
                   ),
           ),
+          ),
+        ]),
       },
     );
   }

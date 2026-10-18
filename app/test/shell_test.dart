@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
 import 'input_code_test.dart' show FakeApi, FakeAuth, json;
+import 'support/memory_cache.dart';
 import 'models_test.dart' show giveawayJson, ticketJson;
 
 class _Auth extends FakeAuth {
@@ -23,8 +24,8 @@ Widget _createTestApp({required _Auth auth, required AuthedApi authed}) {
     providers: [
       ChangeNotifierProvider<AuthController>.value(value: auth),
       Provider<AuthedApi>.value(value: authed),
-      ChangeNotifierProvider(create: (_) => GiveawaysController(authed, auth)),
-      ChangeNotifierProvider(create: (_) => TicketsController(authed, auth)),
+      ChangeNotifierProvider(create: (_) => GiveawaysController(authed, auth, MemoryCacheStore(), retryInterval: null)),
+      ChangeNotifierProvider(create: (_) => TicketsController(authed, auth, MemoryCacheStore(), retryInterval: null)),
     ],
     child: MaterialApp.router(routerConfig: buildRouter(auth)),
   );
@@ -36,7 +37,9 @@ void main() {
     tester.view.devicePixelRatio = 3;
     addTearDown(tester.view.reset);
 
-    final api = FakeApi((m, p, b) async => p.startsWith('/giveaways')
+    final api = FakeApi((m, p, b) async => p.startsWith('/giveaways/')
+        ? json(giveawayJson) // GET /giveaways/:id
+        : p.startsWith('/giveaways')
         ? {'ok': true, 'data': [json(giveawayJson)]}
         : {'ok': true, 'data': [json(ticketJson)]});
     final auth = _Auth(api);
@@ -91,7 +94,9 @@ void main() {
     tester.view.devicePixelRatio = 3;
     addTearDown(tester.view.reset);
 
-    final api = FakeApi((m, p, b) async => p.startsWith('/giveaways')
+    final api = FakeApi((m, p, b) async => p.startsWith('/giveaways/')
+        ? json(giveawayJson) // GET /giveaways/:id
+        : p.startsWith('/giveaways')
         ? {'ok': true, 'data': [json(giveawayJson)]}
         : {'ok': true, 'data': [json(ticketJson)]});
     final auth = _Auth(api);
@@ -130,7 +135,9 @@ void main() {
   });
 
   testWidgets('Home -> Detail Giveaway: info, jadwal WIB, tiket saya, aktivitas dicatat', (tester) async {
-    final api = FakeApi((m, p, b) async => p.startsWith('/giveaways')
+    final api = FakeApi((m, p, b) async => p.startsWith('/giveaways/')
+        ? json(giveawayJson) // GET /giveaways/:id
+        : p.startsWith('/giveaways')
         ? {'ok': true, 'data': [json(giveawayJson)]}
         : p == '/activity'
             ? throw Exception('gagal catat') // tidak boleh mengganggu layar
@@ -141,8 +148,8 @@ void main() {
       providers: [
         ChangeNotifierProvider<AuthController>.value(value: auth),
         Provider<AuthedApi>.value(value: authed),
-        ChangeNotifierProvider(create: (_) => GiveawaysController(authed, auth)),
-        ChangeNotifierProvider(create: (_) => TicketsController(authed, auth)),
+        ChangeNotifierProvider(create: (_) => GiveawaysController(authed, auth, MemoryCacheStore(), retryInterval: null)),
+        ChangeNotifierProvider(create: (_) => TicketsController(authed, auth, MemoryCacheStore(), retryInterval: null)),
       ],
       child: MaterialApp.router(routerConfig: buildRouter(auth)),
     ));

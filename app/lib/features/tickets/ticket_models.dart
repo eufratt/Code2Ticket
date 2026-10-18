@@ -3,6 +3,13 @@ import '../../core/json.dart';
 /// Status tiket dari GET /tickets (kolom `result`).
 enum TicketResult { eligible, waitingForDraw, winner, notSelected }
 
+String _resultValue(TicketResult r) => switch (r) {
+      TicketResult.winner => 'winner',
+      TicketResult.notSelected => 'not_selected',
+      TicketResult.waitingForDraw => 'waiting_for_draw',
+      TicketResult.eligible => 'eligible',
+    };
+
 TicketResult _result(dynamic v) => switch (v) {
       'winner' => TicketResult.winner,
       'not_selected' => TicketResult.notSelected,
@@ -29,6 +36,15 @@ class Ticket {
   final int ticketNumber;
   final DateTime? endAt, drawAt, createdAt;
   final TicketResult result;
+
+  /// Baris tabel cached_tickets, terikat pengguna. Kode lengkap tidak pernah ada di sini (hanya yang disamarkan).
+  Map<String, Object?> toRow(String userId, DateTime cachedAt) => {
+        'id': id, 'user_id': userId, 'giveaway_id': giveawayId, 'giveaway_title': giveawayTitle,
+        'prize_name': prizeName, 'ticket_number': ticketNumber, 'result': _resultValue(result),
+        'end_at': endAt?.toUtc().toIso8601String(), 'draw_at': drawAt?.toUtc().toIso8601String(),
+        'code_masked': codeMasked, 'created_at': createdAt?.toUtc().toIso8601String(),
+        'cached_at': cachedAt.toUtc().toIso8601String(),
+      };
 
   static Ticket? tryParse(dynamic raw) {
     final j = asMap(raw);

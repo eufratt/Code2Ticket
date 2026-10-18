@@ -54,8 +54,8 @@ class _Code2TicketAppState extends State<Code2TicketApp> {
         Provider<LocalDb>.value(value: LocalDb.instance),
         ChangeNotifierProvider<AuthController>.value(value: _auth),
         Provider<AuthedApi>.value(value: _authed),
-        ChangeNotifierProvider(create: (_) => GiveawaysController(_authed, _auth)),
-        ChangeNotifierProvider(create: (_) => TicketsController(_authed, _auth)),
+        ChangeNotifierProvider(create: (_) => GiveawaysController(_authed, _auth, LocalDb.instance)),
+        ChangeNotifierProvider(create: (_) => TicketsController(_authed, _auth, LocalDb.instance)),
       ],
       child: MaterialApp.router(
         title: 'Code2Ticket',

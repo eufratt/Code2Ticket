@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../core/format.dart';
 import '../features/auth/auth_controller.dart';
 
 /// Tampil saat permintaan lambat karena server gratis Render sedang bangun (cold start).
@@ -15,6 +16,36 @@ class WakingUpNotice extends StatelessWidget {
         'Server sedang bangun, tunggu sebentar...',
         textAlign: TextAlign.center,
         style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.primary),
+      ),
+    );
+  }
+}
+
+/// Penanda bahwa data berasal dari cache (jaringan gagal), dengan waktu terakhir diperbarui.
+class OfflineBanner extends StatelessWidget {
+  const OfflineBanner({super.key, this.cachedAt});
+  final DateTime? cachedAt;
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      color: scheme.secondaryContainer,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Row(
+          children: [
+            Icon(Icons.cloud_off, size: 18, color: scheme.onSecondaryContainer),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                cachedAt == null
+                    ? 'Data offline · mencoba memuat ulang otomatis'
+                    : 'Data offline · diperbarui ${formatWib(cachedAt!)}',
+                style: TextStyle(fontSize: 12.5, color: scheme.onSecondaryContainer),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

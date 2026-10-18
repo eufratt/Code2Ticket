@@ -59,6 +59,27 @@ class Giveaway {
     );
   }
 
+  /// Salinan dengan jarak baru (mis. dihitung lokal dari data cache).
+  Giveaway withDistance(double? km) => Giveaway(
+        id: id, title: title, description: description, organizer: organizer, category: category,
+        prizeName: prizeName, prizeValueUsd: prizeValueUsd, latitude: latitude, longitude: longitude,
+        address: address, radiusKm: radiusKm, startAt: startAt, endAt: endAt, drawAt: drawAt,
+        winnerCount: winnerCount, ticketCount: ticketCount, status: status, distanceKm: km,
+      );
+
+  bool get hasCoordinates => latitude != null && longitude != null;
+
+  /// Baris tabel cached_giveaways (nama kolom = nama field API, tanggal ISO UTC).
+  /// Jarak tidak disimpan: bergantung pada posisi pengguna, dan lokasi tidak boleh disimpan.
+  Map<String, Object?> toRow(DateTime cachedAt) => {
+        'id': id, 'title': title, 'description': description, 'organizer': organizer, 'category': category,
+        'prize_name': prizeName, 'prize_value_usd': prizeValueUsd, 'latitude': latitude, 'longitude': longitude,
+        'address': address, 'radius_km': radiusKm, 'start_at': startAt?.toUtc().toIso8601String(),
+        'end_at': endAt?.toUtc().toIso8601String(), 'draw_at': drawAt?.toUtc().toIso8601String(),
+        'winner_count': winnerCount, 'ticket_count': ticketCount, 'status': status,
+        'cached_at': cachedAt.toUtc().toIso8601String(),
+      };
+
   /// Fase dihitung dari waktu, bukan dari kolom status: kolom itu hanya diperbarui scheduler
   /// tiap menit sehingga bisa tertinggal.
   GiveawayPhase phaseAt(DateTime now) {
