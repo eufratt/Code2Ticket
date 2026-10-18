@@ -53,6 +53,12 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
         title: const Text('Discover'),
         actions: [
           IconButton(
+            key: const Key('open_map'),
+            tooltip: 'Peta',
+            icon: const Icon(Icons.map_outlined),
+            onPressed: () => context.push('/map'),
+          ),
+          IconButton(
             key: const Key('open_filter'),
             tooltip: 'Filter',
             icon: Badge(

@@ -5,6 +5,7 @@ import 'features/auth/biometric_lock_screen.dart';
 import 'features/auth/login_screen.dart';
 import 'features/auth/register_screen.dart';
 import 'features/discover/discover_screen.dart';
+import 'features/discover/map_screen.dart';
 import 'features/giveaways/giveaway_detail_screen.dart';
 import 'features/giveaways/giveaway_models.dart';
 import 'features/giveaways/home_screen.dart';
@@ -42,6 +43,7 @@ GoRouter buildRouter(AuthController auth) => GoRouter(
         GoRoute(path: '/lock', builder: (_, _) => const BiometricLockScreen()),
         // Layar di luar tab (tanpa bottom navigation): dibuka dengan push dari tab mana pun.
         GoRoute(path: '/code', builder: (_, _) => const InputCodeScreen()),
+        GoRoute(path: '/map', builder: (_, _) => const MapScreen()),
         GoRoute(
           path: '/giveaway/:id',
           builder: (_, state) => GiveawayDetailScreen(
