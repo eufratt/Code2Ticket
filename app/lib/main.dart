@@ -3,10 +3,13 @@ import 'package:provider/provider.dart';
 
 import 'app_router.dart';
 import 'core/api/api_client.dart';
+import 'core/api/authed_api.dart';
 import 'core/config.dart';
 import 'core/db/local_db.dart';
 import 'core/session/session_store.dart';
 import 'features/auth/auth_controller.dart';
+import 'features/giveaways/giveaways_controller.dart';
+import 'features/tickets/tickets_controller.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,6 +26,7 @@ class _Code2TicketAppState extends State<Code2TicketApp> {
   late final ApiClient _api = ApiClient();
   late final AuthController _auth =
       AuthController(_api, SessionStore())..restore();
+  late final AuthedApi _authed = AuthedApi(_api, _auth);
   late final _router = buildRouter(_auth);
 
   @override
@@ -49,6 +53,9 @@ class _Code2TicketAppState extends State<Code2TicketApp> {
         Provider<ApiClient>.value(value: _api),
         Provider<LocalDb>.value(value: LocalDb.instance),
         ChangeNotifierProvider<AuthController>.value(value: _auth),
+        Provider<AuthedApi>.value(value: _authed),
+        ChangeNotifierProvider(create: (_) => GiveawaysController(_authed, _auth)),
+        ChangeNotifierProvider(create: (_) => TicketsController(_authed, _auth)),
       ],
       child: MaterialApp.router(
         title: 'Code2Ticket',
