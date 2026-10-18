@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'app_router.dart';
 import 'core/api/api_client.dart';
 import 'core/config.dart';
+import 'core/db/local_db.dart';
 import 'core/session/session_store.dart';
 import 'features/auth/auth_controller.dart';
 
@@ -46,6 +47,7 @@ class _Code2TicketAppState extends State<Code2TicketApp> {
     return MultiProvider(
       providers: [
         Provider<ApiClient>.value(value: _api),
+        Provider<LocalDb>.value(value: LocalDb.instance),
         ChangeNotifierProvider<AuthController>.value(value: _auth),
       ],
       child: MaterialApp.router(

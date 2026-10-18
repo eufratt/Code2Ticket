@@ -4,19 +4,29 @@ import 'package:flutter/foundation.dart';
 
 import '../../core/api/api_client.dart';
 import '../../core/crypto/password_hasher.dart';
+import '../../core/db/local_db.dart';
+import '../../core/security/biometric_service.dart';
 import '../../core/session/session_store.dart';
 import 'auth_models.dart';
 
-enum AuthStatus { unknown, signedOut, signedIn }
+enum AuthStatus { unknown, signedOut, biometricRequired, signedIn }
 
 /// Sumber kebenaran status login. Dipakai router (route guard) dan layar auth.
 class AuthController extends ChangeNotifier {
-  AuthController(this._api, this._store) {
+  AuthController(
+    this._api,
+    this._store, {
+    LocalDb? db,
+    BiometricService? biometric,
+  })  : _db = db ?? LocalDb.instance,
+        _biometric = biometric ?? BiometricService() {
     _api.onSlowRequest = setWakingUp;
   }
 
   final ApiClient _api;
   final SessionStore _store;
+  final LocalDb _db;
+  final BiometricService _biometric;
 
   AuthStatus status = AuthStatus.unknown;
   AppUser? user;
@@ -33,6 +43,49 @@ class AuthController extends ChangeNotifier {
     }
   }
 
+  Future<bool> isBiometricAvailable() => _biometric.isAvailable();
+
+  Future<bool> isBiometricEnabled({String? userId}) async {
+    final uid = userId ?? user?.id ?? '';
+    final val = await _db.getSetting('biometric_enabled', userId: uid);
+    if (val != null) return val == '1' || val == 'true';
+    if (uid.isNotEmpty) {
+      final global = await _db.getSetting('biometric_enabled', userId: '');
+      return global == '1' || global == 'true';
+    }
+    return false;
+  }
+
+  Future<bool> setBiometricEnabled(bool enable) async {
+    if (enable) {
+      final available = await _biometric.isAvailable();
+      if (!available) return false;
+      final ok = await _biometric.authenticate(
+        'Konfirmasi identitas Anda untuk mengaktifkan kunci biometric',
+      );
+      if (!ok) return false;
+    }
+    await _db.setSetting(
+      'biometric_enabled',
+      enable ? '1' : '0',
+      userId: user?.id ?? '',
+    );
+    notifyListeners();
+    return true;
+  }
+
+  Future<bool> unlockWithBiometric() async {
+    final ok = await _biometric.authenticate(
+      'Konfirmasi identitas Anda untuk membuka Code2Ticket',
+    );
+    if (ok) {
+      status = AuthStatus.signedIn;
+      notifyListeners();
+      return true;
+    }
+    return false;
+  }
+
   /// Dipanggil saat aplikasi dibuka: validasi token tersimpan ke server.
   Future<void> restore() async {
     final t = await _store.readToken();
@@ -42,7 +95,20 @@ class AuthController extends ChangeNotifier {
       if (r['ok'] == true) {
         _token = t;
         user = AppUser.fromJson(r['user'] as Map<String, dynamic>);
-        status = AuthStatus.signedIn;
+
+        final bioEnabled = await isBiometricEnabled(userId: user!.id);
+        if (bioEnabled) {
+          final passed = await _biometric.authenticate(
+            'Konfirmasi identitas Anda untuk membuka Code2Ticket',
+          );
+          if (passed) {
+            status = AuthStatus.signedIn;
+          } else {
+            status = AuthStatus.biometricRequired;
+          }
+        } else {
+          status = AuthStatus.signedIn;
+        }
         notifyListeners();
       } else {
         await _clear();
