@@ -147,4 +147,26 @@ void main() {
     final res = await client.patch('/me', body: {'full_name': 'New Name'}, token: 'tok123');
     expect(res['ok'], isTrue);
   });
+
+  test('POST koneksi putus diulang secara bawaan, tidak diulang bila retry: false', () async {
+    Future<int> calls({required bool retry}) async {
+      var n = 0;
+      final client = ApiClient(
+        client: MockClient((req) async {
+          n++;
+          throw http.ClientException('putus');
+        }),
+        baseUrl: testBase,
+        retryDelays: [Duration.zero, Duration.zero],
+      );
+      await expectLater(
+        () => client.post('/codes/redeem', body: {'code': 'X'}, retry: retry),
+        throwsA(isA<NetworkException>()),
+      );
+      return n;
+    }
+
+    expect(await calls(retry: true), equals(3));
+    expect(await calls(retry: false), equals(1));
+  });
 }

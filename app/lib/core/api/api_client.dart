@@ -62,12 +62,15 @@ class ApiClient {
   }) =>
       _send('GET', path, body: body, token: token);
 
+  /// [retry] false: jangan ulangi otomatis saat koneksi putus (mis. input kode,
+  /// agar satu ketukan tidak bisa membuat dua tiket).
   Future<Map<String, dynamic>> post(
     String path, {
     dynamic body,
     String? token,
+    bool retry = true,
   }) =>
-      _send('POST', path, body: body, token: token);
+      _send('POST', path, body: body, token: token, retry: retry);
 
   Future<Map<String, dynamic>> patch(
     String path, {
@@ -81,6 +84,7 @@ class ApiClient {
     String path, {
     dynamic body,
     String? token,
+    bool retry = true,
   }) async {
     final uri = _buildUri(path);
     final isGet = method == 'GET';
@@ -125,7 +129,7 @@ class ApiClient {
           throw NetworkException('Koneksi terlalu lama. Coba lagi.');
         } on SocketException {
           // Gagal koneksi sebelum respons: boleh ulangi GET dan POST
-          if (attempt < _retryDelays.length) {
+          if (retry && attempt < _retryDelays.length) {
             await Future.delayed(_retryDelays[attempt]);
             attempt++;
             continue;
@@ -133,7 +137,7 @@ class ApiClient {
           throw NetworkException('Tidak ada koneksi internet.');
         } on http.ClientException {
           // Gagal koneksi sebelum respons: boleh ulangi GET dan POST
-          if (attempt < _retryDelays.length) {
+          if (retry && attempt < _retryDelays.length) {
             await Future.delayed(_retryDelays[attempt]);
             attempt++;
             continue;
