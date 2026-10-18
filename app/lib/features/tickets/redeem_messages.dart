@@ -18,9 +18,9 @@ String redeemErrorMessage(String code, {int? retryAfterSeconds}) {
     case 'ticket_limit':
       return 'Batas tiket untuk undian ini sudah tercapai.';
     case 'location_required':
-      return 'Kode ini butuh izin lokasi.';
+      return 'Kode ini hanya berlaku di area tertentu dan butuh lokasimu. Aktifkan layanan lokasi dan izinkan akses lokasi untuk Code2Ticket, lalu coba lagi.';
     case 'out_of_area':
-      return 'Kamu berada di luar area kode ini.';
+      return 'Kamu berada di luar area kode ini. Pastikan lokasi aktif dan akurat, lalu coba lagi di area yang benar.';
     case 'rate_limited':
       return 'Terlalu banyak kode salah. Coba lagi dalam ${minutes()}.';
     case 'too_many_requests':

@@ -19,6 +19,9 @@ class FakeGateway implements LocationGateway {
   double lat, lng;
   Object? positionError;
 
+  /// Bila diisi, position() menunggu sampai Completer ini selesai (mensimulasikan GPS lambat).
+  Future<void>? positionGate;
+
   int requests = 0, positions = 0, appSettingsOpened = 0, locationSettingsOpened = 0;
 
   @override
@@ -37,6 +40,7 @@ class FakeGateway implements LocationGateway {
   @override
   Future<({double lat, double lng})> position() async {
     positions++;
+    if (positionGate != null) await positionGate;
     if (positionError != null) throw positionError!;
     return (lat: lat, lng: lng);
   }

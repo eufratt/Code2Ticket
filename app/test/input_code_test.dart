@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:code2ticket/core/api/api_client.dart';
 import 'package:code2ticket/core/api/authed_api.dart';
+import 'package:code2ticket/core/location/location_service.dart';
 import 'package:code2ticket/core/session/session_store.dart';
 import 'package:code2ticket/features/auth/auth_controller.dart';
 import 'package:code2ticket/features/giveaways/giveaways_controller.dart';
@@ -13,6 +14,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
+import 'support/fake_location.dart';
 import 'support/memory_cache.dart';
 import 'models_test.dart' show redeemOk, ticketJson;
 
@@ -62,13 +64,15 @@ void main() {
   late FakeApi api;
   late FakeAuth auth;
   late TicketsController tickets;
+  late FakeGateway gateway;
 
   Map<String, dynamic> ticketsList() => {
         'ok': true,
         'data': [json(ticketJson)],
       };
 
-  Future<void> pumpScreen(WidgetTester tester) async {
+  Future<void> pumpScreen(WidgetTester tester, {FakeGateway? location}) async {
+    gateway = location ?? FakeGateway(); // izin belum diberikan
     auth = FakeAuth(api);
     final authed = AuthedApi(api, auth);
     tickets = TicketsController(authed, auth, MemoryCacheStore(), retryInterval: null);
@@ -77,6 +81,7 @@ void main() {
         ChangeNotifierProvider<AuthController>.value(value: auth),
         Provider<AuthedApi>.value(value: authed),
         ChangeNotifierProvider<TicketsController>.value(value: tickets),
+        Provider<LocationService>.value(value: LocationService(gateway)),
       ],
       child: const MaterialApp(home: InputCodeScreen()),
     ));
