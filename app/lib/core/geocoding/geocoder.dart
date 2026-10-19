@@ -26,7 +26,7 @@ class Geocoder {
         _sleep = sleep ?? Future.delayed,
         _clock = clock ?? DateTime.now;
 
-  static const userAgent = 'Code2Ticket/1.0 (Flutter; aplikasi tugas kuliah Pemrograman Aplikasi Mobile)';
+  static const userAgent = 'Code2Ticket/1.0 (+https://github.com/eufratt/Code2Ticket)';
   static const minQueryLength = 3;
   static const _maxCache = 30;
 

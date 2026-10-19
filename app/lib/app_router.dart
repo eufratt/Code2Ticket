@@ -4,12 +4,15 @@ import 'features/auth/auth_controller.dart';
 import 'features/auth/biometric_lock_screen.dart';
 import 'features/auth/login_screen.dart';
 import 'features/auth/register_screen.dart';
+import 'features/converter/converter_screen.dart';
 import 'features/discover/discover_screen.dart';
 import 'features/discover/map_screen.dart';
+import 'features/feedback/feedback_screen.dart';
 import 'features/giveaways/giveaway_detail_screen.dart';
 import 'features/giveaways/giveaway_models.dart';
 import 'features/giveaways/home_screen.dart';
 import 'features/profile/profile_screen.dart';
+import 'features/profile/settings_screen.dart';
 import 'features/shell/app_shell.dart';
 import 'features/tickets/input_code_screen.dart';
 import 'features/tickets/tickets_screen.dart';
@@ -44,6 +47,9 @@ GoRouter buildRouter(AuthController auth) => GoRouter(
         // Layar di luar tab (tanpa bottom navigation): dibuka dengan push dari tab mana pun.
         GoRoute(path: '/code', builder: (_, _) => const InputCodeScreen()),
         GoRoute(path: '/map', builder: (_, _) => const MapScreen()),
+        GoRoute(path: '/converter', builder: (_, _) => const ConverterScreen()),
+        GoRoute(path: '/feedback', builder: (_, _) => const FeedbackScreen()),
+        GoRoute(path: '/settings', builder: (_, _) => const SettingsScreen()),
         GoRoute(
           path: '/giveaway/:id',
           builder: (_, state) => GiveawayDetailScreen(
