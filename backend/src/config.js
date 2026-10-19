@@ -13,6 +13,7 @@ const schema = z.object({
   SCHEDULER_ENABLED: bool.default(true),
   RATE_LIMIT_MAX: z.coerce.number().int().min(1).default(300),
   AUTH_RATE_LIMIT_MAX: z.coerce.number().int().min(1).default(20),
+  UPLOAD_RATE_LIMIT_MAX: z.coerce.number().int().min(1).default(10),
   TRUST_PROXY: z.coerce.number().int().min(0).default(0),
 });
 

@@ -40,7 +40,7 @@ export function createApp({ pool, config, log = defaultLog }) {
   app.use(limiter(config.RATE_LIMIT_MAX));
   app.use(express.json({ limit: '100kb' }));
 
-  const deps = { pool, config, session: requireSession(pool) };
+  const deps = { pool, config, session: requireSession(pool), uploadLimit: limiter(config.UPLOAD_RATE_LIMIT_MAX ?? 10) };
   app.use('/auth', limiter(config.AUTH_RATE_LIMIT_MAX), authRoutes(deps));
   app.use('/giveaways', giveawayRoutes(deps));
   app.use('/admin', adminRoutes(deps));

@@ -228,7 +228,7 @@ export function accessSection(ctx) {
 
   describe('11. Hak akses role anon', () => {
     const tables = ['users', 'sessions', 'login_attempts', 'giveaways', 'giveaway_secrets', 'codes', 'code_attempts', 'tickets',
-      'draws', 'winners', 'draw_chain', 'notifications', 'user_activity', 'game_scores', 'user_badges', 'feedback', 'app_config', 'system_events'];
+      'draws', 'winners', 'draw_chain', 'user_photos', 'notifications', 'user_activity', 'game_scores', 'user_badges', 'feedback', 'app_config', 'system_events'];
     for (const t of tables) {
       it(`anon tidak bisa SELECT ${t}`, async () => {
         expect(await denied(`select * from public.${t} limit 1`)).toBe(true);

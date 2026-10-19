@@ -10,6 +10,7 @@ import { createPool } from '../src/db.js';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 export const SCHEMA_DIR = process.env.DB_SCHEMA_DIR ?? path.resolve(HERE, '../db');
 export const BACKEND_SQL = path.resolve(HERE, '../db/06_backend.sql');
+export const PHOTOS_SQL = path.resolve(HERE, '../db/07_user_photos.sql');
 const BASE_URL = process.env.TEST_PG_URL ?? 'postgres://postgres@127.0.0.1:54329';
 
 export const sha = (s) => crypto.createHash('sha256').update(s, 'utf8').digest('hex');
@@ -30,7 +31,7 @@ export async function createTestDb(name) {
   const shim = fs.existsSync(path.join(SCHEMA_DIR, '00_supabase_shim.sql'))
     ? path.join(SCHEMA_DIR, '00_supabase_shim.sql')
     : path.join(SCHEMA_DIR, 'tests/00_supabase_shim.sql');
-  for (const f of [shim, path.join(SCHEMA_DIR, '01_schema.sql'), BACKEND_SQL]) {
+  for (const f of [shim, path.join(SCHEMA_DIR, '01_schema.sql'), BACKEND_SQL, PHOTOS_SQL]) {
     await c.query(fs.readFileSync(f, 'utf8'));
   }
   await c.end();
@@ -40,7 +41,7 @@ export async function createTestDb(name) {
 export const testConfig = (url, over = {}) => ({
   NODE_ENV: 'test', PORT: 0, DATABASE_URL: url, DATABASE_SSL: 'disable', DB_POOL_MAX: 20,
   corsOrigins: ['http://allowed.example'], TICK_SECRET: 'tick-secret-for-tests-0123456789',
-  SCHEDULER_ENABLED: false, RATE_LIMIT_MAX: 100000, AUTH_RATE_LIMIT_MAX: 100000, TRUST_PROXY: 0, ...over,
+  SCHEDULER_ENABLED: false, RATE_LIMIT_MAX: 100000, AUTH_RATE_LIMIT_MAX: 100000, UPLOAD_RATE_LIMIT_MAX: 100000, TRUST_PROXY: 0, ...over,
 });
 
 // Konteks tes: aplikasi di atas pool, koneksi superuser (su) dan koneksi role anon.

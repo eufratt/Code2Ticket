@@ -11,6 +11,7 @@ npm install
 cp .env.example .env            # isi DATABASE_URL, TICK_SECRET, dst.
 psql "$DATABASE_URL" -f db/01_schema.sql
 psql "$DATABASE_URL" -f db/06_backend.sql
+psql "$DATABASE_URL" -f db/07_user_photos.sql   # foto profil (Supabase: tempel di SQL Editor)
 ADMIN_PASSWORD='...' npm run create-admin -- namamu email@kamu.com "Nama Lengkap"
 npm start
 ```
@@ -72,6 +73,8 @@ Token dikirim lewat `Authorization: Bearer <token>`.
 | `POST /auth/logout` | token (tidak divalidasi) | `rpc_logout` |
 | `GET /auth/me` | session | `rpc_validate_session` |
 | `PATCH /me` | session | `rpc_update_profile` |
+| `PUT /me/photo` (badan JPEG biner, `Content-Type: image/jpeg`, maks. 150 KB; 413 bila lebih besar) | session | (baru) |
+| `GET /users/:id/photo` (publik, `Cache-Control` + `ETag`; 404 bila tidak ada) | - | (baru) |
 | `GET /giveaways` (`q,category,min_value,max_value,lat,lng,radius_km,deadline_days,status,sort,limit,offset`) | - | `rpc_search_giveaways` |
 | `GET /giveaways/:id` (404 `not_found` bila tidak ada) | - | (baru, tanpa padanan RPC) |
 | `GET /giveaways/:id/winners`, `/giveaways/:id/verification` | - | `rpc_get_winners`, `rpc_get_verification_data` |
