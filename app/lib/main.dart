@@ -12,6 +12,7 @@ import 'core/db/local_db.dart';
 import 'core/geocoding/geocoder.dart';
 import 'core/location/location_service.dart';
 import 'core/session/session_store.dart';
+import 'core/theme/app_theme.dart';
 import 'features/auth/auth_controller.dart';
 import 'features/discover/discover_controller.dart';
 import 'features/giveaways/giveaways_controller.dart';
@@ -43,8 +44,10 @@ class _Code2TicketAppState extends State<Code2TicketApp> {
   @override
   Widget build(BuildContext context) {
     if (!AppConfig.isConfigured) {
-      return const MaterialApp(
-        home: Scaffold(
+      return MaterialApp(
+        theme: AppTheme.light(),
+        darkTheme: AppTheme.dark(),
+        home: const Scaffold(
           body: Center(
             child: Padding(
               padding: EdgeInsets.all(24),
@@ -75,7 +78,14 @@ class _Code2TicketAppState extends State<Code2TicketApp> {
       ],
       child: MaterialApp.router(
         title: 'Code2Ticket',
-        theme: ThemeData(colorSchemeSeed: Colors.indigo, useMaterial3: true),
+        theme: AppTheme.light(),
+        darkTheme: AppTheme.dark(),
+        themeMode: ThemeMode.system,
+        // "Kurangi animasi" sistem: pindah layar tanpa transisi.
+        builder: (context, child) => Theme(
+          data: MediaQuery.disableAnimationsOf(context) ? AppTheme.withoutPageTransitions(Theme.of(context)) : Theme.of(context),
+          child: child!,
+        ),
         routerConfig: _router,
       ),
     );
