@@ -5,6 +5,7 @@ import 'features/admin/admin_giveaways_screen.dart';
 import 'features/admin/codes_list_screen.dart';
 import 'features/admin/create_giveaway_screen.dart';
 import 'features/admin/generate_codes_screen.dart';
+import 'features/assistant/assistant_screen.dart';
 import 'features/auth/auth_controller.dart';
 import 'features/auth/biometric_lock_screen.dart';
 import 'features/auth/login_screen.dart';
@@ -28,7 +29,6 @@ import 'features/shell/app_shell.dart';
 import 'features/tickets/input_code_screen.dart';
 import 'features/tickets/tickets_screen.dart';
 import 'splash_screen.dart';
-import 'features/shell/coming_soon_screen.dart';
 
 /// Route guard: belum login -> /login; terkunci -> /lock; login -> /home.
 GoRouter buildRouter(AuthController auth) => GoRouter(
@@ -104,11 +104,7 @@ GoRouter buildRouter(AuthController auth) => GoRouter(
               GoRoute(path: '/tickets', builder: (_, _) => const TicketsScreen()),
             ]),
             StatefulShellBranch(routes: [
-              GoRoute(
-                path: '/assistant',
-                builder: (_, _) => const ComingSoonScreen(
-                    title: 'AI Assistant', note: 'Asisten chat dikerjakan di M7.'),
-              ),
+              GoRoute(path: '/assistant', builder: (_, _) => const AssistantScreen()),
             ]),
             StatefulShellBranch(routes: [
               GoRoute(path: '/profile', builder: (_, _) => const ProfileScreen()),

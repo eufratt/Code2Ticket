@@ -29,6 +29,7 @@ class AppShell extends StatelessWidget {
   const AppShell({super.key, required this.navigationShell});
   final StatefulNavigationShell navigationShell;
 
+  static const _assistantTab = 3;
   static const _tabs = [
     (Icons.home_outlined, Icons.home, 'Home'),
     (Icons.explore_outlined, Icons.explore, 'Discover'),
@@ -97,7 +98,8 @@ class AppShell extends StatelessWidget {
     return Scaffold(
       body: navigationShell,
       floatingActionButtonLocation: const AboveNavCenterFloatLocation(margin: kFabGap),
-      floatingActionButton: DecoratedBox(
+      // Di tab Asisten FAB disembunyikan: kolom input chat ada di dasar layar dan tidak boleh tertutup.
+      floatingActionButton: current == _assistantTab ? null : DecoratedBox(
         decoration: BoxDecoration(shape: BoxShape.circle, boxShadow: AppShadows.fab(c)),
         child: FloatingActionButton(
           tooltip: 'Input Code',

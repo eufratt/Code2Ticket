@@ -1,14 +1,16 @@
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 
+import '../../features/assistant/assistant_models.dart';
 import '../../features/giveaways/giveaway_models.dart';
 import '../../features/tickets/ticket_models.dart';
 import 'cache_store.dart';
+import 'chat_store.dart';
 import 'rate_cache.dart';
 
 /// Basis data lokal SQLite (sqflite) untuk cache dan pengaturan aplikasi.
 /// Skema sesuai dengan Code2Ticket_ERD.md bagian SQLite schema.
-class LocalDb implements CacheStore, RateCache, SettingsStore {
+class LocalDb implements CacheStore, RateCache, SettingsStore, ChatStore {
   LocalDb._();
   static final LocalDb instance = LocalDb._();
 
@@ -24,7 +26,7 @@ class LocalDb implements CacheStore, RateCache, SettingsStore {
   }
 
   static const String dbName = 'code2ticket.db';
-  static const int dbVersion = 1;
+  static const int dbVersion = 2;
 
   Future<Database> _initDb() async {
     final dbPath = await getDatabasesPath();
@@ -33,6 +35,7 @@ class LocalDb implements CacheStore, RateCache, SettingsStore {
       path,
       version: dbVersion,
       onCreate: createTables,
+      onUpgrade: upgradeTables,
     );
   }
 
@@ -77,6 +80,22 @@ class LocalDb implements CacheStore, RateCache, SettingsStore {
         PRIMARY KEY (user_id, key)
       )
     ''');
+    await _createChatTable(db);
+  }
+
+  /// v2: riwayat percakapan Asisten.
+  static Future<void> upgradeTables(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) await _createChatTable(db);
+  }
+
+  static Future<void> _createChatTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE chat_messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT, user_id TEXT NOT NULL, role TEXT NOT NULL, content TEXT NOT NULL,
+        related_json TEXT, created_at TEXT NOT NULL
+      )
+    ''');
+    await db.execute('CREATE INDEX idx_chat_user ON chat_messages(user_id, id)');
   }
 
   @override
@@ -222,7 +241,43 @@ class LocalDb implements CacheStore, RateCache, SettingsStore {
     final db = await database;
     await db.delete('cached_giveaways');
     await db.delete('cached_tickets');
-    if (userId != null) await clearSearches(userId);
+    if (userId != null) {
+      await clearSearches(userId);
+      await clearChat(userId);
+    }
+  }
+
+  // ---------------------------------------------------------------- riwayat percakapan Asisten
+
+  static const _chatKeep = 200;
+
+  @override
+  Future<List<ChatMessage>> loadChat(String userId, {int limit = _chatKeep}) async {
+    final db = await database;
+    final rows = await db.query('chat_messages', where: 'user_id = ?', whereArgs: [userId], orderBy: 'id DESC', limit: limit);
+    return [for (final r in rows.reversed) ?ChatMessage.tryParse(r)];
+  }
+
+  /// Menambah pesan; hanya [_chatKeep] terakhir per pengguna yang disimpan.
+  @override
+  Future<void> appendChat(String userId, List<ChatMessage> items) async {
+    final db = await database;
+    await db.transaction((txn) async {
+      for (final m in items) {
+        await txn.insert('chat_messages', m.toRow(userId));
+      }
+      await txn.rawDelete(
+        'DELETE FROM chat_messages WHERE user_id = ? AND id NOT IN '
+        '(SELECT id FROM chat_messages WHERE user_id = ? ORDER BY id DESC LIMIT $_chatKeep)',
+        [userId, userId],
+      );
+    });
+  }
+
+  @override
+  Future<void> clearChat(String userId) async {
+    final db = await database;
+    await db.delete('chat_messages', where: 'user_id = ?', whereArgs: [userId]);
   }
 
   // ---------------------------------------------------------------- cache kurs (exchange_rate_cache)
