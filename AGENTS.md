@@ -41,8 +41,9 @@ Login/session dibuat sendiri (bukan Firebase/Supabase Auth). Scheduler draw: nod
 
 ## Status milestone
 Selesai: M1 database; M2 auth + biometric + SQLite dasar; M3 navigasi 5 tab (FAB Input Code melayang), Home, Detail Giveaway, Input Code, My Tickets;
-perbaikan navbar; M4 Discover (cari + riwayat, filter, peta OSM, Terdekat/LBS, lokasi manual Nominatim, cache offline, GET /giveaways/:id).
-Sisa: M5 konversi mata uang (IDR/USD/EUR/JPY) dan zona waktu (WIB/WITA/WIT/London), notifikasi, profil, Saran & Kesan, Admin;
+perbaikan navbar; M4 Discover (cari + riwayat, filter, peta OSM, Terdekat/LBS, lokasi manual Nominatim, cache offline, GET /giveaways/:id);
+M5a kurs Frankfurter (langsung dari app) + zona waktu 4 zona + hitung mundur, Konverter, Pengaturan, Profil + foto (PUT /me/photo, butuh backend\db\07_user_photos.sql), Saran & Kesan.
+Sisa: M5b notifikasi dan Admin;
 M6 draw end-to-end, verifikasi hash-chain di app, shake to reveal; M7 AI Assistant (lewat backend, kunci LLM hanya di server), rekomendasi, mini game, leaderboard; M8 pengujian dan data demo; M9 laporan.
 
 ## Peta kode (graphify)
