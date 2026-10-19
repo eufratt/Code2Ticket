@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/display.dart';
 import '../../core/format.dart';
 import 'giveaway_models.dart';
 
@@ -40,10 +41,10 @@ class GiveawayCard extends StatelessWidget {
               ),
               if (g.organizer.isNotEmpty) Text('oleh ${g.organizer}', style: theme.textTheme.bodySmall),
               const SizedBox(height: 8),
-              Text('${g.prizeName} · ${formatUsd(g.prizeValueUsd)}'),
+              Text('${g.prizeName} · ${context.money(g.prizeValueUsd)}'),
               const SizedBox(height: 4),
               Text(
-                g.drawAt == null ? 'Jadwal draw belum ada' : 'Draw: ${formatWib(g.drawAt!)}',
+                g.drawAt == null ? 'Jadwal draw belum ada' : 'Draw: ${context.when(g.drawAt!)}',
                 style: theme.textTheme.bodySmall,
               ),
               Text('${g.ticketCount} tiket terbit · ${g.winnerCount} pemenang',

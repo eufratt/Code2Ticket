@@ -36,6 +36,18 @@ Giveaway gw(String id, {String title = 'T', DateTime? start, DateTime? end, doub
   );
 }
 
+/// Contoh respons asli, tetapi jadwalnya dibuat relatif terhadap sekarang (tanggal contoh sudah lewat).
+Map<String, dynamic> liveGiveawayJson() {
+  final now = DateTime.now().toUtc();
+  String iso(Duration d) => now.add(d).toIso8601String();
+  return {
+    ...json(giveawayJson),
+    'start_at': iso(const Duration(hours: -1)),
+    'end_at': iso(const Duration(hours: 2)),
+    'draw_at': iso(const Duration(hours: 3)),
+  };
+}
+
 Ticket tk(String id, String gid, {int n = 1}) => Ticket(
       id: id,
       ticketNumber: n,
@@ -189,9 +201,9 @@ void main() {
       api = FakeApi((m, p, b) async {
         if (!online) throw NetworkException('Tidak ada koneksi internet.');
         if (p.startsWith('/giveaways/')) {
-          return p.endsWith('/hilang') ? {'ok': false, 'error': 'not_found'} : json(giveawayJson);
+          return p.endsWith('/hilang') ? {'ok': false, 'error': 'not_found'} : liveGiveawayJson();
         }
-        return {'ok': true, 'data': [json(giveawayJson)]};
+        return {'ok': true, 'data': [liveGiveawayJson()]};
       });
     });
 

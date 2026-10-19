@@ -5,6 +5,9 @@ import 'app_router.dart';
 import 'core/api/api_client.dart';
 import 'core/api/authed_api.dart';
 import 'core/config.dart';
+import 'core/currency/rates_controller.dart';
+import 'core/settings/settings_controller.dart';
+import 'core/time/zones.dart';
 import 'core/db/local_db.dart';
 import 'core/geocoding/geocoder.dart';
 import 'core/location/location_service.dart';
@@ -16,6 +19,7 @@ import 'features/tickets/tickets_controller.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  initTimeZones();
   runApp(const Code2TicketApp());
 }
 
@@ -32,6 +36,8 @@ class _Code2TicketAppState extends State<Code2TicketApp> {
   late final AuthedApi _authed = AuthedApi(_api, _auth);
   late final LocationService _location = LocationService(GeolocatorGateway());
   late final Geocoder _geocoder = Geocoder();
+  late final SettingsController _settings = SettingsController(LocalDb.instance)..load();
+  late final RatesController _rates = RatesController(LocalDb.instance)..ensureFresh();
   late final _router = buildRouter(_auth);
 
   @override
@@ -61,6 +67,8 @@ class _Code2TicketAppState extends State<Code2TicketApp> {
         Provider<AuthedApi>.value(value: _authed),
         Provider<LocationService>.value(value: _location),
         Provider<Geocoder>.value(value: _geocoder),
+        ChangeNotifierProvider<SettingsController>.value(value: _settings),
+        ChangeNotifierProvider<RatesController>.value(value: _rates),
         ChangeNotifierProvider(create: (_) => GiveawaysController(_authed, _auth, LocalDb.instance)),
         ChangeNotifierProvider(create: (_) => TicketsController(_authed, _auth, LocalDb.instance)),
         ChangeNotifierProvider(create: (_) => DiscoverController(_authed, _auth, LocalDb.instance, _location)),

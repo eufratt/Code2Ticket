@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../core/format.dart';
+import '../core/display.dart';
 import '../features/auth/auth_controller.dart';
 
 /// Tampil saat permintaan lambat karena server gratis Render sedang bangun (cold start).
@@ -40,7 +40,7 @@ class OfflineBanner extends StatelessWidget {
               child: Text(
                 cachedAt == null
                     ? 'Data offline · mencoba memuat ulang otomatis'
-                    : 'Data offline · diperbarui ${formatWib(cachedAt!)}',
+                    : 'Data offline · diperbarui ${context.when(cachedAt!)}',
                 style: TextStyle(fontSize: 12.5, color: scheme.onSecondaryContainer),
               ),
             ),

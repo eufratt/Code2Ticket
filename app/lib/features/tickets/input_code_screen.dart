@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/display.dart';
 import '../../core/format.dart';
 import '../../core/location/location_service.dart';
 import '../../widgets/state_views.dart';
@@ -186,7 +187,7 @@ class _Success extends StatelessWidget {
         const SizedBox(height: 8),
         const Center(child: Chip(label: Text('Eligible'))),
         if (ticket.drawAt != null)
-          Text('Draw: ${formatWib(ticket.drawAt!)}', textAlign: TextAlign.center),
+          Text('Draw: ${context.when(ticket.drawAt!)}', textAlign: TextAlign.center),
         const SizedBox(height: 24),
         FilledButton(onPressed: () => context.go('/tickets'), child: const Text('Lihat My Tickets')),
         TextButton(onPressed: onAgain, child: const Text('Input kode lain')),

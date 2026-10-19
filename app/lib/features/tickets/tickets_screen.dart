@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/display.dart';
 import '../../core/format.dart';
 import '../../widgets/state_views.dart';
 import '../giveaways/giveaways_controller.dart' show LoadState;
@@ -85,7 +86,7 @@ class _Group extends StatelessWidget {
           ListTile(
             title: Text(first.giveawayTitle, style: Theme.of(context).textTheme.titleMedium),
             subtitle: Text(
-              '${first.prizeName}${first.drawAt == null ? '' : ' · Draw ${formatWib(first.drawAt!)}'}',
+              '${first.prizeName}${first.drawAt == null ? '' : ' · Draw ${context.when(first.drawAt!)}'}',
             ),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.push('/giveaway/$giveawayId'),

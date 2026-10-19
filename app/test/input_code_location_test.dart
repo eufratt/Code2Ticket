@@ -12,6 +12,7 @@ import 'package:provider/provider.dart';
 import 'input_code_test.dart' show FakeApi, FakeAuth, json;
 import 'models_test.dart' show redeemOk;
 import 'support/fake_location.dart';
+import 'support/display.dart';
 import 'support/memory_cache.dart';
 
 void main() {
@@ -26,6 +27,7 @@ void main() {
     await tester.pumpWidget(MultiProvider(
       providers: [
         ChangeNotifierProvider<AuthController>.value(value: auth),
+        ...displayProviders(),
         Provider<AuthedApi>.value(value: authed),
         ChangeNotifierProvider<TicketsController>.value(value: tickets),
         Provider<LocationService>.value(value: LocationService(gateway)),

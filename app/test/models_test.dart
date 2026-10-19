@@ -136,15 +136,6 @@ void main() {
   });
 
   group('format', () {
-    test('formatWib tidak bergantung zona perangkat', () {
-      expect(formatWib(DateTime.utc(2026, 10, 18, 20, 29)), '19 Okt 2026, 03.29 WIB');
-      expect(formatWib(DateTime.utc(2026, 1, 1, 0, 5)), '1 Jan 2026, 07.05 WIB');
-    });
     test('nomor tiket 6 digit', () => expect(formatTicketNumber(12), '#000012'));
-    test('nilai USD', () {
-      expect(formatUsd(1200), 'USD 1,200');
-      expect(formatUsd(1234567.5), 'USD 1,234,567.50');
-      expect(formatUsd(null), '-');
-    });
   });
 }

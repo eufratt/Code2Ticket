@@ -21,6 +21,7 @@ import 'cache_test.dart' show gw;
 import 'input_code_test.dart' show FakeApi, FakeAuth, json;
 import 'models_test.dart' show giveawayJson;
 import 'support/fake_location.dart';
+import 'support/display.dart';
 import 'support/memory_cache.dart';
 
 Map<String, dynamic> listOf(List<Giveaway> gs, {double? distance}) => {
@@ -302,6 +303,7 @@ void main() {
       await tester.pumpWidget(MultiProvider(
         providers: [
           ChangeNotifierProvider<AuthController>.value(value: auth),
+        ...displayProviders(),
           ChangeNotifierProvider<DiscoverController>.value(value: controller),
           Provider<Geocoder>.value(value: geocoder),
         ],
@@ -315,7 +317,7 @@ void main() {
       await pump(tester);
       await tester.pumpAndSettle();
       expect(find.text('Demo: Laptop Gaming Giveaway'), findsOneWidget);
-      expect(find.textContaining('USD 1,200'), findsOneWidget);
+      expect(find.textContaining('US\$1.200,00'), findsOneWidget);
     });
 
     testWidgets('hasil kosong: pesan kosong yang informatif', (tester) async {

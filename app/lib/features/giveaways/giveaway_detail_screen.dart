@@ -3,7 +3,9 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/api/authed_api.dart';
-import '../../core/format.dart';
+import '../../core/display.dart';
+import '../../core/settings/settings_controller.dart';
+import '../../core/time/zones.dart';
 import '../../widgets/state_views.dart';
 import '../tickets/tickets_controller.dart';
 import 'giveaway_card.dart';
@@ -96,6 +98,45 @@ class _GiveawayDetailScreenState extends State<GiveawayDetailScreen> {
   }
 }
 
+/// Jadwal draw di keempat zona; zona pilihan pengguna ditandai.
+class _DrawZones extends StatelessWidget {
+  const _DrawZones({required this.drawAt});
+  final DateTime drawAt;
+
+  @override
+  Widget build(BuildContext context) {
+    final chosen = context.watch<SettingsController>().zone;
+    final theme = Theme.of(context);
+    return Card(
+      key: const Key('draw_zones'),
+      margin: const EdgeInsets.only(top: 8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Jadwal draw di 4 zona', style: theme.textTheme.titleSmall),
+            for (final z in AppZone.values)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2),
+                child: Row(children: [
+                  SizedBox(width: 72, child: Text(z.title, style: TextStyle(fontWeight: z == chosen ? FontWeight.bold : null))),
+                  Expanded(
+                    child: Text(
+                      formatInZone(drawAt, z),
+                      key: Key('zone_${z.name}'),
+                      style: TextStyle(fontWeight: z == chosen ? FontWeight.bold : null),
+                    ),
+                  ),
+                ]),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _Body extends StatelessWidget {
   const _Body({required this.giveaway});
   final Giveaway giveaway;
@@ -131,11 +172,18 @@ class _Body extends StatelessWidget {
         ],
         const Divider(height: 32),
         row('Hadiah', g.prizeName),
-        row('Nilai', formatUsd(g.prizeValueUsd)),
+        row('Nilai', context.money(g.prizeValueUsd)),
+        const Padding(padding: EdgeInsets.only(left: 120), child: RateNote()),
         row('Pemenang', '${g.winnerCount}'),
-        row('Mulai', g.startAt == null ? '-' : formatWib(g.startAt!)),
-        row('Berakhir', g.endAt == null ? '-' : formatWib(g.endAt!)),
-        row('Draw', g.drawAt == null ? '-' : formatWib(g.drawAt!)),
+        row('Mulai', g.startAt == null ? '-' : context.when(g.startAt!)),
+        row('Berakhir', g.endAt == null ? '-' : context.when(g.endAt!)),
+        row('Draw', g.drawAt == null ? '-' : context.when(g.drawAt!)),
+        if (g.drawAt != null && g.phaseAt(DateTime.now()) != GiveawayPhase.drawn)
+          Padding(
+            padding: const EdgeInsets.only(left: 120, top: 2, bottom: 4),
+            child: Countdown(target: g.drawAt!, style: theme.textTheme.titleSmall?.copyWith(color: theme.colorScheme.primary)),
+          ),
+        if (g.drawAt != null) _DrawZones(drawAt: g.drawAt!),
         if (g.address != null && g.address!.isNotEmpty) row('Lokasi', g.address!),
         const Divider(height: 32),
         row('Tiket terbit', '${g.ticketCount}'),

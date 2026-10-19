@@ -4,10 +4,11 @@ import 'package:sqflite/sqflite.dart';
 import '../../features/giveaways/giveaway_models.dart';
 import '../../features/tickets/ticket_models.dart';
 import 'cache_store.dart';
+import 'rate_cache.dart';
 
 /// Basis data lokal SQLite (sqflite) untuk cache dan pengaturan aplikasi.
 /// Skema sesuai dengan Code2Ticket_ERD.md bagian SQLite schema.
-class LocalDb implements CacheStore {
+class LocalDb implements CacheStore, RateCache, SettingsStore {
   LocalDb._();
   static final LocalDb instance = LocalDb._();
 
@@ -78,6 +79,7 @@ class LocalDb implements CacheStore {
     ''');
   }
 
+  @override
   Future<String?> getSetting(String key, {String userId = ''}) async {
     final db = await database;
     final maps = await db.query(
@@ -91,6 +93,7 @@ class LocalDb implements CacheStore {
     return maps.first['value'] as String?;
   }
 
+  @override
   Future<void> setSetting(String key, String? value,
       {String userId = ''}) async {
     final db = await database;
@@ -220,6 +223,43 @@ class LocalDb implements CacheStore {
     await db.delete('cached_giveaways');
     await db.delete('cached_tickets');
     if (userId != null) await clearSearches(userId);
+  }
+
+  // ---------------------------------------------------------------- cache kurs (exchange_rate_cache)
+
+  @override
+  Future<void> saveRates(String base, List<CachedRate> rates) async {
+    final db = await database;
+    final batch = db.batch();
+    for (final r in rates) {
+      batch.insert(
+        'exchange_rate_cache',
+        {
+          'base': base,
+          'target': r.target,
+          'rate': r.rate,
+          'rate_date': r.rateDate,
+          'fetched_at': r.fetchedAt.toUtc().toIso8601String(),
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    }
+    await batch.commit(noResult: true);
+  }
+
+  @override
+  Future<List<CachedRate>> loadRates(String base) async {
+    final db = await database;
+    final rows = await db.query('exchange_rate_cache', where: 'base = ?', whereArgs: [base]);
+    final out = <CachedRate>[];
+    for (final r in rows) {
+      final target = r['target'] as String?;
+      final rate = (r['rate'] as num?)?.toDouble();
+      final at = DateTime.tryParse(r['fetched_at'] as String? ?? '');
+      if (target == null || rate == null || at == null) continue;
+      out.add(CachedRate(target: target, rate: rate, rateDate: r['rate_date'] as String?, fetchedAt: at.toLocal()));
+    }
+    return out;
   }
 
   Future<void> close() async {

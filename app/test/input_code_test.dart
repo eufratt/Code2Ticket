@@ -15,6 +15,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
 import 'support/fake_location.dart';
+import 'support/display.dart';
 import 'support/memory_cache.dart';
 import 'models_test.dart' show redeemOk, ticketJson;
 
@@ -30,6 +31,18 @@ class FakeApi extends ApiClient {
   Future<Map<String, dynamic>> get(String path, {dynamic body, String? token}) {
     calls.add((method: 'GET', path: path, body: body, retry: true));
     return handler('GET', path, body);
+  }
+
+  @override
+  Future<Map<String, dynamic>> putBytes(String path, List<int> bytes, {required String contentType, String? token}) {
+    calls.add((method: 'PUT', path: path, body: bytes, retry: false));
+    return handler('PUT', path, bytes);
+  }
+
+  @override
+  Future<Map<String, dynamic>> patch(String path, {dynamic body, String? token}) {
+    calls.add((method: 'PATCH', path: path, body: body, retry: true));
+    return handler('PATCH', path, body);
   }
 
   @override
@@ -79,6 +92,7 @@ void main() {
     await tester.pumpWidget(MultiProvider(
       providers: [
         ChangeNotifierProvider<AuthController>.value(value: auth),
+        ...displayProviders(),
         Provider<AuthedApi>.value(value: authed),
         ChangeNotifierProvider<TicketsController>.value(value: tickets),
         Provider<LocationService>.value(value: LocationService(gateway)),

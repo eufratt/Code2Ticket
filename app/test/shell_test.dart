@@ -11,6 +11,7 @@ import 'package:provider/provider.dart';
 
 import 'input_code_test.dart' show FakeApi, FakeAuth, json;
 import 'support/fake_location.dart';
+import 'support/display.dart';
 import 'support/memory_cache.dart';
 import 'models_test.dart' show giveawayJson, ticketJson;
 
@@ -26,6 +27,7 @@ Widget _createTestApp({required _Auth auth, required AuthedApi authed}) {
   return MultiProvider(
     providers: [
       ChangeNotifierProvider<AuthController>.value(value: auth),
+        ...displayProviders(),
       Provider<AuthedApi>.value(value: authed),
       ChangeNotifierProvider(create: (_) => GiveawaysController(authed, auth, MemoryCacheStore(), retryInterval: null)),
       ChangeNotifierProvider(create: (_) => TicketsController(authed, auth, MemoryCacheStore(), retryInterval: null)),
@@ -84,8 +86,11 @@ void main() {
 
     await tester.tap(find.text('Profil'));
     await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('Keluar'), 200, scrollable: find.byType(Scrollable).last);
     expect(find.text('Keluar'), findsOneWidget);
-    expect(find.text('Kunci biometric'), findsOneWidget);
+    expect(find.text('Pengaturan'), findsOneWidget);
+    expect(find.text('Saran & Kesan'), findsOneWidget);
+    expect(find.text('Konverter'), findsOneWidget);
 
     await tester.tap(fabFinder);
     await tester.pumpAndSettle();
@@ -151,6 +156,7 @@ void main() {
     await tester.pumpWidget(MultiProvider(
       providers: [
         ChangeNotifierProvider<AuthController>.value(value: auth),
+        ...displayProviders(),
         Provider<AuthedApi>.value(value: authed),
         ChangeNotifierProvider(create: (_) => GiveawaysController(authed, auth, MemoryCacheStore(), retryInterval: null)),
         ChangeNotifierProvider(create: (_) => TicketsController(authed, auth, MemoryCacheStore(), retryInterval: null)),
@@ -162,8 +168,10 @@ void main() {
     await tester.tap(find.text('Demo: Laptop Gaming Giveaway'));
     await tester.pumpAndSettle();
     expect(find.text('Detail Giveaway'), findsOneWidget);
-    expect(find.text('19 Okt 2026, 03.29 WIB'), findsOneWidget); // draw 20:29Z
-    expect(find.text('USD 1,200'), findsOneWidget);
+    expect(find.text('19 Okt 2026, 03.29 WIB'), findsWidgets); // draw 20:29Z: baris Draw + daftar 4 zona
+    expect(find.byKey(const Key('zone_london')), findsOneWidget);
+    expect(find.text('US\$1.200,00'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Tiket saya'), 200, scrollable: find.byType(Scrollable).first);
     expect(find.text('Tiket saya'), findsOneWidget);
     expect(find.text('1'), findsWidgets);
     final activity = api.calls.where((c) => c.path == '/activity').single;

@@ -17,6 +17,7 @@ import 'cache_test.dart' show gw;
 import 'discover_test.dart' show listOf;
 import 'input_code_test.dart' show FakeApi, FakeAuth;
 import 'support/fake_location.dart';
+import 'support/display.dart';
 import 'support/memory_cache.dart';
 
 /// Tile palsu: peta tidak menyentuh jaringan di tes.
@@ -47,6 +48,7 @@ void main() {
     await tester.pumpWidget(MultiProvider(
       providers: [
         ChangeNotifierProvider<AuthController>.value(value: auth),
+        ...displayProviders(),
         ChangeNotifierProvider<DiscoverController>.value(value: controller),
       ],
       child: MaterialApp.router(routerConfig: router),
