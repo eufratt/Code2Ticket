@@ -1,3 +1,4 @@
+import 'package:code2ticket/core/widgets/widgets.dart' show PrimaryButton;
 import 'dart:async';
 
 import 'package:code2ticket/core/api/authed_api.dart';
@@ -120,7 +121,7 @@ void main() {
     gateway = FakeGateway(permission: GatewayPermission.granted)..positionGate = gps.future;
     await pump(tester, (m, p, b) async => p == '/codes/redeem' ? json(redeemOk) : {'ok': true, 'data': []});
     await submit(tester);
-    expect(tester.widget<FilledButton>(find.byKey(const Key('submit_code'))).onPressed, isNull);
+    expect(tester.widget<PrimaryButton>(find.byKey(const Key('submit_code'))).onPressed, isNull);
     await tester.tap(find.byKey(const Key('submit_code')), warnIfMissed: false);
     await tester.pump();
     gps.complete();

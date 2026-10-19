@@ -165,15 +165,23 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
+    await tester.scrollUntilVisible(find.text('Demo: Laptop Gaming Giveaway'), 200, scrollable: find.byType(Scrollable).first);
+    await tester.ensureVisible(find.text('Demo: Laptop Gaming Giveaway'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Demo: Laptop Gaming Giveaway'));
     await tester.pumpAndSettle();
     expect(find.text('Detail Giveaway'), findsOneWidget);
-    expect(find.text('19 Okt 2026, 03.29 WIB'), findsWidgets); // draw 20:29Z: baris Draw + daftar 4 zona
-    expect(find.byKey(const Key('zone_london')), findsOneWidget);
     expect(find.text('US\$1.200,00'), findsOneWidget);
     await tester.scrollUntilVisible(find.text('Tiket saya'), 200, scrollable: find.byType(Scrollable).first);
     expect(find.text('Tiket saya'), findsOneWidget);
     expect(find.text('1'), findsWidgets);
+    await tester.scrollUntilVisible(find.text('Jadwal draw di zona lain'), 200, scrollable: find.byType(Scrollable).first);
+    await tester.ensureVisible(find.text('Jadwal draw di zona lain'));
+    await tester.pumpAndSettle();
+    expect(find.text('19 Okt 2026, 03.29 WIB'), findsOneWidget); // draw 20:29Z di zona pilihan (WIB)
+    await tester.tap(find.text('Jadwal draw di zona lain')); // tiga zona lain dapat dibuka
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('zone_london')), findsOneWidget);
     final activity = api.calls.where((c) => c.path == '/activity').single;
     expect(activity.body, {
       'type': 'view_giveaway',

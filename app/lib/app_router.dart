@@ -17,7 +17,7 @@ import 'features/shell/app_shell.dart';
 import 'features/tickets/input_code_screen.dart';
 import 'features/tickets/tickets_screen.dart';
 import 'splash_screen.dart';
-import 'widgets/state_views.dart';
+import 'features/shell/coming_soon_screen.dart';
 
 /// Route guard: belum login -> /login; terkunci -> /lock; login -> /home.
 GoRouter buildRouter(AuthController auth) => GoRouter(

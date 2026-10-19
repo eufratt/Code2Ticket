@@ -6,7 +6,10 @@ import 'package:provider/provider.dart';
 import '../../core/display.dart';
 import '../../core/format.dart';
 import '../../core/location/location_service.dart';
-import '../../widgets/state_views.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_tokens.dart';
+import '../../core/theme/app_typography.dart';
+import '../../core/widgets/widgets.dart';
 import 'ticket_models.dart';
 import 'tickets_controller.dart';
 
@@ -98,7 +101,7 @@ class _InputCodeScreenState extends State<InputCodeScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Input Code')),
       body: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(Spacing.s24),
         child: _ticket != null ? _Success(ticket: _ticket!, onAgain: _again) : _form(busy),
       ),
     );
@@ -112,57 +115,72 @@ class _InputCodeScreenState extends State<InputCodeScreen> {
         _code.clear();
       });
 
-  Widget _form(bool busy) => ListView(
-        children: [
-          Text('Masukkan kode dari penyelenggara', style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 16),
-          TextField(
-            key: const Key('code_field'),
-            controller: _code,
-            enabled: !busy,
-            autofocus: true,
-            textCapitalization: TextCapitalization.characters,
-            inputFormatters: [CodeInputFormatter()],
-            decoration: InputDecoration(
-              labelText: 'Kode',
-              hintText: 'XXXX-XXXX-XXXX',
-              errorText: _error,
-              errorMaxLines: 3,
-            ),
-            onSubmitted: (_) => _submit(),
+  Widget _form(bool busy) {
+    final theme = Theme.of(context);
+    final c = context.colors;
+    return ListView(
+      children: [
+        Text('Masukkan kode dari penyelenggara', style: theme.textTheme.titleMedium),
+        const SizedBox(height: Spacing.s4),
+        Text('Kode terdiri dari 12 huruf dan angka.', style: theme.textTheme.bodySmall?.copyWith(color: c.muted)),
+        const SizedBox(height: Spacing.s24),
+        TextField(
+          key: const Key('code_field'),
+          controller: _code,
+          enabled: !busy,
+          autofocus: true,
+          textAlign: TextAlign.center,
+          textCapitalization: TextCapitalization.characters,
+          inputFormatters: [CodeInputFormatter()],
+          // Kolom besar bermonospace: karakter mirip (0/O, 1/I) mudah dibedakan.
+          style: AppTypography.mono(theme.textTheme.headlineSmall!).copyWith(letterSpacing: 2),
+          decoration: InputDecoration(
+            labelText: 'Kode',
+            hintText: 'XXXX-XXXX-XXXX',
+            errorText: _error,
+            errorMaxLines: 3,
+            contentPadding: const EdgeInsets.symmetric(horizontal: Spacing.s16, vertical: Spacing.s24),
           ),
-          const SizedBox(height: 24),
-          FilledButton(
-            key: const Key('submit_code'),
-            onPressed: busy ? null : _submit,
-            child: busy
-                ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                : const Text('Tukar kode'),
-          ),
-          if (busy) const WakingUpNotice(),
-          if (_errorCode == 'location_required' || _errorCode == 'out_of_area') ...[
-            const SizedBox(height: 12),
-            OutlinedButton.icon(
-              key: const Key('enable_location'),
-              onPressed: busy ? null : _enableLocation,
-              icon: const Icon(Icons.my_location),
-              label: const Text('Aktifkan lokasi'),
-            ),
-          ],
-          if (_locationHint != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(_locationHint!, key: const Key('location_hint')),
-            ),
-          const SizedBox(height: 24),
-          Text(
-            'Lokasi hanya dipakai untuk memeriksa area kode berbatas lokasi dan tidak disimpan.',
-            style: Theme.of(context).textTheme.bodySmall,
+          onSubmitted: (_) => _submit(),
+        ),
+        const SizedBox(height: Spacing.s24),
+        PrimaryButton(key: const Key('submit_code'), label: 'Tukar kode', loading: busy, onPressed: busy ? null : _submit),
+        if (busy) const WakingUpNotice(),
+        if (_errorCode == 'location_required' || _errorCode == 'out_of_area') ...[
+          const SizedBox(height: Spacing.s12),
+          PrimaryButton(
+            key: const Key('enable_location'),
+            label: 'Aktifkan lokasi',
+            icon: Icons.my_location,
+            variant: ButtonVariant.secondary,
+            onPressed: busy ? null : _enableLocation,
           ),
         ],
-      );
+        if (_locationHint != null)
+          Padding(
+            padding: const EdgeInsets.only(top: Spacing.s12),
+            child: Text(_locationHint!, key: const Key('location_hint'), style: theme.textTheme.bodyMedium),
+          ),
+        const SizedBox(height: Spacing.s24),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.lock_outline, size: 16, color: c.muted),
+            const SizedBox(width: Spacing.s8),
+            Expanded(
+              child: Text(
+                'Lokasi hanya dipakai untuk memeriksa area kode berbatas lokasi dan tidak disimpan.',
+                style: theme.textTheme.bodySmall?.copyWith(color: c.muted),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
 }
 
+/// Hasil sukses: tiket "muncul" (skala + pudar, 250 ms; langsung tampil bila animasi dikurangi), nomor tiket besar.
 class _Success extends StatelessWidget {
   const _Success({required this.ticket, required this.onAgain});
   final RedeemedTicket ticket;
@@ -171,26 +189,43 @@ class _Success extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final c = context.colors;
     return ListView(
       children: [
-        Icon(Icons.check_circle, size: 72, color: theme.colorScheme.primary),
-        const SizedBox(height: 12),
-        Text('Tiket berhasil dibuat', textAlign: TextAlign.center, style: theme.textTheme.titleLarge),
-        const SizedBox(height: 16),
-        Text(formatTicketNumber(ticket.ticketNumber),
-            key: const Key('ticket_number'),
-            textAlign: TextAlign.center,
-            style: theme.textTheme.displaySmall),
-        const SizedBox(height: 8),
-        Text(ticket.giveawayTitle, textAlign: TextAlign.center),
-        Text(ticket.prizeName, textAlign: TextAlign.center, style: theme.textTheme.bodySmall),
-        const SizedBox(height: 8),
-        const Center(child: Chip(label: Text('Eligible'))),
-        if (ticket.drawAt != null)
-          Text('Draw: ${context.when(ticket.drawAt!)}', textAlign: TextAlign.center),
-        const SizedBox(height: 24),
-        FilledButton(onPressed: () => context.go('/tickets'), child: const Text('Lihat My Tickets')),
-        TextButton(onPressed: onAgain, child: const Text('Input kode lain')),
+        TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0, end: 1),
+          duration: Motion.of(context, Motion.slow),
+          curve: Motion.curve,
+          builder: (context, t, child) => Opacity(
+            opacity: t,
+            child: Transform.scale(scale: 0.9 + 0.1 * t, child: child),
+          ),
+          child: Column(
+            children: [
+              ExcludeSemantics(child: Icon(Icons.check_circle, size: 72, color: c.success)),
+              const SizedBox(height: Spacing.s12),
+              Semantics(
+                header: true,
+                liveRegion: true,
+                child: Text('Tiket berhasil dibuat', textAlign: TextAlign.center, style: theme.textTheme.titleLarge),
+              ),
+              const SizedBox(height: Spacing.s24),
+              TicketCard(
+                numberKey: const Key('ticket_number'),
+                title: ticket.giveawayTitle,
+                category: null,
+                ticketNumber: formatTicketNumber(ticket.ticketNumber),
+                status: AppStatus.ticketEligible,
+                prizeText: ticket.prizeName,
+                subtitle: ticket.drawAt == null ? null : 'Draw: ${context.when(ticket.drawAt!)}',
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: Spacing.s24),
+        PrimaryButton(label: 'Lihat tiket', onPressed: () => context.go('/tickets')),
+        const SizedBox(height: Spacing.s8),
+        PrimaryButton(label: 'Input kode lain', variant: ButtonVariant.text, onPressed: onAgain),
       ],
     );
   }

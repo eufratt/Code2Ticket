@@ -1,3 +1,4 @@
+import 'package:code2ticket/core/widgets/widgets.dart' show PrimaryButton;
 import 'dart:async';
 import 'dart:convert';
 
@@ -173,7 +174,7 @@ void main() {
     await submit(tester, 'AAAA-BBBB-CCCC');
 
     // Tombol nonaktif + indikator memuat selama menunggu.
-    expect(tester.widget<FilledButton>(find.byKey(const Key('submit_code'))).onPressed, isNull);
+    expect(tester.widget<PrimaryButton>(find.byKey(const Key('submit_code'))).onPressed, isNull);
     await tester.tap(find.byKey(const Key('submit_code')), warnIfMissed: false);
     await tester.tap(find.byKey(const Key('submit_code')), warnIfMissed: false);
     await tester.pump();
