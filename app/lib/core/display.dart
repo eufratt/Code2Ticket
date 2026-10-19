@@ -45,10 +45,14 @@ class RateNote extends StatelessWidget {
 /// Hitung mundur ke [target], diperbarui tiap detik. Timer hanya berjalan saat widget terlihat: dihentikan saat
 /// layar ditutup (dispose), saat tab/rute tersembunyi (TickerMode mati), dan saat aplikasi di latar belakang.
 class Countdown extends StatefulWidget {
-  const Countdown({super.key, required this.target, this.now, this.style, this.prefix = 'Draw dalam '});
+  const Countdown({super.key, required this.target, this.now, this.style, this.prefix = 'Draw dalam ', this.builder});
   final DateTime target;
   final TextStyle? style;
   final String prefix;
+
+  /// Tampilan sendiri untuk sisa waktu (mis. CountdownCard); null = teks "Draw dalam 2j 10m 05d".
+  /// Dipanggil hanya selama target belum tercapai.
+  final Widget Function(BuildContext context, Duration left)? builder;
 
   /// Hanya untuk tes: sumber waktu.
   final DateTime Function()? now;
@@ -111,6 +115,7 @@ class _CountdownState extends State<Countdown> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     final left = widget.target.difference(_now());
+    if (widget.builder != null && !left.isNegative && left != Duration.zero) return widget.builder!(context, left);
     return Text(
       left.isNegative || left == Duration.zero ? 'Waktu draw sudah tiba' : '${widget.prefix}${formatCountdown(left)}',
       key: const Key('countdown'),
