@@ -113,7 +113,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         : ([for (final g in discover.items) if (g.distanceKm != null && (selected == null || g.category == selected)) g]
           ..sort((a, b) => a.distanceKm!.compareTo(b.distanceKm!)));
     final soon = soonestDraws(visible, now);
-    final forYou = recommendFor(visible, context.watch<AffinityController?>()?.scores ?? const {}, now);
+    final affinityScores = context.watch<AffinityController?>()?.scores ?? const {};
+    final forYou = recommendFor(visible, affinityScores, now);
     void open(Giveaway g) => context.push('/giveaway/${g.id}', extra: g);
 
     return CustomScrollView(
@@ -133,7 +134,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             key: Key('for_you'),
             child: SectionHeader('Untuk kamu', padding: EdgeInsets.fromLTRB(Spacing.screen, Spacing.s16, Spacing.s8, 0)),
           ),
-          SliverToBoxAdapter(child: _Carousel(items: forYou, onOpen: open)),
+          SliverToBoxAdapter(
+            child: _Carousel(
+              items: forYou,
+              onOpen: open,
+              reasonsFor: (g) => recommendationReasons(g, affinityScores, now),
+            ),
+          ),
         ],
         if (soon.isNotEmpty) ...[
           SliverToBoxAdapter(
@@ -430,9 +437,10 @@ class _CategoryChips extends StatelessWidget {
 
 /// Kartu horizontal. Tinggi mengikuti kartu tertinggi (IntrinsicHeight), jadi aman untuk skala font besar.
 class _Carousel extends StatelessWidget {
-  const _Carousel({required this.items, required this.onOpen});
+  const _Carousel({required this.items, required this.onOpen, this.reasonsFor});
   final List<Giveaway> items;
   final void Function(Giveaway) onOpen;
+  final List<String> Function(Giveaway)? reasonsFor;
 
   @override
   Widget build(BuildContext context) {
@@ -447,7 +455,12 @@ class _Carousel extends StatelessWidget {
               if (i > 0) const SizedBox(width: Spacing.cardGap),
               SizedBox(
                 width: _carouselCardWidth,
-                child: GiveawayCard(giveaway: g, variant: GiveawayCardVariant.carousel, onTap: () => onOpen(g)),
+                child: GiveawayCard(
+                  giveaway: g,
+                  variant: GiveawayCardVariant.carousel,
+                  onTap: () => onOpen(g),
+                  reasons: reasonsFor?.call(g),
+                ),
               ),
             ],
           ],

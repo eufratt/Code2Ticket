@@ -14,13 +14,18 @@ import '../input_code_test.dart' show FakeApi, FakeAuth;
 import '../layout/screens_layout_test.dart' show SampleEnv, sampleGiveaway;
 import '../support/ui.dart';
 
-Giveaway gw(String id, String category, {int drawHours = 3, String status = 'active', int startHours = -1}) {
+Giveaway gw(String id, String category, {int drawHours = 3, String status = 'active', int startHours = -1, double? distanceKm, bool clearDistance = false}) {
   final m = sampleGiveaway(id, category);
   final now = DateTime.now().toUtc();
   m['start_at'] = now.add(Duration(hours: startHours)).toIso8601String();
   m['end_at'] = now.add(Duration(hours: drawHours - 1)).toIso8601String();
   m['draw_at'] = now.add(Duration(hours: drawHours)).toIso8601String();
   m['status'] = status;
+  if (distanceKm != null) {
+    m['distance_km'] = distanceKm;
+  } else if (clearDistance) {
+    m['distance_km'] = null;
+  }
   return Giveaway.tryParse(m)!;
 }
 
@@ -47,6 +52,70 @@ void main() {
     test('dibatasi limit', () {
       final items = [for (var i = 0; i < 10; i++) gw('g$i', 'tech', drawHours: 2 + i)];
       expect(recommendFor(items, {'tech': 1}, now, limit: 4).length, 4);
+    });
+  });
+
+  group('recommendationReasons', () {
+    final now = DateTime.now();
+
+    test('kategori teratas: "Karena kamu sering ikut kategori {kategori}"', () {
+      final g = gw('1', 'gaming', drawHours: 48, clearDistance: true);
+      final r = recommendationReasons(g, {'gaming': 5, 'tech': 2}, now);
+      expect(r, ['Karena kamu sering ikut kategori Gaming']);
+    });
+
+    test('bukan teratas: "Sesuai minatmu di {kategori}"', () {
+      final g = gw('2', 'tech', drawHours: 48, clearDistance: true);
+      final r = recommendationReasons(g, {'gaming': 5, 'tech': 2}, now);
+      expect(r, ['Sesuai minatmu di Tech']);
+    });
+
+    test('kosong: afinitas kosong -> tidak ada alasan', () {
+      final g = gw('3', 'gaming', drawHours: 5, distanceKm: 2.3);
+      expect(recommendationReasons(g, const {}, now), isEmpty);
+    });
+
+    test('kategori tanpa skor minat -> kosong', () {
+      final g = gw('4', 'food', drawHours: 5, distanceKm: 2.3);
+      expect(recommendationReasons(g, {'gaming': 5}, now), isEmpty);
+    });
+
+    test('alasan kedua: draw < 24 jam -> "Draw segera"', () {
+      final g = gw('5', 'gaming', drawHours: 12, clearDistance: true);
+      final r = recommendationReasons(g, {'gaming': 5}, now);
+      expect(r, ['Karena kamu sering ikut kategori Gaming', 'Draw segera']);
+    });
+
+    test('draw >= 24 jam -> tidak memuat "Draw segera"', () {
+      final g = gw('6', 'gaming', drawHours: 30, clearDistance: true);
+      final r = recommendationReasons(g, {'gaming': 5}, now);
+      expect(r, ['Karena kamu sering ikut kategori Gaming']);
+      expect(r, isNot(contains('Draw segera')));
+    });
+
+    test('alasan kedua: jarak diketahui -> "{n} km dari kamu"', () {
+      final g1 = gw('7', 'gaming', drawHours: 48, distanceKm: 3.5);
+      final r1 = recommendationReasons(g1, {'gaming': 5}, now);
+      expect(r1, ['Karena kamu sering ikut kategori Gaming', '3,5 km dari kamu']);
+
+      // Jarak bulat
+      final g2 = gw('8', 'gaming', drawHours: 48, distanceKm: 5.0);
+      final r2 = recommendationReasons(g2, {'gaming': 5}, now);
+      expect(r2, ['Karena kamu sering ikut kategori Gaming', '5 km dari kamu']);
+
+      // Jarak sangat dekat
+      final g3 = gw('9', 'gaming', drawHours: 48, distanceKm: 0.05);
+      final r3 = recommendationReasons(g3, {'gaming': 5}, now);
+      expect(r3, ['Karena kamu sering ikut kategori Gaming', '<0,1 km dari kamu']);
+    });
+
+    test('maksimal 2 alasan dengan urutan afinitas dulu', () {
+      // Ada afinitas, draw < 24h, dan jarak: hanya 2 alasan pertama yang diambil
+      final g = gw('10', 'gaming', drawHours: 6, distanceKm: 2.3);
+      final r = recommendationReasons(g, {'gaming': 5}, now);
+      expect(r.length, 2);
+      expect(r[0], 'Karena kamu sering ikut kategori Gaming');
+      expect(r[1], 'Draw segera');
     });
   });
 
@@ -164,5 +233,48 @@ void main() {
       expect(find.descendant(of: find.byKey(const Key('badge_maze_master')), matching: find.byIcon(Icons.lock)), findsOneWidget);
       await tester.pumpWidget(const SizedBox());
     });
+  });
+
+  group('Widget & Layout: Alasan rekomendasi di Home', () {
+    Future<SampleEnv> pumpHome(WidgetTester tester, Map<String, dynamic> affinity, {double width = 360, double textScale = 1.0, Brightness brightness = Brightness.light}) async {
+      await setViewport(tester, width: width, height: 1600, textScale: textScale, brightness: brightness);
+      final env = SampleEnv()..affinity = affinity;
+      await tester.pumpWidget(env.app(const HomeScreen()));
+      await tester.pumpAndSettle();
+      return env;
+    }
+
+    testWidgets('alasan tampil pada kartu "Untuk kamu" dan tidak pada bagian lain', (tester) async {
+      await pumpHome(tester, {'travel': 5, 'gaming': 2});
+      final forYouFinder = find.byKey(const Key('for_you'));
+      expect(forYouFinder, findsOneWidget);
+
+      expect(find.text('Karena kamu sering ikut kategori Travel'), findsOneWidget);
+      expect(find.text('Sesuai minatmu di Gaming'), findsOneWidget);
+      expect(find.text('Draw segera'), findsAtLeastNWidgets(1));
+
+      expect(find.bySemanticsLabel('Alasan rekomendasi: Karena kamu sering ikut kategori Travel'), findsOneWidget);
+
+      // Hanya tampil satu kali di layar (hanya di Untuk kamu, bukan di Segera draw atau Semua giveaway)
+      expect(find.text('Karena kamu sering ikut kategori Travel'), findsExactly(1));
+      expect(find.text('Sesuai minatmu di Gaming'), findsExactly(1));
+
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    for (final (w, sc, b, label) in [
+      (360.0, 1.3, Brightness.light, '360 dp font 1,3x terang'),
+      (360.0, 1.3, Brightness.dark, '360 dp font 1,3x gelap'),
+      (428.0, 1.3, Brightness.light, '428 dp font 1,3x terang'),
+      (428.0, 1.3, Brightness.dark, '428 dp font 1,3x gelap'),
+    ]) {
+      testWidgets('layout: kartu "Untuk kamu" dengan alasan di $label tanpa overflow', (tester) async {
+        await pumpHome(tester, {'travel': 5, 'gaming': 2}, width: w, textScale: sc, brightness: b);
+        expect(tester.takeException(), isNull);
+        expect(find.text('Untuk kamu'), findsOneWidget);
+        expect(find.text('Karena kamu sering ikut kategori Travel'), findsOneWidget);
+        await tester.pumpWidget(const SizedBox());
+      });
+    }
   });
 }

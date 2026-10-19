@@ -23,16 +23,31 @@ String phaseLabel(GiveawayPhase p) => statusOfPhase(p).label;
 enum GiveawayCardVariant { list, carousel, compact }
 
 class GiveawayCard extends StatelessWidget {
-  const GiveawayCard({super.key, required this.giveaway, required this.onTap, this.variant = GiveawayCardVariant.list});
+  const GiveawayCard({
+    super.key,
+    required this.giveaway,
+    required this.onTap,
+    this.variant = GiveawayCardVariant.list,
+    this.reasons,
+  });
   final Giveaway giveaway;
   final VoidCallback onTap;
   final GiveawayCardVariant variant;
+  final List<String>? reasons;
 
   @override
   Widget build(BuildContext context) {
     final g = giveaway;
     final status = statusOfPhase(g.phaseAt(DateTime.now()));
-    return variant == GiveawayCardVariant.compact ? _Compact(g: g, status: status, onTap: onTap) : _Full(g: g, status: status, onTap: onTap, carousel: variant == GiveawayCardVariant.carousel);
+    return variant == GiveawayCardVariant.compact
+        ? _Compact(g: g, status: status, onTap: onTap)
+        : _Full(
+            g: g,
+            status: status,
+            onTap: onTap,
+            carousel: variant == GiveawayCardVariant.carousel,
+            reasons: reasons,
+          );
   }
 }
 
@@ -62,11 +77,18 @@ class CategoryTag extends StatelessWidget {
 }
 
 class _Full extends StatelessWidget {
-  const _Full({required this.g, required this.status, required this.onTap, required this.carousel});
+  const _Full({
+    required this.g,
+    required this.status,
+    required this.onTap,
+    required this.carousel,
+    this.reasons,
+  });
   final Giveaway g;
   final AppStatus status;
   final VoidCallback onTap;
   final bool carousel;
+  final List<String>? reasons;
 
   @override
   Widget build(BuildContext context) {
@@ -88,6 +110,14 @@ class _Full extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (reasons != null && reasons!.isNotEmpty) ...[
+                  for (final r in reasons!)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: Spacing.s4),
+                      child: _ReasonBadge(reason: r),
+                    ),
+                  const SizedBox(height: Spacing.s4),
+                ],
                 Text(g.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: theme.textTheme.titleMedium),
                 if (g.organizer.isNotEmpty)
                   Text('oleh ${g.organizer}', maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodySmall?.copyWith(color: c.muted)),
@@ -104,6 +134,63 @@ class _Full extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Chip/baris kecil alasan rekomendasi (PRD FR-AI-01 AC4): ikon + teks, kontras token, dengan Semantics.
+class _ReasonBadge extends StatelessWidget {
+  const _ReasonBadge({required this.reason});
+  final String reason;
+
+  IconData _icon() {
+    if (reason.startsWith('Karena') || reason.startsWith('Sesuai')) {
+      return Icons.auto_awesome;
+    }
+    if (reason.contains('Draw') || reason.contains('segera')) {
+      return Icons.timer_outlined;
+    }
+    if (reason.contains('km')) {
+      return Icons.near_me;
+    }
+    return Icons.auto_awesome;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    final theme = Theme.of(context);
+    return Semantics(
+      container: true,
+      label: 'Alasan rekomendasi: $reason',
+      excludeSemantics: true,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: Spacing.s8, vertical: Spacing.s4),
+        decoration: BoxDecoration(
+          color: c.primaryContainer,
+          borderRadius: Radii.inputAll,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 1),
+              child: Icon(_icon(), size: 14, color: c.onPrimaryContainer),
+            ),
+            const SizedBox(width: Spacing.s4),
+            Flexible(
+              child: Text(
+                reason,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: c.onPrimaryContainer,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
