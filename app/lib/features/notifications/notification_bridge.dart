@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/notifications/background_check.dart';
 import '../../core/notifications/notification_service.dart';
 import '../../core/notifications/reminder_planner.dart';
 import '../auth/auth_controller.dart';
@@ -15,8 +16,11 @@ import 'notifications_controller.dart';
 /// - logout -> semua jadwal dibatalkan;
 /// - notifikasi diketuk (juga saat aplikasi tertutup) -> rute terkait dibuka lewat router, setelah masuk dan lolos kunci biometric.
 class NotificationBridge extends StatefulWidget {
-  const NotificationBridge({super.key, required this.router, required this.child});
+  const NotificationBridge({super.key, required this.router, required this.child, this.poller});
   final GoRouter router;
+
+  /// Pemeriksaan latar belakang (Fase B); null = tidak dipakai (mis. di tes).
+  final BackgroundPoller? poller;
   final Widget child;
 
   @override
@@ -66,12 +70,14 @@ class _NotificationBridgeState extends State<NotificationBridge> with WidgetsBin
       if (status == AuthStatus.signedOut) {
         _registeredUser = null;
         svc.onLogout();
+        widget.poller?.stop();
       }
     }
     final uid = _auth.user?.id;
     if (status == AuthStatus.signedIn && uid != null && uid != _registeredUser) {
       _registeredUser = uid;
       svc.onSignedIn(uid);
+      widget.poller?.start();
     }
     _tryDispatch();
   }

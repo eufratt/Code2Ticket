@@ -19,7 +19,7 @@ Login/session dibuat sendiri (bukan Firebase/Supabase Auth). Scheduler draw: nod
 - Flutter (di app\): flutter pub get ; flutter analyze --no-pub ; flutter test ;
   flutter run --dart-define=API_BASE_URL=https://code2ticket.onrender.com
 - Backend (di backend\): npm ci ; npm test (butuh Postgres uji dan Python 3, lihat backend\README.md) ; npm run demo-seed (env ADMIN_USERNAME/ADMIN_PASSWORD/API_BASE_URL)
-- Kontrol Maze: logika kemiringan murni di app\libeatures\game	ilt_filter.dart (parameter tiltTau/zona mati/gain/batas didokumentasikan di sana, tesnya app	est\game	ilt_filter_test.dart); adaptor sensor_plus di tilt.dart. Jangan menaruh logika filter di layar.
+- Kontrol Maze: logika kemiringan murni di app\lib\features\game\tilt_filter.dart (parameter tiltTau/zona mati/gain/batas didokumentasikan di sana, tesnya app\test\game\tilt_filter_test.dart); adaptor sensor_plus di tilt.dart. Jangan menaruh logika filter di layar.
 - Android: android\gradle.properties berisi kotlin.incremental=false (proyek di drive D:, pub cache di C:); jangan dihapus.
 
 ## Navigasi
@@ -28,6 +28,15 @@ Home, Profil, dan Saran & Kesan adalah 3 cabang StatefulShellRoute; Logout hanya
 Home adalah pusat fitur (tombol Input Code + grid Menu fitur). Discover, My Tickets, Asisten, Input Code, Game, Papan Peringkat, Konverter, dan Peta adalah rute tingkat atas
 yang dibuka dengan context.push dari Home (layar penuh, tombol kembali, tanpa bottom nav). Jangan memakai context.go untuk membuka layar fitur (tumpukan Home hilang); gunakan push / pushReplacement.
 Padding bawah daftar di dalam shell = Spacing.listBottom (tinggi bar + 16).
+
+## Notifikasi sistem (bilah status; tanpa Firebase/FCM)
+Paket: flutter_local_notifications (+ timezone yang sudah ada) dan workmanager (hanya pemeriksaan latar Android). Kode: app\lib\core\notifications\ ; sambungan ke aplikasi: app\lib\features\notifications\notification_bridge.dart.
+- Logika murni tanpa plugin: reminder_planner.dart (kapan menjadwalkan, id deterministik, selisih jadwal, pemilihan notifikasi server, muatan -> rute). Tesnya: app\test\notifications\. Jangan memasukkan logika jadwal ke plugin/UI.
+- notification_service.dart: NotificationGateway (batas ke plugin), NotificationService (tiket baru langsung; pengingat H-1 jam dan saat draw_at, jadwal tidak-exact tanpa izin alarm exact; notifikasi server baru dibanding id terakhir per pengguna di app_settings `notif_last_shown`; semua dibatalkan saat logout; saklar `notif_reminders`).
+- Izin POST_NOTIFICATIONS selalu didahului dialog penjelasan (features\notifications\notification_permission.dart); ditolak = aplikasi tetap jalan lewat pusat notifikasi dalam aplikasi, Pengaturan menampilkan status + tombol ke pengaturan sistem.
+- Ketuk notifikasi (juga saat app tertutup) -> muatan `giveaway/{id}`, `result/{id}`, `notifications` -> rute lewat router yang ada (routeForPayload). Isi notifikasi tidak boleh memuat kode, token, atau data pribadi.
+- Fase B: background_check.dart (WorkManager ~15 menit, butuh jaringan). Isolate latar membaca token dari flutter_secure_storage dan id pengguna aktif dari app_settings `notif_active_user` (bukan token); tidak pernah melempar atau mencatat token.
+- Android: POST_NOTIFICATIONS, RECEIVE_BOOT_COMPLETED, penerima ScheduledNotification(Boot)Receiver di AndroidManifest.xml, dan core library desugaring di android\app\build.gradle.kts. Jangan dihapus.
 
 ## Kontrak yang tidak boleh diubah diam-diam
 - Password: klien menghitung PBKDF2-HMAC-SHA256 (10.000 iterasi, 32 byte, salt 32 hex dipakai sebagai TEKS UTF-8, hasil hex huruf kecil);

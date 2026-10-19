@@ -1,6 +1,7 @@
 import 'package:code2ticket/app_router.dart';
 import 'package:code2ticket/core/api/authed_api.dart';
 import 'package:code2ticket/core/location/location_service.dart';
+import 'package:code2ticket/core/notifications/background_check.dart';
 import 'package:code2ticket/core/notifications/notification_service.dart';
 import 'package:code2ticket/core/notifications/reminder_planner.dart';
 import 'package:code2ticket/core/settings/settings_controller.dart';
@@ -32,6 +33,14 @@ Future<void> frames(WidgetTester tester) async {
   for (var i = 0; i < 20; i++) {
     await tester.pump(const Duration(milliseconds: 100));
   }
+}
+
+class _Poller implements BackgroundPoller {
+  int starts = 0, stops = 0;
+  @override
+  Future<void> start() async => starts++;
+  @override
+  Future<void> stop() async => stops++;
 }
 
 class _Auth extends FakeAuth {
@@ -83,11 +92,11 @@ class _Env {
       ];
 
   /// Seluruh aplikasi dengan router asli dan jembatan notifikasi.
-  Future<void> pumpApp(WidgetTester tester, {bool settle = true}) async {
+  Future<void> pumpApp(WidgetTester tester, {bool settle = true, BackgroundPoller? poller}) async {
     await svc.init();
     await tester.pumpWidget(MultiProvider(
       providers: providers,
-      child: NotificationBridge(router: router, child: MaterialApp.router(theme: AppTheme.light(), routerConfig: router)),
+      child: NotificationBridge(router: router, poller: poller, child: MaterialApp.router(theme: AppTheme.light(), routerConfig: router)),
     ));
     settle ? await tester.pumpAndSettle() : await frames(tester);
   }
@@ -156,6 +165,17 @@ void main() {
     await tester.pumpAndSettle();
     expect(e.gw.cancelAllCalls, 1);
     expect(e.gw.scheduled, isEmpty);
+  });
+
+  testWidgets('pemeriksaan latar belakang: dimulai saat masuk, dihentikan saat logout', (tester) async {
+    final poller = _Poller();
+    final e = _Env();
+    await e.pumpApp(tester, poller: poller);
+    expect(poller.starts, 1);
+    expect(poller.stops, 0);
+    await e.auth.handleInvalidSession();
+    await tester.pumpAndSettle();
+    expect(poller.stops, 1);
   });
 
   testWidgets('ketuk notifikasi saat aplikasi hidup: membuka Hasil Draw / Detail lewat router (Home tetap di bawah)', (tester) async {

@@ -12,6 +12,7 @@ import 'core/db/local_db.dart';
 import 'core/db/rate_cache.dart' show SettingsStore;
 import 'core/geocoding/geocoder.dart';
 import 'core/location/location_service.dart';
+import 'core/notifications/background_check.dart';
 import 'core/notifications/notification_service.dart';
 import 'core/session/session_store.dart';
 import 'core/theme/app_theme.dart';
@@ -48,6 +49,7 @@ class _Code2TicketAppState extends State<Code2TicketApp> with WidgetsBindingObse
   late final SettingsController _settings = SettingsController(LocalDb.instance)..load();
   late final RatesController _rates = RatesController(LocalDb.instance)..ensureFresh();
   late final NotificationService _notifService = NotificationService(PluginNotificationGateway(), LocalDb.instance);
+  late final WorkmanagerPoller _poller = WorkmanagerPoller();
   late final _router = buildRouter(_auth);
 
   @override
@@ -112,6 +114,7 @@ class _Code2TicketAppState extends State<Code2TicketApp> with WidgetsBindingObse
       ],
       child: NotificationBridge(
         router: _router,
+        poller: _poller,
         child: MaterialApp.router(
         title: 'Code2Ticket',
         theme: AppTheme.light(),
