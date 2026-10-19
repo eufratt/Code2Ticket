@@ -9,6 +9,7 @@ import 'core/currency/rates_controller.dart';
 import 'core/settings/settings_controller.dart';
 import 'core/time/zones.dart';
 import 'core/db/local_db.dart';
+import 'core/db/rate_cache.dart' show SettingsStore;
 import 'core/geocoding/geocoder.dart';
 import 'core/location/location_service.dart';
 import 'core/session/session_store.dart';
@@ -85,6 +86,7 @@ class _Code2TicketAppState extends State<Code2TicketApp> with WidgetsBindingObse
       providers: [
         Provider<ApiClient>.value(value: _api),
         Provider<LocalDb>.value(value: LocalDb.instance),
+        Provider<SettingsStore>.value(value: LocalDb.instance),
         ChangeNotifierProvider<AuthController>.value(value: _auth),
         Provider<AuthedApi>.value(value: _authed),
         Provider<LocationService>.value(value: _location),

@@ -37,7 +37,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final router = GoRouter.of(context);
     final err = await c.markRead(n.id);
     if (err != null && mounted) _toast(err);
-    if (n.giveawayId != null) router.push('/giveaway/${n.giveawayId}');
+    if (n.giveawayId != null) router.push(n.type == 'winner' || n.type == 'draw_result' ? '/giveaway/${n.giveawayId}/result' : '/giveaway/${n.giveawayId}');
   }
 
   @override

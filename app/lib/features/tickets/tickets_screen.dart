@@ -174,7 +174,8 @@ class _Group extends StatelessWidget {
                 if (t.drawAt != null) 'Draw ${context.when(t.drawAt!)}',
                 if (t.codeMasked.isNotEmpty) 'Kode ${t.codeMasked}',
               ].join('\n'),
-              onTap: () => context.push('/giveaway/$giveawayId'),
+              // Tiket yang sudah diundi (menang / tidak terpilih) membuka hasil draw; lainnya membuka detail giveaway.
+              onTap: () => context.push(t.result == TicketResult.winner || t.result == TicketResult.notSelected ? '/giveaway/$giveawayId/result' : '/giveaway/$giveawayId'),
             ),
           ),
       ],

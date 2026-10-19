@@ -99,7 +99,14 @@ class _GiveawayDetailScreenState extends State<GiveawayDetailScreen> {
               child: SafeArea(
                 child: Padding(
                   padding: const EdgeInsets.all(Spacing.s16),
-                  child: PrimaryButton(label: 'Input Code', icon: Icons.qr_code_2, onPressed: () => context.push('/code')),
+                  child: g.phaseAt(DateTime.now()) == GiveawayPhase.drawn
+                      // Sudah diundi: kode tidak bisa dipakai lagi; tawarkan hasil dan verifikasi.
+                      ? Column(mainAxisSize: MainAxisSize.min, children: [
+                          PrimaryButton(key: const Key('open_result'), label: 'Lihat hasil', icon: Icons.emoji_events_outlined, onPressed: () => context.push('/giveaway/${g.id}/result')),
+                          const SizedBox(height: Spacing.s8),
+                          PrimaryButton(key: const Key('open_verify_detail'), label: 'Cek keaslian', icon: Icons.verified_outlined, variant: ButtonVariant.secondary, onPressed: () => context.push('/giveaway/${g.id}/verify')),
+                        ])
+                      : PrimaryButton(label: 'Input Code', icon: Icons.qr_code_2, onPressed: () => context.push('/code')),
                 ),
               ),
             ),

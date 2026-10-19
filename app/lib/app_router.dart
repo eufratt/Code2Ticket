@@ -11,6 +11,8 @@ import 'features/auth/login_screen.dart';
 import 'features/auth/register_screen.dart';
 import 'features/converter/converter_screen.dart';
 import 'features/discover/discover_screen.dart';
+import 'features/draw/draw_result_screen.dart';
+import 'features/draw/draw_verify_screen.dart';
 import 'features/discover/map_screen.dart';
 import 'features/feedback/feedback_screen.dart';
 import 'features/giveaways/giveaway_detail_screen.dart';
@@ -80,6 +82,8 @@ GoRouter buildRouter(AuthController auth) => GoRouter(
             initial: state.extra is Giveaway ? state.extra as Giveaway : null,
           ),
         ),
+        GoRoute(path: '/giveaway/:id/result', builder: (_, state) => DrawResultScreen(giveawayId: state.pathParameters['id']!)),
+        GoRoute(path: '/giveaway/:id/verify', builder: (_, state) => DrawVerifyScreen(giveawayId: state.pathParameters['id']!)),
         // 5 tab; FAB tengah (Input Code) ada di AppShell.
         StatefulShellRoute.indexedStack(
           builder: (_, _, shell) => AppShell(navigationShell: shell),
