@@ -29,8 +29,9 @@ List<Giveaway> soonestDraws(List<Giveaway> items, DateTime now, {int limit = 6})
   return soon.take(limit).toList();
 }
 
-/// S-HOME: sapaan, ringkasan tiket, kolom cari, chip kategori, carousel "Segera draw" dan "Terdekat", lalu semua giveaway.
-/// Carousel memakai data yang sudah dimuat controller (tanpa permintaan jaringan baru).
+/// S-HOME (pusat fitur): sapaan, ringkasan tiket, kolom cari, tombol utama Input Code, grid "Menu fitur", chip kategori,
+/// carousel "Segera draw" dan "Terdekat", lalu semua giveaway. Layar fitur dibuka dengan push (layar penuh, tombol kembali
+/// ke Home). Carousel memakai data yang sudah dimuat controller (tanpa permintaan jaringan baru).
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
   @override
@@ -116,6 +117,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         const SliverToBoxAdapter(child: _Header()),
         const SliverToBoxAdapter(child: _TicketSummary()),
         const SliverToBoxAdapter(child: _SearchBar()),
+        const SliverToBoxAdapter(child: _InputCodeButton()),
+        const SliverToBoxAdapter(child: _FeatureMenu()),
         if (categories.length > 1)
           SliverToBoxAdapter(
             child: _CategoryChips(categories: categories, selected: selected, onSelected: (v) => setState(() => _category = v)),
@@ -132,7 +135,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             child: SectionHeader('Segera draw',
                 padding: const EdgeInsets.fromLTRB(Spacing.screen, Spacing.s16, Spacing.s8, 0),
                 actionLabel: 'Lihat semua',
-                onAction: () => context.go('/discover')),
+                onAction: () => context.push('/discover')),
           ),
           SliverToBoxAdapter(child: _Carousel(items: soon, onOpen: open)),
         ],
@@ -141,7 +144,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             child: SectionHeader('Terdekat',
                 padding: const EdgeInsets.fromLTRB(Spacing.screen, Spacing.s16, Spacing.s8, 0),
                 actionLabel: 'Lihat semua',
-                onAction: () => context.go('/discover')),
+                onAction: () => context.push('/discover')),
           ),
           SliverToBoxAdapter(child: _Carousel(items: nearby.take(6).toList(), onOpen: open)),
         ],
@@ -230,7 +233,7 @@ class _TicketSummary extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: Spacing.screen),
       child: SurfaceCard(
         key: const Key('ticket_summary'),
-        onTap: () => context.go('/tickets'),
+        onTap: () => context.push('/tickets'),
         color: c.primaryContainer,
         child: Row(
           children: [
@@ -270,14 +273,14 @@ class _SearchBar extends StatelessWidget {
         button: true,
         label: 'Cari giveaway',
         excludeSemantics: true,
-        onTap: () => context.go('/discover'),
+        onTap: () => context.push('/discover'),
         child: Material(
           color: c.surfaceVariant,
           borderRadius: Radii.inputAll,
           child: InkWell(
             key: const Key('home_search'),
             borderRadius: Radii.inputAll,
-            onTap: () => context.go('/discover'),
+            onTap: () => context.push('/discover'),
             child: ConstrainedBox(
               constraints: const BoxConstraints(minHeight: 52),
               child: Padding(
@@ -296,6 +299,91 @@ class _SearchBar extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Aksi utama Home: Input Code (satu-satunya tombol utama di layar ini).
+class _InputCodeButton extends StatelessWidget {
+  const _InputCodeButton();
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.fromLTRB(Spacing.screen, Spacing.s16, Spacing.screen, 0),
+        child: PrimaryButton(key: const Key('home_input_code'), label: 'Input Code', icon: Icons.qr_code_2, onPressed: () => context.push('/code')),
+      );
+}
+
+/// Menu fitur: (kunci, ikon, label, rute). Urutan = urutan tampil.
+const _featureMenu = [
+  ('discover', Icons.explore_outlined, 'Discover', '/discover'),
+  ('tickets', Icons.confirmation_number_outlined, 'My Tickets', '/tickets'),
+  ('assistant', Icons.smart_toy_outlined, 'Asisten', '/assistant'),
+  ('game', Icons.sports_esports_outlined, 'Game Maze', '/game'),
+  ('leaderboard', Icons.leaderboard_outlined, 'Papan Peringkat', '/leaderboard'),
+  ('converter', Icons.currency_exchange, 'Konverter', '/converter'),
+  ('map', Icons.map_outlined, 'Peta', '/map'),
+];
+
+/// Grid "Menu fitur": 4 kolom bila tiap kotak cukup lebar untuk label (memperhitungkan skala font), selain itu 2 kolom.
+class _FeatureMenu extends StatelessWidget {
+  const _FeatureMenu();
+
+  @override
+  Widget build(BuildContext context) {
+    final scale = MediaQuery.textScalerOf(context).scale(12) / 12;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SectionHeader('Menu fitur', padding: EdgeInsets.fromLTRB(Spacing.screen, Spacing.s16, Spacing.screen, Spacing.s8)),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: Spacing.screen),
+          child: LayoutBuilder(builder: (context, box) {
+            final cols = (box.maxWidth - Spacing.s8 * 3) / 4 >= 72 * scale ? 4 : 2;
+            return Column(children: [
+              for (var start = 0; start < _featureMenu.length; start += cols)
+                Padding(
+                  padding: EdgeInsets.only(top: start == 0 ? 0 : Spacing.s8),
+                  child: IntrinsicHeight(
+                    child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                      for (var i = start; i < start + cols; i++) ...[
+                        if (i > start) const SizedBox(width: Spacing.s8),
+                        Expanded(child: i < _featureMenu.length ? _FeatureTile(_featureMenu[i]) : const SizedBox.shrink()),
+                      ],
+                    ]),
+                  ),
+                ),
+            ]);
+          }),
+        ),
+      ],
+    );
+  }
+}
+
+class _FeatureTile extends StatelessWidget {
+  const _FeatureTile(this.item);
+  final (String, IconData, String, String) item;
+
+  @override
+  Widget build(BuildContext context) {
+    final (key, icon, label, route) = item;
+    final c = context.colors;
+    return SurfaceCard(
+      key: Key('menu_$key'),
+      onTap: () => context.push(route),
+      semanticLabel: label,
+      padding: const EdgeInsets.symmetric(vertical: Spacing.s12, horizontal: Spacing.s4),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: kMinTap),
+        child: Column(mainAxisSize: MainAxisSize.min, mainAxisAlignment: MainAxisAlignment.center, children: [
+          DecoratedBox(
+            decoration: BoxDecoration(color: c.primaryContainer, shape: BoxShape.circle),
+            child: SizedBox(width: 40, height: 40, child: Icon(icon, color: c.onPrimaryContainer)),
+          ),
+          const SizedBox(height: Spacing.s8),
+          Text(label, textAlign: TextAlign.center, style: Theme.of(context).textTheme.labelMedium),
+        ]),
       ),
     );
   }

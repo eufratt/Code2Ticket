@@ -251,7 +251,7 @@ Future<void> _scrollThrough(WidgetTester tester) async {
 void main() {
   // Tiap layar: pembangun + teks yang harus tampil (membuktikan layar benar-benar terisi, bukan masih kerangka).
   final screens = <String, (Widget Function(), String)>{
-    'Home': (() => const HomeScreen(), 'Segera draw'),
+    'Home': (() => const HomeScreen(), 'Menu fitur'),
     'Detail Giveaway': (() => GiveawayDetailScreen(giveawayId: 'g1', initial: Giveaway.tryParse(sampleGiveaways().first)), 'Input Code'),
     'My Tickets': (() => const TicketsScreen(), '#123456'),
     'Notifikasi': (() => const NotificationsScreen(), 'Selamat, kamu menang!'),
@@ -354,6 +354,7 @@ void main() {
         final env = SampleEnv()..affinity = {'travel': 5, 'gaming': 2};
         await tester.pumpWidget(env.app(const HomeScreen()));
         await tester.pumpAndSettle();
+        await tester.scrollUntilVisible(find.text('Untuk kamu'), 200, scrollable: find.byType(Scrollable).first);
         expect(find.text('Untuk kamu'), findsOneWidget);
         expect(tester.takeException(), isNull);
         await _scrollThrough(tester);

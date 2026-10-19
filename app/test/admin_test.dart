@@ -483,7 +483,7 @@ void main() {
     testWidgets('user biasa: menu Admin tidak ada', (tester) async {
       await pumpProfile(tester, 'user');
       expect(find.byKey(const Key('open_admin')), findsNothing);
-      expect(find.byKey(const Key('open_converter')), findsOneWidget);
+      expect(find.byKey(const Key('open_settings')), findsOneWidget);
     });
 
     testWidgets('admin: menu Admin tampil', (tester) async {

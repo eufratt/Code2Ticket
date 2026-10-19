@@ -221,9 +221,11 @@ void main() {
       expect(find.text('Early Bird'), findsOneWidget);
       expect(find.byKey(const Key('avatar_initials')), findsOneWidget);
       expect(find.text('EA'), findsOneWidget);
-      for (final t in ['Konverter', 'Saran & Kesan', 'Pengaturan', 'Keluar']) {
-        await tester.scrollUntilVisible(find.text(t), 200, scrollable: find.byType(Scrollable).first);
-        expect(find.text(t), findsOneWidget, reason: t);
+      await tester.scrollUntilVisible(find.text('Pengaturan'), 200, scrollable: find.byType(Scrollable).first);
+      expect(find.text('Pengaturan'), findsOneWidget);
+      // Dipindah ke bottom navigation / menu fitur Home: tidak ganda di Profil.
+      for (final t in ['Konverter', 'Saran & Kesan', 'Game Maze', 'Keluar']) {
+        expect(find.text(t), findsNothing, reason: t);
       }
     });
 

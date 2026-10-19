@@ -57,11 +57,13 @@ GoRouter buildRouter(AuthController auth) => GoRouter(
         GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
         GoRoute(path: '/register', builder: (_, _) => const RegisterScreen()),
         GoRoute(path: '/lock', builder: (_, _) => const BiometricLockScreen()),
-        // Layar di luar tab (tanpa bottom navigation): dibuka dengan push dari tab mana pun.
+        // Layar fitur penuh (tanpa bottom navigation, tombol kembali di AppBar): dibuka dengan push dari Home.
+        GoRoute(path: '/discover', builder: (_, _) => const DiscoverScreen()),
+        GoRoute(path: '/tickets', builder: (_, _) => const TicketsScreen()),
+        GoRoute(path: '/assistant', builder: (_, _) => const AssistantScreen()),
         GoRoute(path: '/code', builder: (_, _) => const InputCodeScreen()),
         GoRoute(path: '/map', builder: (_, _) => const MapScreen()),
         GoRoute(path: '/converter', builder: (_, _) => const ConverterScreen()),
-        GoRoute(path: '/feedback', builder: (_, _) => const FeedbackScreen()),
         GoRoute(path: '/settings', builder: (_, _) => const SettingsScreen()),
         GoRoute(path: '/notifications', builder: (_, _) => const NotificationsScreen()),
         GoRoute(path: '/game', builder: (_, _) => const GameHubScreen()),
@@ -90,7 +92,7 @@ GoRouter buildRouter(AuthController auth) => GoRouter(
         ),
         GoRoute(path: '/giveaway/:id/result', builder: (_, state) => DrawResultScreen(giveawayId: state.pathParameters['id']!)),
         GoRoute(path: '/giveaway/:id/verify', builder: (_, state) => DrawVerifyScreen(giveawayId: state.pathParameters['id']!)),
-        // 5 tab; FAB tengah (Input Code) ada di AppShell.
+        // 3 tab (Home, Profil, Saran & Kesan); item ke-4 bottom nav (Logout) hanya aksi, bukan rute.
         StatefulShellRoute.indexedStack(
           builder: (_, _, shell) => AppShell(navigationShell: shell),
           branches: [
@@ -98,16 +100,10 @@ GoRouter buildRouter(AuthController auth) => GoRouter(
               GoRoute(path: '/home', builder: (_, _) => const HomeScreen()),
             ]),
             StatefulShellBranch(routes: [
-              GoRoute(path: '/discover', builder: (_, _) => const DiscoverScreen()),
-            ]),
-            StatefulShellBranch(routes: [
-              GoRoute(path: '/tickets', builder: (_, _) => const TicketsScreen()),
-            ]),
-            StatefulShellBranch(routes: [
-              GoRoute(path: '/assistant', builder: (_, _) => const AssistantScreen()),
-            ]),
-            StatefulShellBranch(routes: [
               GoRoute(path: '/profile', builder: (_, _) => const ProfileScreen()),
+            ]),
+            StatefulShellBranch(routes: [
+              GoRoute(path: '/feedback', builder: (_, _) => const FeedbackScreen()),
             ]),
           ],
         ),

@@ -152,9 +152,9 @@ void main() {
       return env;
     }
 
-    testWidgets('menu Game Maze ada', (tester) async {
+    testWidgets('menu Game Maze tidak ada lagi di Profil (pindah ke menu fitur Home)', (tester) async {
       await pumpProfile(tester, const []);
-      expect(find.byKey(const Key('open_game')), findsOneWidget);
+      expect(find.byKey(const Key('open_game')), findsNothing);
     });
 
     testWidgets('lencana Maze sesuai data server; tidak dihitung di klien', (tester) async {

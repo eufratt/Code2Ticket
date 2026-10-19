@@ -223,7 +223,7 @@ class _Success extends StatelessWidget {
           ),
         ),
         const SizedBox(height: Spacing.s24),
-        PrimaryButton(label: 'Lihat tiket', onPressed: () => context.go('/tickets')),
+        PrimaryButton(label: 'Lihat tiket', onPressed: () => context.pushReplacement('/tickets')),
         const SizedBox(height: Spacing.s8),
         PrimaryButton(label: 'Input kode lain', variant: ButtonVariant.text, onPressed: onAgain),
       ],

@@ -249,7 +249,7 @@ class _History extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
-      padding: const EdgeInsets.only(bottom: Spacing.listBottom),
+      padding: const EdgeInsets.only(bottom: Spacing.s16),
       children: [
         SectionHeader(
           'Riwayat pencarian',
@@ -311,7 +311,7 @@ class _Results extends StatelessWidget {
               ),
             ])
           : ListView.builder(
-              padding: const EdgeInsets.fromLTRB(Spacing.screen, Spacing.s4, Spacing.screen, Spacing.listBottom),
+              padding: const EdgeInsets.fromLTRB(Spacing.screen, Spacing.s4, Spacing.screen, Spacing.s16),
               itemCount: c.items.length + (c.hasMore ? 1 : 0),
               itemBuilder: (_, i) {
                 if (i == c.items.length) {

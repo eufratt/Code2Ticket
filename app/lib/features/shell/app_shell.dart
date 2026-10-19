@@ -4,54 +4,73 @@ import 'package:provider/provider.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_tokens.dart';
+import '../auth/auth_controller.dart';
 import '../notifications/notifications_controller.dart';
+import '../profile/user_avatar.dart';
 
-/// Lokasi kustom FAB melayang di tengah horizontal, tepat di atas bottom navigation bar.
-class AboveNavCenterFloatLocation extends FloatingActionButtonLocation {
-  const AboveNavCenterFloatLocation({this.margin = kFabGap});
-  final double margin;
-
-  @override
-  Offset getOffset(ScaffoldPrelayoutGeometry scaffoldGeometry) {
-    final double fabX = (scaffoldGeometry.scaffoldSize.width -
-            scaffoldGeometry.floatingActionButtonSize.width) /
-        2.0;
-    final double fabY = scaffoldGeometry.contentBottom -
-        scaffoldGeometry.floatingActionButtonSize.height -
-        margin;
-    return Offset(fabX, fabY);
-  }
-}
-
-/// Kerangka navigasi: 5 tab simetris sama lebar (Home, Discover, My Tickets, Asisten, Profil)
-/// dan 1 FAB melayang di tengah tepat di atas bar tanpa notch.
+/// Kerangka navigasi: 4 item sama lebar (Home, Profil dengan foto, Saran & Kesan, Logout).
+/// Tiga item pertama adalah cabang (tab); Logout hanya aksi (dialog konfirmasi) dan tidak pernah terpilih.
+/// Fitur lain (Discover, My Tickets, Asisten, Input Code, Game, ...) dibuka dari Home sebagai layar penuh.
 class AppShell extends StatelessWidget {
   const AppShell({super.key, required this.navigationShell});
   final StatefulNavigationShell navigationShell;
 
-  static const _assistantTab = 3;
-  static const _tabs = [
+  static const _items = [
     (Icons.home_outlined, Icons.home, 'Home'),
-    (Icons.explore_outlined, Icons.explore, 'Discover'),
-    (Icons.confirmation_number_outlined, Icons.confirmation_number, 'My Tickets'),
-    (Icons.smart_toy_outlined, Icons.smart_toy, 'Asisten'),
-    (Icons.person_outline, Icons.person, 'Profil'),
+    (null, null, 'Profil'), // ikon = foto profil
+    (Icons.rate_review_outlined, Icons.rate_review, 'Saran & Kesan'),
+    (Icons.logout, Icons.logout, 'Logout'),
   ];
+  static const _logoutIndex = 3;
+
+  Future<void> _confirmLogout(BuildContext context) async {
+    final auth = context.read<AuthController>();
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Keluar dari akun?'),
+        content: const Text('Kamu perlu masuk lagi untuk melihat tiketmu.'),
+        actions: [
+          TextButton(key: const Key('logout_cancel'), onPressed: () => Navigator.pop(context, false), child: const Text('Batal')),
+          FilledButton(key: const Key('logout_confirm'), onPressed: () => Navigator.pop(context, true), child: const Text('Keluar')),
+        ],
+      ),
+    );
+    if (ok == true) await auth.logout();
+  }
 
   @override
   Widget build(BuildContext context) {
     final current = navigationShell.currentIndex;
     final c = context.colors;
     final labelStyle = Theme.of(context).textTheme.labelMedium!;
+    final user = context.watch<AuthController>().user;
 
-    Widget item(int index, (IconData, IconData, String) d) {
-      final selected = index == current;
+    Widget item(int index) {
+      final (outlined, filled, label) = _items[index];
+      final isLogout = index == _logoutIndex;
+      final selected = !isLogout && index == current;
       final color = selected ? c.primary : c.muted;
+      final Widget icon = index == 1
+          // Foto profil dalam lingkaran kecil; terpilih = cincin `primary` tebal (selain pil dan label tebal).
+          ? ExcludeSemantics(
+              child: DecoratedBox(
+                decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: selected ? c.primary : Colors.transparent, width: 2)),
+                child: Padding(padding: const EdgeInsets.all(1), child: UserAvatar(user: user, radius: 11)),
+              ),
+            )
+          : Icon(selected ? filled : outlined, size: 24, color: selected ? c.onPrimaryContainer : color);
       return Expanded(
         child: Semantics(
+          button: true,
           selected: selected,
           child: InkWell(
+            key: Key('nav_${const ['home', 'profile', 'feedback', 'logout'][index]}'),
             onTap: () {
+              if (isLogout) {
+                _confirmLogout(context);
+                return;
+              }
               if (index == 0 && current != 0) context.read<NotificationsController?>()?.refreshUnread();
               navigationShell.goBranch(index, initialLocation: index == current);
             },
@@ -61,26 +80,27 @@ class AppShell extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Indikator tab aktif: pil lembut di belakang ikon.
+                  // Indikator item aktif: pil lembut di belakang ikon.
                   AnimatedContainer(
                     duration: Motion.of(context, Motion.fast),
                     curve: Motion.curve,
                     width: 56,
                     height: 28,
+                    alignment: Alignment.center,
                     decoration: BoxDecoration(
                       color: selected ? c.primaryContainer : Colors.transparent,
                       borderRadius: BorderRadius.circular(Radii.full),
                     ),
-                    child: Icon(selected ? d.$2 : d.$1, size: 24, color: selected ? c.onPrimaryContainer : color),
+                    child: icon,
                   ),
                   const SizedBox(height: 2),
-                  // Label bar dibatasi 1,15x dan, bila masih lebih lebar dari tab 72 dp, diperkecil seperlunya (bukan dipotong).
+                  // Label bar dibatasi 1,15x dan, bila masih lebih lebar dari item (1/4 lebar layar), diperkecil seperlunya (bukan dipotong).
                   MediaQuery.withClampedTextScaling(
                     maxScaleFactor: 1.15,
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
                       child: Text(
-                        d.$3,
+                        label,
                         maxLines: 1,
                         textAlign: TextAlign.center,
                         style: labelStyle.copyWith(color: color, fontWeight: selected ? FontWeight.w700 : FontWeight.w500),
@@ -95,31 +115,23 @@ class AppShell extends StatelessWidget {
       );
     }
 
-    return Scaffold(
-      body: navigationShell,
-      floatingActionButtonLocation: const AboveNavCenterFloatLocation(margin: kFabGap),
-      // Di tab Asisten FAB disembunyikan: kolom input chat ada di dasar layar dan tidak boleh tertutup.
-      floatingActionButton: current == _assistantTab ? null : DecoratedBox(
-        decoration: BoxDecoration(shape: BoxShape.circle, boxShadow: AppShadows.fab(c)),
-        child: FloatingActionButton(
-          tooltip: 'Input Code',
-          heroTag: null,
-          onPressed: () => context.push('/code'),
-          child: const Icon(Icons.qr_code_2, size: 28),
-        ),
-      ),
-      bottomNavigationBar: BottomAppBar(
-        padding: EdgeInsets.zero,
-        height: kNavBarHeight,
-        color: c.surface,
-        elevation: 0,
-        surfaceTintColor: Colors.transparent,
-        child: DecoratedBox(
-          decoration: BoxDecoration(border: Border(top: BorderSide(color: c.outline))),
-          child: Row(
-            children: [
-              for (var i = 0; i < _tabs.length; i++) item(i, _tabs[i]),
-            ],
+    return PopScope(
+      // Tombol kembali sistem dari Profil / Saran & Kesan kembali ke Home dulu; dari Home keluar aplikasi.
+      canPop: current == 0,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) navigationShell.goBranch(0);
+      },
+      child: Scaffold(
+        body: navigationShell,
+        bottomNavigationBar: BottomAppBar(
+          padding: EdgeInsets.zero,
+          height: kNavBarHeight,
+          color: c.surface,
+          elevation: 0,
+          surfaceTintColor: Colors.transparent,
+          child: DecoratedBox(
+            decoration: BoxDecoration(border: Border(top: BorderSide(color: c.outline))),
+            child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [for (var i = 0; i < _items.length; i++) item(i)]),
           ),
         ),
       ),
