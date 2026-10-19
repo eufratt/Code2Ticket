@@ -179,3 +179,43 @@ describe('4. login_attempts dibersihkan berkala (bukan hanya cleanup harian)', (
     expect((await login(api, 'dina01', 'Passw0rd!1')).error).toBe('locked');
   });
 });
+
+describe('5. salt palsu tidak bisa dibedakan dari salt asli', () => {
+  const salt = async (identifier) => (await api.post('/auth/salt', { body: { identifier } })).salt;
+  const HEX32 = /^[0-9a-f]{32}$/;
+
+  it('salt asli dan palsu: format sama (32 hex huruf kecil); palsu deterministik dan unik per identifier', async () => {
+    const real1 = await salt('alice01');
+    const fakes = await Promise.all(['tidak_ada', 'x', 'Tidak_Ada@Contoh.com', 'a'.repeat(300), '', 'é😀', ' tidak_ada '].map(salt));
+    for (const s of [real1, ...fakes]) expect(s).toMatch(HEX32);
+    expect(await salt('tidak_ada')).toBe(fakes[0]); // deterministik
+    expect(fakes[6]).toBe(fakes[0]); // dinormalisasi seperti pencarian akun (trim + huruf kecil)
+    expect(new Set(fakes.slice(0, 4)).size).toBe(4);
+    expect(fakes[0]).not.toBe(real1);
+  });
+
+  it('salt tersimpan di database untuk semua akun berformat sama (register menolak format lain)', async () => {
+    for (const bad of ['x'.repeat(16), 'ABCDEF0123456789ABCDEF0123456789', 'a'.repeat(31), 'a'.repeat(33), 'a'.repeat(128), 'g'.repeat(32)]) {
+      const r = await api.post('/auth/register', {
+        body: { username: 'odd_salt1', email: 'odd@example.com', full_name: 'Odd', salt: bad, password_hash: 'a'.repeat(64) },
+      });
+      expect([bad.length, r.error]).toEqual([bad.length, 'invalid_input']);
+    }
+    expect(await count("select count(*)::int n from users where salt !~ '^[0-9a-f]{32}$'")).toBe(0);
+  });
+
+  it('jumlah query sama untuk akun ada dan tidak ada (tanpa selisih kerja yang terlihat)', async () => {
+    const calls = async (identifier) => {
+      let n = 0;
+      const orig = real.pool.query.bind(real.pool);
+      real.pool.query = (...a) => (n++, orig(...a));
+      try {
+        await salt(identifier);
+      } finally {
+        real.pool.query = orig;
+      }
+      return n;
+    };
+    expect(await calls('tidak_ada_lagi')).toBe(await calls('alice01'));
+  });
+});

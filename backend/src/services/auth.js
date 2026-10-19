@@ -13,7 +13,8 @@ const registerSchema = z.object({
   username: z.string().transform(pgTrim).pipe(z.string().regex(/^[A-Za-z0-9_]{4,20}$/)),
   email: z.string().transform((s) => pgTrim(s).toLowerCase()).pipe(z.string().max(254).regex(/^[^@\s]+@[^@\s]+\.[^@\s]+$/i)),
   full_name: z.string().transform(pgTrim).pipe(z.string().refine((s) => cpLen(s) >= 1 && cpLen(s) <= 100)),
-  salt: z.string().refine((s) => cpLen(s) >= 16 && cpLen(s) <= 128),
+  // Format yang dibuat app (16 byte acak -> 32 hex huruf kecil), sama dengan salt palsu di getSalt, supaya salt tidak membedakan akun asli.
+  salt: z.string().regex(/^[0-9a-f]{32}$/),
   password_hash: z.string().regex(TOKEN_RE),
 });
 
@@ -43,12 +44,10 @@ export async function register(pool, body) {
 // Salt asli, atau salt palsu konsisten (HMAC) agar keberadaan akun tidak dapat ditebak.
 export async function getSalt(pool, body) {
   const ident = identifierOf(body?.identifier);
+  // Kedua query selalu dijalankan agar akun ada/tidak ada sama kerjanya.
   const r = await pool.query('select salt from users where lower(username) = $1 or lower(email) = $1 limit 1', [ident]);
-  let salt = r.rows[0]?.salt;
-  if (!salt) {
-    const key = (await pool.query("select value from app_config where key = 'fake_salt_key'")).rows[0].value;
-    salt = crypto.createHmac('sha256', key).update(ident, 'utf8').digest('hex').slice(0, 32);
-  }
+  const k = await pool.query("select value from app_config where key = 'fake_salt_key'");
+  const salt = r.rows[0]?.salt ?? crypto.createHmac('sha256', k.rows[0].value).update(ident, 'utf8').digest('hex').slice(0, 32);
   return ok({ salt });
 }
 
