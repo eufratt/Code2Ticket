@@ -1,5 +1,10 @@
 import 'package:go_router/go_router.dart';
 
+import 'features/admin/admin_giveaway_screen.dart';
+import 'features/admin/admin_giveaways_screen.dart';
+import 'features/admin/codes_list_screen.dart';
+import 'features/admin/create_giveaway_screen.dart';
+import 'features/admin/generate_codes_screen.dart';
 import 'features/auth/auth_controller.dart';
 import 'features/auth/biometric_lock_screen.dart';
 import 'features/auth/login_screen.dart';
@@ -35,6 +40,8 @@ GoRouter buildRouter(AuthController auth) => GoRouter(
           case AuthStatus.biometricRequired:
             return loc == '/lock' ? null : '/lock';
           case AuthStatus.signedIn:
+            // Layar Admin hanya untuk role admin (server tetap penentu: 403 pada tiap permintaan admin).
+            if (loc.startsWith('/admin') && auth.user?.isAdmin != true) return '/profile';
             return (isAuthPage || loc == '/splash' || loc == '/lock')
                 ? '/home'
                 : null;
@@ -52,6 +59,20 @@ GoRouter buildRouter(AuthController auth) => GoRouter(
         GoRoute(path: '/feedback', builder: (_, _) => const FeedbackScreen()),
         GoRoute(path: '/settings', builder: (_, _) => const SettingsScreen()),
         GoRoute(path: '/notifications', builder: (_, _) => const NotificationsScreen()),
+        GoRoute(path: '/admin', builder: (_, _) => const AdminGiveawaysScreen()),
+        GoRoute(path: '/admin/create', builder: (_, _) => const CreateGiveawayScreen()),
+        GoRoute(
+          path: '/admin/giveaway/:id',
+          builder: (_, state) => AdminGiveawayScreen(giveawayId: state.pathParameters['id']!, initial: state.extra is Giveaway ? state.extra as Giveaway : null),
+        ),
+        GoRoute(
+          path: '/admin/giveaway/:id/generate',
+          builder: (_, state) => GenerateCodesScreen(giveawayId: state.pathParameters['id']!, giveaway: state.extra is Giveaway ? state.extra as Giveaway : null),
+        ),
+        GoRoute(
+          path: '/admin/giveaway/:id/codes',
+          builder: (_, state) => CodesListScreen(giveawayId: state.pathParameters['id']!, giveaway: state.extra is Giveaway ? state.extra as Giveaway : null),
+        ),
         GoRoute(
           path: '/giveaway/:id',
           builder: (_, state) => GiveawayDetailScreen(

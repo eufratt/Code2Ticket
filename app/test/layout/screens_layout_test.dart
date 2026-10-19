@@ -1,5 +1,11 @@
 import 'package:code2ticket/core/api/authed_api.dart';
 import 'package:code2ticket/core/location/location_service.dart';
+import 'package:code2ticket/features/admin/admin_controller.dart';
+import 'package:code2ticket/features/admin/admin_giveaway_screen.dart';
+import 'package:code2ticket/features/admin/admin_giveaways_screen.dart';
+import 'package:code2ticket/features/admin/codes_list_screen.dart';
+import 'package:code2ticket/features/admin/create_giveaway_screen.dart';
+import 'package:code2ticket/features/admin/generate_codes_screen.dart';
 import 'package:code2ticket/features/auth/auth_controller.dart';
 import 'package:code2ticket/features/auth/auth_models.dart';
 import 'package:code2ticket/features/auth/biometric_lock_screen.dart';
@@ -128,6 +134,18 @@ class SampleEnv {
       if (p.startsWith('/giveaways/')) return sampleGiveaways().first;
       if (p.startsWith('/giveaways')) return {'ok': true, 'data': sampleGiveaways()};
       if (p.startsWith('/tickets')) return {'ok': true, 'data': List.of(tickets)};
+      if (p.startsWith('/admin/giveaways/')) {
+        if (m == 'GET') {
+          return {
+            'ok': true,
+            'data': [
+              {'code': 'ABCD-EFGH-JKLM', 'is_used': false, 'used_at': null, 'geo_radius_km': null},
+              {'code': 'NPQR-STUV-WXYZ', 'is_used': true, 'used_at': DateTime.now().toUtc().toIso8601String(), 'geo_radius_km': '5.00'},
+            ],
+          };
+        }
+        return {'ok': true, 'codes': ['ABCD-EFGH-JKLM', 'NPQR-STUV-WXYZ', 'A2B3-C4D5-E6F7']};
+      }
       if (p.startsWith('/notifications/read')) return {'ok': true, 'updated': 1};
       if (p.startsWith('/notifications')) return {'ok': true, 'data': sampleNotifications()};
       if (p.startsWith('/feedback')) {
@@ -162,6 +180,7 @@ class SampleEnv {
           ChangeNotifierProvider(create: (_) => GiveawaysController(authed, auth, MemoryCacheStore(), retryInterval: null)),
           ChangeNotifierProvider(create: (_) => TicketsController(authed, auth, MemoryCacheStore(), retryInterval: null)),
           ChangeNotifierProvider(create: (_) => NotificationsController(authed, auth)),
+          ChangeNotifierProvider(create: (_) => AdminController(authed, auth)),
           ChangeNotifierProvider(
               create: (_) => DiscoverController(authed, auth, MemoryCacheStore(), LocationService(FakeGateway()), retryInterval: null)),
         ],
@@ -187,6 +206,11 @@ void main() {
     'Detail Giveaway': (() => GiveawayDetailScreen(giveawayId: 'g1', initial: Giveaway.tryParse(sampleGiveaways().first)), 'Input Code'),
     'My Tickets': (() => const TicketsScreen(), '#123456'),
     'Notifikasi': (() => const NotificationsScreen(), 'Selamat, kamu menang!'),
+    'Admin': (() => const AdminGiveawaysScreen(), 'Buat giveaway'),
+    'Buat Giveaway': (() => const CreateGiveawayScreen(), 'Informasi'),
+    'Kelola Giveaway': (() => AdminGiveawayScreen(giveawayId: 'g1', initial: Giveaway.tryParse(sampleGiveaways().first)), 'Generate Code'),
+    'Generate Code': (() => const GenerateCodesScreen(giveawayId: 'g1'), 'Buat kode'),
+    'Daftar Kode': (() => const CodesListScreen(giveawayId: 'g1'), 'ABCD-EFGH-JKLM'),
     'Profil': (() => const ProfileScreen(), 'Level 3'),
     'Login': (() => const LoginScreen(), 'Belum punya akun? Daftar'),
     'Daftar': (() => const RegisterScreen(), 'Sudah punya akun? Masuk'),
@@ -218,6 +242,32 @@ void main() {
           await tester.pumpWidget(const SizedBox()); // hentikan timer (hitung mundur)
         });
       }
+
+      testWidgets('Generate Code: hasil (peringatan, kode, salin)', (tester) async {
+        await setViewport(tester, width: v.width, textScale: v.scale, brightness: v.brightness);
+        final env = SampleEnv();
+        await tester.pumpWidget(env.app(const GenerateCodesScreen(giveawayId: 'g1')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('generate_codes')));
+        await tester.pumpAndSettle();
+        expect(find.text('ABCD-EFGH-JKLM'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+        await _scrollThrough(tester);
+        await tester.pumpWidget(const SizedBox());
+      });
+
+      testWidgets('Kelola Giveaway: dialog konfirmasi draw', (tester) async {
+        await setViewport(tester, width: v.width, textScale: v.scale, brightness: v.brightness);
+        final env = SampleEnv();
+        await tester.pumpWidget(env.app(AdminGiveawayScreen(giveawayId: 'g1', initial: Giveaway.tryParse(sampleGiveaways().first))));
+        await tester.pumpAndSettle();
+        await tester.scrollUntilVisible(find.byKey(const Key('run_draw')), 200, scrollable: find.byType(Scrollable).first);
+        await tester.tap(find.byKey(const Key('run_draw')));
+        await tester.pumpAndSettle();
+        expect(find.byKey(const Key('draw_confirm')), findsOneWidget);
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox());
+      });
 
       testWidgets('Input Code: hasil sukses (TicketCard + nomor besar)', (tester) async {
         await setViewport(tester, width: v.width, textScale: v.scale, brightness: v.brightness);
