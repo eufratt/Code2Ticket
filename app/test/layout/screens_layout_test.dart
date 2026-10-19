@@ -4,6 +4,11 @@ import 'dart:io';
 import 'package:code2ticket/core/db/rate_cache.dart' show SettingsStore;
 import 'package:code2ticket/core/verify/chain_verifier.dart';
 import 'package:code2ticket/features/draw/draw_result_screen.dart';
+import 'package:code2ticket/features/game/game_controller.dart';
+import 'package:code2ticket/features/game/game_hub_screen.dart';
+import 'package:code2ticket/features/game/leaderboard_screen.dart';
+import 'package:code2ticket/features/game/maze_play_screen.dart';
+import 'package:code2ticket/features/giveaways/affinity_controller.dart';
 import 'package:code2ticket/features/draw/draw_verify_screen.dart';
 import 'package:code2ticket/core/api/authed_api.dart';
 import 'package:code2ticket/core/location/location_service.dart';
@@ -138,6 +143,21 @@ class SampleAuth extends FakeAuth {
 class SampleEnv {
   SampleEnv() {
     api = FakeApi((m, p, b) async {
+      if (p.startsWith('/me/affinity')) return {...affinity};
+      if (p.startsWith('/game/leaderboard')) {
+        return {
+          'ok': true,
+          'data': [
+            {'rank': 1, 'username': 'ab***', 'level': 4, 'total_score': 12000},
+            {'rank': 2, 'username': 'pengguna_dengan_username_panjang', 'level': 3, 'total_score': 9800},
+            {'rank': 3, 'username': 'cd***', 'level': 1, 'total_score': 700},
+            {'rank': 4, 'username': 'ef***', 'level': 1, 'total_score': 300},
+          ],
+        };
+      }
+      if (p == '/game/scores') {
+        return {'ok': true, 'score': 700, 'xp_earned': 70, 'daily_xp_total': 70, 'daily_cap_reached': false, 'user': {'id': 'u1', 'username': 'pengguna_dengan_username_panjang', 'email': 'a@b.co', 'full_name': 'Nama', 'role': 'user', 'xp': 100, 'level': 1, 'badges': <String>[]}};
+      }
       if (p.endsWith('/winners')) return {'ok': true, 'drawn': true, 'winners': [for (var i = 0; i < drawWinners.length; i++) {'rank': i + 1, 'ticket_number': drawWinners[i], 'name': 'pe***${i + 1}'}]};
       if (p.endsWith('/verification')) return {'ok': true, ...drawVerification};
       if (p.startsWith('/giveaways/')) return {...sampleGiveaways().first, 'status': giveawayStatus};
@@ -170,6 +190,9 @@ class SampleEnv {
     auth = SampleAuth(api)..user = sampleUser();
     authed = AuthedApi(api, auth);
   }
+  /// Isi GET /me/affinity ({kategori: skor}); kosong = tanpa "Untuk kamu".
+  Map<String, dynamic> affinity = {};
+
   /// Status giveaway yang dijawab GET /giveaways/:id (tes boleh mengubahnya sebelum layar dibuka).
   String giveawayStatus = 'active';
 
@@ -199,6 +222,8 @@ class SampleEnv {
           ChangeNotifierProvider(create: (_) => TicketsController(authed, auth, MemoryCacheStore(), retryInterval: null)),
           ChangeNotifierProvider(create: (_) => NotificationsController(authed, auth)),
           ChangeNotifierProvider(create: (_) => AdminController(authed, auth)),
+          ChangeNotifierProvider(create: (_) => GameController(authed, auth)),
+          ChangeNotifierProvider(create: (_) => AffinityController(authed, auth)),
           ChangeNotifierProvider(
               create: (_) => DiscoverController(authed, auth, MemoryCacheStore(), LocationService(FakeGateway()), retryInterval: null)),
         ],
@@ -231,6 +256,9 @@ void main() {
     'Kelola Giveaway': (() => AdminGiveawayScreen(giveawayId: 'g1', initial: Giveaway.tryParse(sampleGiveaways().first)), 'Generate Code'),
     'Generate Code': (() => const GenerateCodesScreen(giveawayId: 'g1'), 'Buat kode'),
     'Daftar Kode': (() => const CodesListScreen(giveawayId: 'g1'), 'ABCD-EFGH-JKLM'),
+    'Game Maze': (() => const GameHubScreen(), 'Pilih tingkat'),
+    'Papan Peringkat': (() => const LeaderboardScreen(), 'Skor total 7 hari terakhir'),
+    'Maze (siap)': (() => MazePlayScreen(levelIndex: 2, seed: 1, tilt: () => const Stream.empty()), 'Siap?'),
     'Cek Keaslian': (() => DrawVerifyScreen(giveawayId: 'g1', runner: _syncVerify), 'Seed dikunci sebelum tiket terbit'),
     'Profil': (() => const ProfileScreen(), 'Level 3'),
     'Login': (() => const LoginScreen(), 'Belum punya akun? Daftar'),
@@ -294,6 +322,34 @@ void main() {
         await tester.pumpWidget(env.app(DrawResultScreen(giveawayId: 'g1', runner: _syncVerify, shakes: () => const Stream<void>.empty())));
         await frames(tester);
         expect(find.text('Daftar pemenang'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+        await _scrollThrough(tester);
+        await tester.pumpWidget(const SizedBox());
+      });
+
+      testWidgets('Maze: hasil waktu habis di tingkat sulit', (tester) async {
+        await setViewport(tester, width: v.width, textScale: v.scale, brightness: v.brightness);
+        final env = SampleEnv();
+        await tester.pumpWidget(env.app(MazePlayScreen(levelIndex: 2, seed: 1, tilt: () => const Stream.empty())));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('maze_start')));
+        await tester.pump();
+        for (var i = 0; i < 20 * 55; i++) {
+          await tester.pump(const Duration(milliseconds: 50));
+        }
+        await tester.pumpAndSettle();
+        expect(find.text('Waktu habis'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+        await _scrollThrough(tester);
+        await tester.pumpWidget(const SizedBox());
+      });
+
+      testWidgets('Home: bagian "Untuk kamu"', (tester) async {
+        await setViewport(tester, width: v.width, textScale: v.scale, brightness: v.brightness);
+        final env = SampleEnv()..affinity = {'travel': 5, 'gaming': 2};
+        await tester.pumpWidget(env.app(const HomeScreen()));
+        await tester.pumpAndSettle();
+        expect(find.text('Untuk kamu'), findsOneWidget);
         expect(tester.takeException(), isNull);
         await _scrollThrough(tester);
         await tester.pumpWidget(const SizedBox());

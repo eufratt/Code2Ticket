@@ -1,0 +1,168 @@
+import 'package:code2ticket/core/api/api_client.dart';
+import 'package:code2ticket/core/api/authed_api.dart';
+import 'package:code2ticket/features/auth/auth_controller.dart';
+import 'package:code2ticket/features/auth/auth_models.dart';
+import 'package:code2ticket/features/giveaways/affinity_controller.dart';
+import 'package:code2ticket/features/giveaways/giveaway_models.dart';
+import 'package:code2ticket/features/giveaways/giveaways_controller.dart' show LoadState;
+import 'package:code2ticket/features/giveaways/home_screen.dart';
+import 'package:code2ticket/features/profile/profile_screen.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+import '../input_code_test.dart' show FakeApi, FakeAuth;
+import '../layout/screens_layout_test.dart' show SampleEnv, sampleGiveaway;
+import '../support/ui.dart';
+
+Giveaway gw(String id, String category, {int drawHours = 3, String status = 'active', int startHours = -1}) {
+  final m = sampleGiveaway(id, category);
+  final now = DateTime.now().toUtc();
+  m['start_at'] = now.add(Duration(hours: startHours)).toIso8601String();
+  m['end_at'] = now.add(Duration(hours: drawHours - 1)).toIso8601String();
+  m['draw_at'] = now.add(Duration(hours: drawHours)).toIso8601String();
+  m['status'] = status;
+  return Giveaway.tryParse(m)!;
+}
+
+void main() {
+  group('recommendFor', () {
+    final now = DateTime.now();
+    test('urut skor minat tertinggi dulu, lalu draw terdekat; kategori tanpa skor tidak ikut', () {
+      final items = [gw('a', 'tech', drawHours: 5), gw('b', 'gaming', drawHours: 9), gw('c', 'gaming', drawHours: 4), gw('d', 'food'), gw('e', 'travel', drawHours: 2)];
+      final r = recommendFor(items, {'gaming': 5, 'tech': 1, 'travel': 3}, now);
+      expect(r.map((g) => g.id), ['c', 'b', 'e', 'a']);
+    });
+
+    test('affinity kosong -> kosong (bagian disembunyikan)', () {
+      expect(recommendFor([gw('a', 'tech')], const {}, now), isEmpty);
+    });
+
+    test('yang sudah diundi atau menunggu draw tidak direkomendasikan; yang belum mulai boleh', () {
+      final items = [gw('drawn', 'tech', status: 'drawn'), gw('wait', 'tech', drawHours: -1, startHours: -5), gw('soon', 'tech', startHours: 2, drawHours: 6), gw('ok', 'tech')];
+      expect(recommendFor(items, {'tech': 2}, now).map((g) => g.id), containsAll(['ok', 'soon']));
+      expect(recommendFor(items, {'tech': 2}, now).map((g) => g.id), isNot(contains('drawn')));
+      expect(recommendFor(items, {'tech': 2}, now).map((g) => g.id), isNot(contains('wait')));
+    });
+
+    test('dibatasi limit', () {
+      final items = [for (var i = 0; i < 10; i++) gw('g$i', 'tech', drawHours: 2 + i)];
+      expect(recommendFor(items, {'tech': 1}, now, limit: 4).length, 4);
+    });
+  });
+
+  group('AffinityController', () {
+    late FakeApi api;
+    late FakeAuth auth;
+    late AffinityController c;
+    Future<Map<String, dynamic>> Function(String, String, dynamic) handler = (m, p, b) async => {};
+
+    setUp(() {
+      handler = (m, p, b) async => {'gaming': 5, 'travel': 3, 'food': 0, 'rusak': 'x'};
+      api = FakeApi((m, p, b) => handler(m, p, b));
+      auth = FakeAuth(api);
+      c = AffinityController(AuthedApi(api, auth), auth);
+    });
+
+    test('objek polos {kategori: skor}: hanya skor positif numerik; satu GET /me/affinity', () async {
+      await c.load();
+      expect(c.scores, {'gaming': 5, 'travel': 3});
+      expect(c.state, LoadState.loaded);
+      expect(api.calls.single.path, '/me/affinity');
+    });
+
+    test('loadOnce: tidak membuat permintaan baru setelah dimuat', () async {
+      await c.loadOnce();
+      await c.loadOnce();
+      expect(api.calls.length, 1);
+    });
+
+    test('galat jaringan / 403 / ok:false: kosong tanpa melempar; 401 -> logout', () async {
+      handler = (m, p, b) async => throw NetworkException('putus');
+      await c.load();
+      expect(c.state, LoadState.error);
+      expect(c.scores, isEmpty);
+      handler = (m, p, b) async => throw ForbiddenException();
+      await c.load();
+      expect(c.state, LoadState.error);
+      handler = (m, p, b) async => {'ok': false, 'error': 'x'};
+      await c.load();
+      expect(c.scores, isEmpty);
+      handler = (m, p, b) async => throw InvalidSessionException();
+      await c.load();
+      expect(auth.invalidated, 1);
+    });
+
+    test('logout mengosongkan', () async {
+      await c.load();
+      auth.status = AuthStatus.signedOut;
+      auth.notifyListeners();
+      expect(c.scores, isEmpty);
+    });
+  });
+
+  group('Home: "Untuk kamu"', () {
+    Future<SampleEnv> pumpHome(WidgetTester tester, Map<String, dynamic> affinity) async {
+      await setViewport(tester, height: 1600);
+      final env = SampleEnv()..affinity = affinity;
+      await tester.pumpWidget(env.app(const HomeScreen()));
+      await tester.pumpAndSettle();
+      return env;
+    }
+
+    int gets(SampleEnv env) => env.api.calls.where((c) => c.path == '/me/affinity').length;
+
+    testWidgets('affinity berisi: bagian tampil; dimuat satu kali', (tester) async {
+      final env = await pumpHome(tester, {'travel': 5, 'gaming': 2});
+      expect(find.text('Untuk kamu'), findsOneWidget);
+      expect(gets(env), 1);
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('affinity kosong: bagian disembunyikan', (tester) async {
+      final env = await pumpHome(tester, {});
+      expect(find.text('Untuk kamu'), findsNothing);
+      expect(gets(env), 1);
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('kategori tanpa giveaway yang cocok: bagian disembunyikan', (tester) async {
+      await pumpHome(tester, {'fashion': 9});
+      expect(find.text('Untuk kamu'), findsNothing);
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('tidak ada permintaan berlebih saat Home digulir dan dibangun ulang', (tester) async {
+      final env = await pumpHome(tester, {'travel': 5});
+      await tester.drag(find.byType(Scrollable).first, const Offset(0, -400));
+      await tester.pumpAndSettle();
+      await tester.drag(find.byType(Scrollable).first, const Offset(0, 400));
+      await tester.pumpAndSettle();
+      expect(gets(env), 1);
+      await tester.pumpWidget(const SizedBox());
+    });
+  });
+
+  group('Profil: Game dan lencana dari server', () {
+    Future<SampleEnv> pumpProfile(WidgetTester tester, List<String> badges) async {
+      await setViewport(tester, height: 2200);
+      final env = SampleEnv();
+      env.auth.user = AppUser(id: 'u1', username: 'pengguna_uji', email: 'a@b.co', fullName: 'Pengguna Uji', role: 'user', xp: 10, level: 1, badges: badges);
+      await tester.pumpWidget(env.app(const ProfileScreen()));
+      await tester.pumpAndSettle();
+      return env;
+    }
+
+    testWidgets('menu Game Maze ada', (tester) async {
+      await pumpProfile(tester, const []);
+      expect(find.byKey(const Key('open_game')), findsOneWidget);
+    });
+
+    testWidgets('lencana Maze sesuai data server; tidak dihitung di klien', (tester) async {
+      await pumpProfile(tester, const ['first_maze_clear']);
+      expect(find.bySemanticsLabel('First Maze Clear, sudah diraih'), findsOneWidget);
+      expect(find.bySemanticsLabel('Maze Master, terkunci'), findsOneWidget);
+      expect(find.descendant(of: find.byKey(const Key('badge_maze_master')), matching: find.byIcon(Icons.lock)), findsOneWidget);
+      await tester.pumpWidget(const SizedBox());
+    });
+  });
+}
