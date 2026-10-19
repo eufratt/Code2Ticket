@@ -158,6 +158,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             SurfaceCard(
               padding: EdgeInsets.zero,
               child: Column(children: [
+                if (u?.isAdmin == true) ...[
+                  ListTile(key: const Key('open_admin'), leading: const Icon(Icons.admin_panel_settings_outlined), title: const Text('Admin'), subtitle: const Text('Buat giveaway, kode, dan draw'), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/admin')),
+                  const Divider(indent: Spacing.s16, endIndent: Spacing.s16),
+                ],
                 ListTile(key: const Key('open_converter'), leading: const Icon(Icons.currency_exchange), title: const Text('Konverter'), subtitle: const Text('Mata uang dan waktu'), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/converter')),
                 const Divider(indent: Spacing.s16, endIndent: Spacing.s16),
                 ListTile(key: const Key('open_feedback'), leading: const Icon(Icons.rate_review_outlined), title: const Text('Saran & Kesan'), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/feedback')),
