@@ -7,9 +7,13 @@ abstract final class Spacing {
   static const s4 = 4.0, s8 = 8.0, s12 = 12.0, s16 = 16.0, s24 = 24.0, s32 = 32.0;
   static const screen = s16, cardGap = s12, sectionGap = s24;
 
-  /// Ruang bawah daftar supaya isi terakhir tidak tertutup FAB + bottom navigation.
-  static const listBottom = 140.0;
+  /// Ruang bawah daftar di dalam shell supaya isi terakhir tidak tertutup FAB + bottom navigation:
+  /// tinggi bar + FAB + jarak FAB ke bar + napas 16 dp. Dipakai semua daftar tab (satu sumber).
+  static const listBottom = kNavBarHeight + kFabSize + kFabGap + s16;
 }
+
+/// Ukuran kerangka navigasi (dipakai AppShell dan [Spacing.listBottom]).
+const double kNavBarHeight = 64, kFabSize = 56, kFabGap = 10;
 
 /// Radius (DESIGN.md 3.5).
 abstract final class Radii {

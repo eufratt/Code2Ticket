@@ -249,6 +249,7 @@ class _History extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
+      padding: const EdgeInsets.only(bottom: Spacing.listBottom),
       children: [
         SectionHeader(
           'Riwayat pencarian',

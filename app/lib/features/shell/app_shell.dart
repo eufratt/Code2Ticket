@@ -6,7 +6,7 @@ import '../../core/theme/app_tokens.dart';
 
 /// Lokasi kustom FAB melayang di tengah horizontal, tepat di atas bottom navigation bar.
 class AboveNavCenterFloatLocation extends FloatingActionButtonLocation {
-  const AboveNavCenterFloatLocation({this.margin = 10.0});
+  const AboveNavCenterFloatLocation({this.margin = kFabGap});
   final double margin;
 
   @override
@@ -91,7 +91,7 @@ class AppShell extends StatelessWidget {
 
     return Scaffold(
       body: navigationShell,
-      floatingActionButtonLocation: const AboveNavCenterFloatLocation(margin: 10.0),
+      floatingActionButtonLocation: const AboveNavCenterFloatLocation(margin: kFabGap),
       floatingActionButton: DecoratedBox(
         decoration: BoxDecoration(shape: BoxShape.circle, boxShadow: AppShadows.fab(c)),
         child: FloatingActionButton(
@@ -103,7 +103,7 @@ class AppShell extends StatelessWidget {
       ),
       bottomNavigationBar: BottomAppBar(
         padding: EdgeInsets.zero,
-        height: 64,
+        height: kNavBarHeight,
         color: c.surface,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
