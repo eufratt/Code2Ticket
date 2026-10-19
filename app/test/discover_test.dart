@@ -1,3 +1,4 @@
+import 'package:code2ticket/core/widgets/widgets.dart' show SkeletonLoader;
 import 'dart:async';
 
 import 'package:code2ticket/core/api/api_client.dart';
@@ -353,7 +354,7 @@ void main() {
       await pump(tester);
       auth.setWakingUp(true);
       await tester.pump();
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byType(SkeletonLoader), findsOneWidget);
       expect(find.text('Server sedang bangun, tunggu sebentar...'), findsOneWidget);
       gate.complete({'ok': true, 'data': []});
       await tester.pumpAndSettle();

@@ -3,7 +3,9 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/location/location_service.dart';
-import '../../widgets/state_views.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_tokens.dart';
+import '../../core/widgets/widgets.dart';
 import '../giveaways/giveaway_card.dart';
 import '../giveaways/giveaways_controller.dart' show LoadState;
 import 'discover_controller.dart';
@@ -73,7 +75,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+            padding: const EdgeInsets.fromLTRB(Spacing.screen, Spacing.s8, Spacing.screen, Spacing.s4),
             child: TextField(
               key: const Key('search_field'),
               controller: _text,
@@ -93,8 +95,6 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                           setState(() {});
                         },
                       ),
-                border: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(28))),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
               ),
               onChanged: (v) {
                 c.onQueryChanged(v);
@@ -161,6 +161,7 @@ class _SortBar extends StatelessWidget {
             const SizedBox(width: 8),
             InputChip(
               key: const Key('manual_chip'),
+              deleteButtonTooltipMessage: 'Hapus lokasi manual',
               avatar: const Icon(Icons.place, size: 18),
               label: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 160),
@@ -188,6 +189,7 @@ class _SortBar extends StatelessWidget {
           if (f.category != null) ...[
             const SizedBox(width: 8),
             InputChip(
+              deleteButtonTooltipMessage: 'Hapus filter kategori',
               label: Text(categoryLabel(f.category!)),
               onDeleted: () => controller.setFilters(f.copyWith(category: null)),
             ),
@@ -207,17 +209,17 @@ class _LocationBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final status = controller.locationProblem!;
-    final scheme = Theme.of(context).colorScheme;
+    final sc = context.colors.statusWarning;
     final opensSettings = status == LocationStatus.deniedForever || status == LocationStatus.serviceOff;
     return Container(
       key: const Key('location_banner'),
       width: double.infinity,
-      color: scheme.errorContainer,
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+      color: sc.bg,
+      padding: const EdgeInsets.fromLTRB(Spacing.screen, Spacing.s8, Spacing.screen, Spacing.s4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(locationStatusMessage(status), style: TextStyle(color: scheme.onErrorContainer)),
+          Text(locationStatusMessage(status), style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: sc.fg)),
           Wrap(spacing: 8, children: [
             TextButton(
               key: const Key('location_action'),
@@ -248,18 +250,12 @@ class _History extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView(
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 8, 0),
-          child: Row(
-            children: [
-              Expanded(child: Text('Riwayat pencarian', style: Theme.of(context).textTheme.titleSmall)),
-              TextButton(
-                key: const Key('clear_history'),
-                onPressed: controller.clearHistory,
-                child: const Text('Hapus semua'),
-              ),
-            ],
-          ),
+        SectionHeader(
+          'Riwayat pencarian',
+          padding: const EdgeInsets.fromLTRB(Spacing.screen, Spacing.s8, Spacing.s8, 0),
+          actionLabel: 'Hapus semua',
+          actionKey: const Key('clear_history'),
+          onAction: controller.clearHistory,
         ),
         for (final q in controller.history)
           ListTile(
@@ -288,9 +284,9 @@ class _Results extends StatelessWidget {
     switch (c.state) {
       case LoadState.idle:
       case LoadState.loading:
-        if (c.items.isEmpty) return const LoadingView();
+        if (c.items.isEmpty) return const SkeletonLoader(count: 3);
       case LoadState.error:
-        if (c.items.isEmpty) return ErrorRetryView(message: c.error ?? 'Gagal memuat.', onRetry: c.search);
+        if (c.items.isEmpty) return ErrorState(message: c.error ?? 'Gagal memuat.', onRetry: c.search);
       case LoadState.loaded:
         break;
     }
@@ -300,21 +296,26 @@ class _Results extends StatelessWidget {
           ? ListView(children: [
               SizedBox(
                 height: 360,
-                child: EmptyView(
-                  icon: Icons.search_off,
-                  message: c.filters.query.trim().isEmpty && c.filters.activeFilterCount == 0
-                      ? 'Belum ada giveaway.\nTarik ke bawah untuk memuat ulang.'
-                      : 'Tidak ada giveaway yang cocok.\nCoba kata kunci atau filter lain.',
-                ),
+                child: c.filters.query.trim().isEmpty && c.filters.activeFilterCount == 0
+                    ? const EmptyState(
+                        icon: Icons.search_off,
+                        title: 'Belum ada giveaway',
+                        message: 'Tarik ke bawah untuk memuat ulang.',
+                      )
+                    : const EmptyState(
+                        icon: Icons.search_off,
+                        title: 'Tidak ada giveaway yang cocok',
+                        message: 'Coba kata kunci atau filter lain.',
+                      ),
               ),
             ])
           : ListView.builder(
-              padding: const EdgeInsets.only(top: 4, bottom: 140),
+              padding: const EdgeInsets.fromLTRB(Spacing.screen, Spacing.s4, Spacing.screen, Spacing.listBottom),
               itemCount: c.items.length + (c.hasMore ? 1 : 0),
               itemBuilder: (_, i) {
                 if (i == c.items.length) {
                   return Padding(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(Spacing.s12),
                     child: Center(
                       child: c.loadingMore
                           ? const CircularProgressIndicator()
@@ -323,12 +324,15 @@ class _Results extends StatelessWidget {
                   );
                 }
                 final g = c.items[i];
-                return GiveawayCard(
-                  giveaway: g,
-                  onTap: () {
-                    c.commitQuery();
-                    context.push('/giveaway/${g.id}', extra: g);
-                  },
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: Spacing.s4 + 2),
+                  child: GiveawayCard(
+                    giveaway: g,
+                    onTap: () {
+                      c.commitQuery();
+                      context.push('/giveaway/${g.id}', extra: g);
+                    },
+                  ),
                 );
               },
             ),
@@ -387,97 +391,107 @@ class _FilterSheetState extends State<FilterSheet> {
           ]),
         );
     return Padding(
-      padding: EdgeInsets.fromLTRB(16, 8, 16, MediaQuery.of(context).viewInsets.bottom + 16),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Filter', style: theme.textTheme.titleLarge),
-            section(
-              'Kategori',
-              Wrap(spacing: 8, runSpacing: 4, children: [
-                ChoiceChip(
-                  label: const Text('Semua'),
-                  selected: _f.category == null,
-                  onSelected: (_) => setState(() => _f = _f.copyWith(category: null)),
+      padding: EdgeInsets.fromLTRB(Spacing.screen, Spacing.s8, Spacing.screen, MediaQuery.of(context).viewInsets.bottom + Spacing.s16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Flexible(
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                Text('Filter', style: theme.textTheme.titleLarge),
+                section(
+                  'Kategori',
+                  Wrap(spacing: 8, runSpacing: 4, children: [
+                    ChoiceChip(
+                      label: const Text('Semua'),
+                      selected: _f.category == null,
+                      onSelected: (_) => setState(() => _f = _f.copyWith(category: null)),
+                    ),
+                    for (final c in giveawayCategories)
+                      ChoiceChip(
+                        key: Key('cat_$c'),
+                        label: Text(categoryLabel(c)),
+                        selected: _f.category == c,
+                        onSelected: (_) => setState(() => _f = _f.copyWith(category: c)),
+                      ),
+                  ]),
                 ),
-                for (final c in giveawayCategories)
-                  ChoiceChip(
-                    key: Key('cat_$c'),
-                    label: Text(categoryLabel(c)),
-                    selected: _f.category == c,
-                    onSelected: (_) => setState(() => _f = _f.copyWith(category: c)),
-                  ),
-              ]),
-            ),
-            section(
-              'Nilai hadiah (USD)',
-              Row(children: [
-                Expanded(
-                  child: TextField(
-                    key: const Key('min_value'),
-                    controller: _min,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    decoration: const InputDecoration(labelText: 'Minimum'),
-                  ),
+                section(
+                  'Nilai hadiah (USD)',
+                  Row(children: [
+                    Expanded(
+                      child: TextField(
+                        key: const Key('min_value'),
+                        controller: _min,
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        decoration: const InputDecoration(labelText: 'Minimum'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextField(
+                        key: const Key('max_value'),
+                        controller: _max,
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        decoration: const InputDecoration(labelText: 'Maksimum'),
+                      ),
+                    ),
+                  ]),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextField(
-                    key: const Key('max_value'),
-                    controller: _max,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    decoration: const InputDecoration(labelText: 'Maksimum'),
-                  ),
+                section(
+                  'Deadline',
+                  Wrap(spacing: 8, children: [
+                    for (final (label, days) in const [('Semua', null), ('Hari ini', 1), ('7 hari', 7), ('30 hari', 30)])
+                      ChoiceChip(
+                        label: Text(label),
+                        selected: _f.deadlineDays == days,
+                        onSelected: (_) => setState(() => _f = _f.copyWith(deadlineDays: days)),
+                      ),
+                  ]),
                 ),
-              ]),
-            ),
-            section(
-              'Deadline',
-              Wrap(spacing: 8, children: [
-                for (final (label, days) in const [('Semua', null), ('Hari ini', 1), ('7 hari', 7), ('30 hari', 30)])
-                  ChoiceChip(
-                    label: Text(label),
-                    selected: _f.deadlineDays == days,
-                    onSelected: (_) => setState(() => _f = _f.copyWith(deadlineDays: days)),
-                  ),
-              ]),
-            ),
-            section(
-              'Status',
-              Wrap(spacing: 8, children: [
-                for (final s in GiveawayStatusFilter.values)
-                  ChoiceChip(
-                    label: Text(s.label),
-                    selected: _f.status == s,
-                    onSelected: (_) => setState(() => _f = _f.copyWith(status: s)),
-                  ),
-              ]),
-            ),
-            if (_error != null) ...[
-              const SizedBox(height: 12),
-              Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
-            ],
-            const SizedBox(height: 20),
-            Row(children: [
-              TextButton(
-                key: const Key('reset_filter'),
-                onPressed: () => Navigator.pop(
-                  context,
-                  widget.initial.copyWith(
-                    category: null, minValue: null, maxValue: null, deadlineDays: null,
-                    status: GiveawayStatusFilter.active,
-                  ),
+                section(
+                  'Status',
+                  Wrap(spacing: 8, children: [
+                    for (final s in GiveawayStatusFilter.values)
+                      ChoiceChip(
+                        label: Text(s.label),
+                        selected: _f.status == s,
+                        onSelected: (_) => setState(() => _f = _f.copyWith(status: s)),
+                      ),
+                  ]),
                 ),
-                child: const Text('Atur ulang'),
-              ),
-              const Spacer(),
-              FilledButton(key: const Key('apply_filter'), onPressed: _apply, child: const Text('Terapkan')),
-            ]),
-          ],
+                if (_error != null) ...[
+                  const SizedBox(height: 12),
+                  InlineMessage(_error!),
+                ],
+              ],
+            ),
+          ),
         ),
-      ),
+        const SizedBox(height: Spacing.s16),
+        Row(children: [
+          PrimaryButton(
+            key: const Key('reset_filter'),
+            label: 'Atur ulang',
+            variant: ButtonVariant.text,
+            expand: false,
+            onPressed: () => Navigator.pop(
+              context,
+              widget.initial.copyWith(
+                category: null, minValue: null, maxValue: null, deadlineDays: null,
+                status: GiveawayStatusFilter.active,
+              ),
+            ),
+          ),
+          const Spacer(),
+          PrimaryButton(key: const Key('apply_filter'), label: 'Terapkan', expand: false, onPressed: _apply),
+        ]),
+      ],
+    ),
     );
   }
 }

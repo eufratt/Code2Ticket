@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
-import '../../widgets/state_views.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_tokens.dart';
+import '../../core/widgets/widgets.dart';
 import '../giveaways/giveaway_card.dart';
 import '../giveaways/giveaway_models.dart';
 import '../giveaways/giveaways_controller.dart' show LoadState;
@@ -98,12 +100,15 @@ class _MapScreenState extends State<MapScreen> {
                             child: GestureDetector(
                               key: Key('marker_${g.id}'),
                               onTap: () => setState(() => _selectedId = g.id),
-                              child: Icon(
-                                Icons.location_on,
-                                size: 44,
-                                color: g.id == _selectedId
-                                    ? Theme.of(context).colorScheme.error
-                                    : Theme.of(context).colorScheme.primary,
+                              child: Semantics(
+                                button: true,
+                                label: 'Giveaway ${g.title}',
+                                child: Icon(
+                                  Icons.location_on,
+                                  size: 44,
+                                  color: g.id == _selectedId ? context.colors.accent : context.colors.primary,
+                                  shadows: const [Shadow(color: Color(0x66000000), blurRadius: 4)],
+                                ),
                               ),
                             ),
                           ),
@@ -115,9 +120,9 @@ class _MapScreenState extends State<MapScreen> {
                             child: DecoratedBox(
                               key: const Key('my_position'),
                               decoration: BoxDecoration(
-                                color: Colors.blue,
+                                color: context.colors.success,
                                 shape: BoxShape.circle,
-                                border: Border.all(color: Colors.white, width: 3),
+                                border: Border.all(color: context.colors.surface, width: 3),
                               ),
                             ),
                           ),
@@ -126,27 +131,55 @@ class _MapScreenState extends State<MapScreen> {
                   ],
                 ),
                 Positioned(
-                  top: 8,
-                  left: 8,
-                  child: Material(
-                    color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.9),
-                    borderRadius: BorderRadius.circular(16),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      child: Text(
-                        key: const Key('map_summary'),
-                        _summary(c, placed.length),
-                        style: Theme.of(context).textTheme.bodySmall,
+                  top: Spacing.s8,
+                  left: Spacing.s8,
+                  right: 72,
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: context.colors.surface,
+                        borderRadius: BorderRadius.circular(Radii.full),
+                        boxShadow: AppShadows.card(context.colors),
                       ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: Spacing.s12, vertical: Spacing.s8),
+                        child: Text(
+                          key: const Key('map_summary'),
+                          _summary(c, placed.length),
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: context.colors.onBackground),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                // Tombol "lokasi saya": menengahkan peta ke posisi bila sudah diketahui; bila belum, meminta posisi
+                // lewat mode Terdekat yang sama dengan chip di Discover.
+                Positioned(
+                  top: Spacing.s8,
+                  right: Spacing.s8,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: context.colors.surface,
+                      shape: BoxShape.circle,
+                      boxShadow: AppShadows.card(context.colors),
+                    ),
+                    child: IconButton(
+                      key: const Key('my_location'),
+                      tooltip: 'Lokasi saya',
+                      icon: c.locating
+                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                          : const Icon(Icons.my_location),
+                      onPressed: c.locating ? null : () => me != null ? _map.move(me, 14) : c.enableNearby(),
                     ),
                   ),
                 ),
                 const Positioned(right: 0, bottom: 0, child: OsmAttribution()),
                 if (selected != null)
                   Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 24,
+                    left: Spacing.screen,
+                    right: Spacing.screen,
+                    bottom: Spacing.s24 + 4,
                     child: _SelectedCard(giveaway: selected),
                   ),
               ],
@@ -172,12 +205,12 @@ class OsmAttribution extends StatelessWidget {
   const OsmAttribution({super.key});
   @override
   Widget build(BuildContext context) => Container(
-        color: Colors.white.withValues(alpha: 0.75),
+        color: context.colors.surface.withValues(alpha: 0.85),
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-        child: const Text(
+        child: Text(
           '© OpenStreetMap contributors',
-          key: Key('osm_attribution'),
-          style: TextStyle(fontSize: 11, color: Colors.black87),
+          key: const Key('osm_attribution'),
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: 11, color: context.colors.onBackground),
         ),
       );
 }
@@ -194,12 +227,14 @@ class _SelectedCard extends StatelessWidget {
         GiveawayCard(
           key: const Key('selected_card'),
           giveaway: giveaway,
+          variant: GiveawayCardVariant.compact,
           onTap: () => context.push('/giveaway/${giveaway.id}', extra: giveaway),
         ),
-        FilledButton.tonal(
+        const SizedBox(height: Spacing.s8),
+        PrimaryButton(
           key: const Key('open_detail'),
+          label: 'Lihat detail',
           onPressed: () => context.push('/giveaway/${giveaway.id}', extra: giveaway),
-          child: const Text('Lihat detail'),
         ),
       ],
     );

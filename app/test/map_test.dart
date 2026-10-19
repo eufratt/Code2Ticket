@@ -94,7 +94,7 @@ void main() {
     expect(find.byKey(const Key('selected_card')), findsOneWidget);
     expect(find.descendant(of: find.byKey(const Key('selected_card')), matching: find.text('Bandung')), findsOneWidget);
 
-    await tester.tapAt(const Offset(370, 110)); // area peta kosong (pojok kanan atas)
+    await tester.tapAt(const Offset(20, 300)); // area peta kosong (tepi kiri, jauh dari penanda dan tombol)
     await tester.pump(const Duration(milliseconds: 400)); // flutter_map menunggu kemungkinan double-tap
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('selected_card')), findsNothing);
