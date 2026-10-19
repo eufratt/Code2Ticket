@@ -54,7 +54,9 @@ Catatan penting untuk demo (banyak ponsel di satu Wi-Fi = satu IP publik):
 
 ## Data demo
 
-Membuat 2 giveaway aktif (satu gaming, satu travel; keduanya tanpa batas lokasi) dengan 10 kode tiap giveaway, lewat API (login admin + `POST /admin/giveaways` + `POST /admin/giveaways/:id/codes`). Kode hanya dicetak ke terminal. Akun harus admin (lihat `npm run create-admin`). Menjalankan ulang membuat giveaway baru.
+Membuat 5 giveaway aktif (gaming online tanpa batas lokasi, travel di Bali tanpa batas radius, kuliner di Surabaya dengan batas radius 15 km, smartphone di Jakarta Pusat dengan batas radius 10 km, serta sneaker di Jakarta Selatan dengan batas radius 12 km) dengan 10 kode tiap giveaway, lewat API (login admin + `POST /admin/giveaways` + `POST /admin/giveaways/:id/codes`). Kode hanya dicetak ke terminal. Akun harus admin (lihat `npm run create-admin`).
+
+Script ini bersifat **idempotent**: jika dijalankan ulang, giveaway aktif yang sudah ada akan digunakan kembali (dan diperpanjang masa aktifnya jika mendekati akhir), serta kode yang belum terpakai akan dicetak ulang tanpa membuat duplikasi. Kode baru hanya dibuat jika sisa kode yang belum terpakai kurang dari 10. Kredensial tidak pernah ditulis ke file/repo.
 
 PowerShell (kredensial hanya di sesi terminal ini):
 
