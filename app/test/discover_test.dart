@@ -1,10 +1,10 @@
-import 'package:code2ticket/core/widgets/widgets.dart' show SkeletonLoader;
 import 'dart:async';
 
 import 'package:code2ticket/core/api/api_client.dart';
 import 'package:code2ticket/core/api/authed_api.dart';
 import 'package:code2ticket/core/geocoding/geocoder.dart';
 import 'package:code2ticket/core/location/location_service.dart';
+import 'package:code2ticket/core/widgets/widgets.dart' show SkeletonLoader;
 import 'package:code2ticket/features/auth/auth_controller.dart';
 import 'package:code2ticket/features/auth/auth_models.dart';
 import 'package:code2ticket/features/discover/discover_controller.dart';

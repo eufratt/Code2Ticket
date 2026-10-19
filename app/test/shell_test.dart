@@ -6,6 +6,7 @@ import 'package:code2ticket/features/discover/discover_controller.dart';
 import 'package:code2ticket/features/giveaways/giveaways_controller.dart';
 import 'package:code2ticket/features/tickets/tickets_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show RenderParagraph;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
@@ -188,6 +189,30 @@ void main() {
       'giveaway_id': '5deb977d-ff30-4e4e-849d-ff389fe51e6a',
       'category': 'gaming',
     });
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('font sistem 1,3x di 360 dp: label tab tidak terpotong, FAB tetap 8-12 dp di atas bar, tanpa overflow', (tester) async {
+    tester.view.physicalSize = const Size(360 * 3, 800 * 3);
+    tester.view.devicePixelRatio = 3;
+    tester.platformDispatcher.textScaleFactorTestValue = 1.3;
+    addTearDown(() {
+      tester.view.reset();
+      tester.platformDispatcher.clearAllTestValues();
+    });
+    final api = FakeApi((m, p, b) async => p.startsWith('/giveaways')
+        ? {'ok': true, 'data': [json(giveawayJson)]}
+        : {'ok': true, 'data': [json(ticketJson)]});
+    final auth = _Auth(api);
+    await tester.pumpWidget(_createTestApp(auth: auth, authed: AuthedApi(api, auth)));
+    await tester.pumpAndSettle();
+    for (final label in ['Home', 'Discover', 'My Tickets', 'Asisten', 'Profil']) {
+      final p = tester.renderObject<RenderParagraph>(find.text(label));
+      expect(p.didExceedMaxLines, isFalse, reason: '$label terpotong');
+    }
+    final fabBottom = tester.getBottomRight(find.byTooltip('Input Code')).dy;
+    final barTop = tester.getTopLeft(find.byType(BottomAppBar)).dy;
+    expect(barTop - fabBottom, inInclusiveRange(8.0, 12.0));
     expect(tester.takeException(), isNull);
   });
 }

@@ -46,11 +46,14 @@ Latar status (chip): sukses `#DCFCE7` + teks `#166534`; peringatan `#FEF3C7` + t
 background `#0F172A`, surface `#1E293B`, surfaceVariant `#334155`, onBackground `#E2E8F0` (14,5), onSurfaceMuted `#94A3B8` (5,7 di surface),
 primary `#818CF8` (teks gelap `#0F172A` di atasnya, 6,0), accent `#FBBF24` (8,8), success `#4ADE80` (8,4), error `#F87171` (5,3).
 Tema gelap harus punya padanan untuk setiap token terang; tidak ada warna yang hanya didefinisikan di satu tema.
+Tambahan: `mutedOnVariant` = teks sekunder di atas surfaceVariant (kolom input): terang `#475569` (6,9), gelap `#CBD5E1` (7,5), karena `#94A3B8` di atas `#334155` hanya 4,0.
+Latar chip status gelap: sukses `#14532D`/`#BBF7D0`, peringatan `#78350F`/`#FDE68A`, error `#7F1D1D`/`#FECACA`, info `#312E81`/`#C7D2FE`, netral `#334155`/`#CBD5E1` (semua di atas 7:1). Kontras semua pasangan token diperiksa otomatis di `test/theme/theme_test.dart`.
 
 ### 3.3 Warna kategori (banner tanpa gambar)
 Gradien dua warna per kategori + ikon: gaming `#4F46E5→#7C3AED` (ikon gamepad), travel `#0EA5E9→#22D3EE` (pesawat), elektronik `#334155→#64748B` (laptop/chip),
 fashion `#DB2777→#F472B6`, makanan `#EA580C→#FB923C`, lainnya `#4F46E5→#818CF8`. Teks putih di atas gradien harus kontras >= 4,5 (pakai lapisan gelap 20% bila perlu).
 Kategori yang tidak dikenal memakai "lainnya". Warna per kategori konsisten di seluruh aplikasi.
+Kode kategori backend dipetakan: `tech`=elektronik, `food`=makanan, `gaming`/`travel`/`fashion` sama, `lifestyle` dan `other`=lainnya. Lapisan gelap 20% selalu dipasang di atas gradien, dan teks tidak pernah ditaruh langsung di atas banner (hanya ikon putih dan chip bersolid).
 
 ### 3.4 Tipografi
 Font: Plus Jakarta Sans (`google_fonts`; pastikan fallback bila offline tidak merusak tata letak). Angka tabular untuk nomor tiket, kurs, hitung mundur.
@@ -91,21 +94,21 @@ Dukung skala font sistem sampai 1,3x tanpa overflow (pakai `Flexible`/`Wrap`, bu
 - **EmptyState**: ikon besar (64), judul, penjelasan satu kalimat, satu aksi. **ErrorState**: sama, dengan pesan jelas dan tombol "Coba lagi"; pesan "Server sedang bangun, tunggu sebentar..." bila menunggu > 5 detik.
 - **SkeletonLoader**: blok abu `surfaceVariant` dengan kilau halus, bentuk menyerupai kartu yang dimuat. Jangan spinner penuh layar untuk daftar.
 - **CategoryBanner**: gambar bila ada URL; bila tidak, gradien kategori + ikon (lihat 3.3). Rasio 16:9 (kartu) atau tinggi 180 (Detail). Tidak pernah kotak kosong.
-- **Bottom navigation**: 5 tab lebar sama (Home, Discover, My Tickets, Asisten, Profil), ikon 24 + label 12; aktif = `primary` + indikator. FAB "Input Code" melayang di tengah, 10 dp di atas bar, tidak menutupi label tab ke-3; padding bawah daftar >= 140 dp.
+- **Bottom navigation**: 5 tab lebar sama (Home, Discover, My Tickets, Asisten, Profil), ikon 24 + label 12; aktif = `primary` + indikator (pil `primaryContainer` di belakang ikon). Label bar dibatasi skala 1,15x dan diperkecil seperlunya (FittedBox) bila masih lebih lebar dari tab 72 dp, tidak pernah dipotong. FAB "Input Code" melayang di tengah, 10 dp di atas bar, tidak menutupi label tab ke-3; padding bawah daftar >= 140 dp.
 - **Banner offline**: strip tipis di atas konten: "Data offline · diperbarui <waktu>"; warna peringatan lembut.
 - **Hitung mundur**: kartu sendiri, angka display (hari/jam/menit/detik), diperbarui hanya saat layar terlihat.
 
 ## 5. Panduan per layar
 - **Login/Register**: logo/teks merek di atas, satu kartu form, tombol utama lebar penuh, tautan pindah layar di bawah. Pesan error di bawah kolom terkait atau satu banner error di atas tombol (bukan snackbar).
-- **Home**: header (sapaan + avatar kecil), ringkasan ("Kamu punya N tiket", ketuk -> My Tickets), kolom cari (ketuk -> Discover), chip kategori, carousel "Segera draw" dan "Terdekat" (kartu horizontal), daftar "Semua giveaway".
+- **Home**: header (sapaan + avatar kecil), ringkasan ("Kamu punya N tiket", ketuk -> My Tickets), kolom cari (ketuk -> Discover), chip kategori (menyaring carousel dan daftar di sisi klien), carousel "Segera draw" dan "Terdekat" (kartu horizontal), daftar "Semua giveaway". Carousel memakai data yang sudah dimuat controller; "Terdekat" hanya tampil bila mode Terdekat di Discover sudah aktif (jarak berasal dari sana).
 - **Discover**: kolom cari + ikon filter + ikon peta; riwayat pencarian saat fokus kosong; hasil memakai kartu yang sama dengan Home; chip filter aktif dapat dihapus satu per satu.
-- **Peta**: peta penuh, kartu ringkas di bawah saat penanda diketuk, atribusi OSM selalu terlihat, tombol "lokasi saya".
-- **Detail Giveaway**: banner, judul + status, nilai hadiah (mata uang pilihan) besar, kartu hitung mundur, info (penyelenggara, jumlah pemenang, tiket terbit, jadwal di zona pilihan + tiga zona lain dapat dibuka), bagian "Cara ikut", tombol "Input Code" menempel di bawah.
+- **Peta**: peta penuh, kartu ringkas di bawah saat penanda diketuk, atribusi OSM selalu terlihat, tombol "lokasi saya" (kanan atas: menengahkan peta bila posisi sudah ada, selain itu meminta posisi lewat mode Terdekat). Penanda terpilih amber, posisi pengguna hijau (isi besar, bukan teks).
+- **Detail Giveaway**: banner, judul + status, nilai hadiah (mata uang pilihan) besar, kartu hitung mundur, info (penyelenggara, jumlah pemenang, tiket terbit, jadwal di zona pilihan; tiga zona lain dibuka lewat "Jadwal draw di zona lain"), bagian "Cara ikut", tombol "Input Code" menempel di bawah. Model giveaway belum punya URL gambar, jadi banner selalu gradien kategori sampai backend menyediakannya.
 - **Input Code**: kolom kode besar (monospace, huruf kapital, format otomatis XXXX-XXXX-XXXX), satu tombol; hasil sukses: animasi tiket muncul + nomor tiket besar + tombol "Lihat tiket"; hasil gagal: pesan jelas dari tabel kode error + petunjuk (mis. aktifkan lokasi).
 - **My Tickets**: dikelompokkan per giveaway (SectionHeader = nama giveaway), TicketCard per tiket; filter status (chip) di atas.
 - **Verifikasi draw** (M6): timeline vertikal: 1 Seed dikunci (commit), 2 Periode tiket, 3 Draw dijalankan, 4 Seed dibuka, 5 Hasil terverifikasi. Tiap langkah: ikon status, judul, waktu, dan "Lihat hash" (hash ditampilkan dipotong dengan tombol salin). Hasil akhir: banner "Terverifikasi" (sukses) atau "Tidak cocok" (error) dengan alasan.
 - **Pemenang**: daftar tiket pemenang (nomor tiket + inisial/nama samaran sesuai aturan privasi PRD), tanpa mengungkap data pribadi.
-- **Profil**: avatar besar (ketuk untuk ganti), nama, username, lingkaran level + bar XP, grid lencana (terkunci = abu), daftar menu (Konverter, Saran & Kesan, Pengaturan, Keluar; Admin hanya untuk role admin).
+- **Profil**: avatar besar (ketuk untuk ganti), nama, username, lingkaran level + bar XP, grid lencana (terkunci = abu + gembok), daftar menu (Konverter, Saran & Kesan, Pengaturan, Keluar; Admin hanya untuk role admin, menyusul di M5b). Bar XP: XP di dalam level dari 500 XP per level (`level = xp / 500 + 1`, skema database).
 - **Konverter**: dua tab; hasil besar di atas, kolom di bawah; keterangan kurs/tanggal dan label offline di kaki.
 - **Chat AI** (M7): gelembung kiri/kanan, indikator mengetik, saran cepat (chip) di atas input; jawaban rekomendasi menyertakan kartu giveaway yang dapat diketuk.
 - **Game** (M7): layar penuh, papan skor di atas, hasil dengan bintang; tidak memakai komponen tab/FAB.

@@ -106,7 +106,7 @@ void main() {
     expect(find.text('DETAIL a'), findsOneWidget);
   });
 
-  testWidgets('posisi pengguna (bila ada) tampil sebagai titik biru', (tester) async {
+  testWidgets('posisi pengguna (bila ada) tampil sebagai titik di peta', (tester) async {
     await pump(tester, [gw('a', title: 'Jakarta', lat: -6.2, lng: 106.8)]);
     expect(find.byKey(const Key('my_position')), findsNothing);
     await controller.setPosition((lat: -6.21, lng: 106.81));

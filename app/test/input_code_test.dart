@@ -1,4 +1,3 @@
-import 'package:code2ticket/core/widgets/widgets.dart' show PrimaryButton;
 import 'dart:async';
 import 'dart:convert';
 
@@ -6,6 +5,7 @@ import 'package:code2ticket/core/api/api_client.dart';
 import 'package:code2ticket/core/api/authed_api.dart';
 import 'package:code2ticket/core/location/location_service.dart';
 import 'package:code2ticket/core/session/session_store.dart';
+import 'package:code2ticket/core/widgets/widgets.dart' show PrimaryButton;
 import 'package:code2ticket/features/auth/auth_controller.dart';
 import 'package:code2ticket/features/giveaways/giveaways_controller.dart';
 import 'package:code2ticket/features/tickets/input_code_screen.dart';
