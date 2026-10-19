@@ -50,8 +50,9 @@ M5a kurs Frankfurter (langsung dari app) + zona waktu 4 zona + hitung mundur, Ko
 Desain DESIGN.md diterapkan ke semua layar yang ada (tema terang/gelap, komponen bersama, tes tata letak).
 M5b notifikasi (lonceng + lencana di Home, layar Notifikasi) dan Admin (menu hanya untuk role admin: Buat Giveaway, Generate Code, Daftar Kode, Draw manual).
 M6 hasil draw, verifikasi hash-chain di perangkat (app\lib\core\verify, vektor dari test_m1.py di app\test\fixtures), shake to reveal (sensors_plus).
+M7a Game Maze (accelerometer + D-pad, skor ke /game/scores), papan peringkat, rekomendasi "Untuk kamu" (/me/affinity) dan pencatatan aktivitas (/activity).
 Sisa:
-M7 AI Assistant (lewat backend, kunci LLM hanya di server), rekomendasi, mini game, leaderboard; M8 pengujian dan data demo; M9 laporan.
+M7b AI Assistant (lewat backend, kunci LLM hanya di server); M8 pengujian dan data demo; M9 laporan.
 
 ## Peta kode (graphify)
 Bila graphify-out\GRAPH_REPORT.md ada, baca dulu sebelum mencari file satu per satu. Perbarui dengan "graphify update ." setelah perubahan besar
