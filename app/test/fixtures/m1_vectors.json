@@ -1,0 +1,5133 @@
+{
+ "sha": [
+  {
+   "in": "",
+   "out": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+   "in": "abc",
+   "out": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+  },
+  {
+   "in": "Halo dunia",
+   "out": "8f6b9417cd9a7ba37b13d684eba2a6be2ea9c349b51c81395c57e1cb3ab7e126"
+  },
+  {
+   "in": "é中😀",
+   "out": "aabae3418ff6346303d27c710ec789e76a3d57634026fc011ac96be24144615a"
+  },
+  {
+   "in": "a36f980b409e8a22c87e25ca0a853b1c0baf89a834ff276c1b9717c83a0c5829",
+   "out": "fbbb7863a7eae145a44c5fb38f6b88f8c4b1c68fd12c7b215520926ac712fa7e"
+  }
+ ],
+ "owner_key": [
+  {
+   "user": "7da5780f-5627-48bc-b297-7d1e30c41e50",
+   "gid": "a1460908-51cd-4288-9916-3502e2070b59",
+   "out": "60c8d74f3bc9"
+  },
+  {
+   "user": "b57281ac-ff0c-493f-8d45-aab2297577bd",
+   "gid": "54034369-93ea-45c7-90b1-db9cd794f8af",
+   "out": "2cff5ada9c93"
+  },
+  {
+   "user": "9c2335a6-bcfe-4b7b-830b-f3a432691dc6",
+   "gid": "bf27267b-db11-47a8-80be-b26861565380",
+   "out": "a4998c995448"
+  },
+  {
+   "user": "8fb48386-0ad4-41bb-92da-a9aa0c467ef1",
+   "gid": "f69955e5-5157-452b-9acc-f391a189ca4b",
+   "out": "edd78e47ec26"
+  },
+  {
+   "user": "2632b0ff-7241-4008-b3f6-95568f9ba12c",
+   "gid": "85808969-bb3f-48a6-b29e-2c63b4e20456",
+   "out": "77efb28017d9"
+  },
+  {
+   "user": "4d90598b-7ef4-4ffd-ad8b-28531764881b",
+   "gid": "93d2625e-34ce-4941-b07f-dafe747f7b33",
+   "out": "f5227e9e25bf"
+  }
+ ],
+ "blocks": [
+  {
+   "block": {
+    "block_index": 1,
+    "giveaway_id": "5ad46141-3fa3-4e33-83b2-74e1eaf35148",
+    "ts_ms": 1700228654523,
+    "previous_hash": "20b43898746a565e0f35b910b23203df41fdae85e6b5e5ab335076aa74771cf3",
+    "block_type": "commit",
+    "seed_hash": "29113e5e9df18d69958bf9b9e561a53a0bead46da90612bbeb8379d366e0c918",
+    "winner_count": 21,
+    "draw_id": null,
+    "seed": null,
+    "total_tickets": null,
+    "tickets_hash": null,
+    "winning_tickets": null
+   },
+   "hash": "91090b9ac58be0a3bf68dd13daee69913522b92b1444d096a6b5f16052c00d03"
+  },
+  {
+   "block": {
+    "block_index": 2,
+    "giveaway_id": "b203e135-47e5-4efe-933e-c9608c0b78d0",
+    "ts_ms": 1700792785106,
+    "previous_hash": "fd00a8bd306c8b4c308157ddd25eaf57da6e983620124d1e66933cd0866e874f",
+    "block_type": "result",
+    "draw_id": "259de839-99a9-45a0-8d5a-9567e81ec267",
+    "seed": "6b17f1826cdbb7e5dcde111269530f2b3c92a45c2d1d67cd48ce59e6190fd83c",
+    "total_tickets": 2244,
+    "tickets_hash": "0f9f4eeb370555a4d96930360210e7961680966262cb354de4338dd864bc4d34",
+    "winning_tickets": "",
+    "seed_hash": null,
+    "winner_count": null
+   },
+   "hash": "01afc8570bb2ed99384bfd961121bbec71167c21ba361fae857dd11e872360cc"
+  },
+  {
+   "block": {
+    "block_index": 3,
+    "giveaway_id": "6abdd6c1-356e-4373-916b-6743d108f148",
+    "ts_ms": 1700437683566,
+    "previous_hash": "6971d9a7b8abcc2fd6fad650a239f97384874db397905f6a984f27d25d4a5b8f",
+    "block_type": "commit",
+    "seed_hash": "d896cbf51d3ce3c146ccc47d4e4e68b0183c784ee7065843c23761a0fed80b82",
+    "winner_count": 75,
+    "draw_id": null,
+    "seed": null,
+    "total_tickets": null,
+    "tickets_hash": null,
+    "winning_tickets": null
+   },
+   "hash": "3743ddfbf447cf4eb1faf70b19b12922d4ce3139f5299988a5fed39a240ee167"
+  },
+  {
+   "block": {
+    "block_index": 4,
+    "giveaway_id": "dee11dd4-fd39-439e-b174-1bd0c5f6c07e",
+    "ts_ms": 1700737134046,
+    "previous_hash": "327319dbef2f022acc10d5c3a093058be796f00d6e5d7a707ea36f5ede7f5d51",
+    "block_type": "result",
+    "draw_id": "86791c0c-b2bb-4cce-884e-8e321953a658",
+    "seed": "9a841cc3f87c671768df7b0446cc3943e4e2c1dc185ab8bae3d7668013713846",
+    "total_tickets": 3087,
+    "tickets_hash": "567badd9643cf3d42b4f1c4b09f9fffac15f9a3c6115387262f34694b23efafe",
+    "winning_tickets": "1,22,333,4444",
+    "seed_hash": null,
+    "winner_count": null
+   },
+   "hash": "105ab9b6b7f78780ee7849421d9fdaf0a1372fb2238fc1b80822f7d6d367c0d0"
+  },
+  {
+   "block": {
+    "block_index": 5,
+    "giveaway_id": "ac6e99d3-c9dd-4617-867b-16850f3f2020",
+    "ts_ms": 1700481866756,
+    "previous_hash": "66f06a517b528f3b25f252fdd61211634f7271afa45ef7e1064f4dae1b30f0bd",
+    "block_type": "commit",
+    "seed_hash": "0a059569f668b91e2e4bce805f2a54fb136088ca7dfe845b228f4e097210af9b",
+    "winner_count": 94,
+    "draw_id": null,
+    "seed": null,
+    "total_tickets": null,
+    "tickets_hash": null,
+    "winning_tickets": null
+   },
+   "hash": "f55b650352be4572c8f129ea80856d318e7ea9dca2997c3b28099faa1d4caf32"
+  },
+  {
+   "block": {
+    "block_index": 6,
+    "giveaway_id": "3a9b61b5-333a-4b51-8fbc-19b5ef751304",
+    "ts_ms": 1700784945319,
+    "previous_hash": "03813b916d6bce6b0c7c8af0c385e9925cac9511264fd4d7cb3c5cc90512dd61",
+    "block_type": "result",
+    "draw_id": "61e877ef-2147-4ec5-8cc5-8f8481f71889",
+    "seed": "bd0faa6ffde2a30115df41b9350611a0cf519be39c54817277899e2977bf4b79",
+    "total_tickets": 2203,
+    "tickets_hash": "c50ab4061b7c2acf2703912a1bccea36e2835223d7087793ee860a3950d9ef12",
+    "winning_tickets": "1,22",
+    "seed_hash": null,
+    "winner_count": null
+   },
+   "hash": "c00c08659c032b7313c2707e29448e1849b2c8269c0866d7f3c171993aa50acc"
+  },
+  {
+   "block": {
+    "block_index": 7,
+    "giveaway_id": "3d2c9abc-e101-40d1-99ce-661ae42246e2",
+    "ts_ms": 1700431715620,
+    "previous_hash": "067e3d31a30a9d537b5140f07fc4b00f430c86d2bf3a406826d97947ba02329d",
+    "block_type": "commit",
+    "seed_hash": "8f1bcebceef2b6338a2d3ffa284ecb47b0316070a37723710732c19d4649f0ba",
+    "winner_count": 92,
+    "draw_id": null,
+    "seed": null,
+    "total_tickets": null,
+    "tickets_hash": null,
+    "winning_tickets": null
+   },
+   "hash": "b6e2a00949129b254a668160bcea4dac13c739c08adabfcf3453aed0eee76e7e"
+  },
+  {
+   "block": {
+    "block_index": 8,
+    "giveaway_id": "2d950d73-aa2b-47e5-9b03-708ff0588f6f",
+    "ts_ms": 1700391504991,
+    "previous_hash": "8ab31f24facff85d8edbe5a40883dee452b4c860ed4ad2102bb3cd47f74b4c7d",
+    "block_type": "result",
+    "draw_id": "736bfa6c-f263-4018-88fa-c58af257857f",
+    "seed": "9e916785138bfb8bf209d56620b2936faa75fbd5e1bacada7f56d077b2b69ac7",
+    "total_tickets": 3931,
+    "tickets_hash": "7893c19d6ac9cd01c5ef82262aa23c7f99be9e1498641c1744e27650f3ded078",
+    "winning_tickets": "1,22,333,4444",
+    "seed_hash": null,
+    "winner_count": null
+   },
+   "hash": "75d39c6183fde9b5f7cf719f631331aa4b6b5c6b292638fe5a9e1decb80a836c"
+  },
+  {
+   "block": {
+    "block_index": 9,
+    "giveaway_id": "04060cc1-cb6b-432c-91cb-4a989a769181",
+    "ts_ms": 1700897991746,
+    "previous_hash": "a18a66a7a7b3c20b0bfe2eb53bc228d72e9fe27448c4d555d139afe0b3ddcfd3",
+    "block_type": "commit",
+    "seed_hash": "68836d46601b750024a626dd55d60c9bf03cf6ead634dd78f094556051e9faf0",
+    "winner_count": 23,
+    "draw_id": null,
+    "seed": null,
+    "total_tickets": null,
+    "tickets_hash": null,
+    "winning_tickets": null
+   },
+   "hash": "bc3366d790f91b769906c996c487637d64df4ac712fd2fd08e8a7a691d8c686d"
+  },
+  {
+   "block": {
+    "block_index": 10,
+    "giveaway_id": "ec114a1d-f4c4-4556-aebe-2f5f4bc8678f",
+    "ts_ms": 1700076721001,
+    "previous_hash": "d6c7bf731a44a0482fbd60db49109e7e021f4ad2e4f211cb3b0236772efe446e",
+    "block_type": "result",
+    "draw_id": "f55e5da6-3343-4757-a915-56d04c4ac5e4",
+    "seed": "7dda5ce0a5bd1b710ddebab5976584d455e10b52a9d0167420ed9c3dcf0237e0",
+    "total_tickets": 826,
+    "tickets_hash": "386fbbbf4822911e2e9b896e4a72aef77a3348cb9c907bb6ded820ad0841bc0d",
+    "winning_tickets": "1,22",
+    "seed_hash": null,
+    "winner_count": null
+   },
+   "hash": "79f2b302438cb2ac64310d88bcbe7095bb9e91a744e83ecfaeb08f6e0538c83c"
+  },
+  {
+   "block": {
+    "block_index": 11,
+    "giveaway_id": "895f4928-311f-49ad-be89-60fd60aee6e5",
+    "ts_ms": 1700750770510,
+    "previous_hash": "bf2bddb2c0125289e315363f7fbd3c6be58f9958788458d6a75094e1d0e8056b",
+    "block_type": "commit",
+    "seed_hash": "76283d0bf7de49add58b500ea492bbdbaf3a6d07e12385e45de04e4711e95bea",
+    "winner_count": 57,
+    "draw_id": null,
+    "seed": null,
+    "total_tickets": null,
+    "tickets_hash": null,
+    "winning_tickets": null
+   },
+   "hash": "8a02c095c28e01ea1db9bbb8636768554fd4255cf4a4e1c9b37de1ac4e43fb4c"
+  },
+  {
+   "block": {
+    "block_index": 12,
+    "giveaway_id": "484a44b7-600a-4e93-bf5f-5115c2d2d3f4",
+    "ts_ms": 1700285333679,
+    "previous_hash": "1d8a8517025a0d54e1572837eacc80381a632deeec7c66e56413987ce8dc6379",
+    "block_type": "result",
+    "draw_id": "fe692c26-93cb-4e7d-90ea-161e1e7c78ef",
+    "seed": "381bb904f3766969f729d5284605957e810eefd8d2f12c8ea906aeb6b45ba387",
+    "total_tickets": 1989,
+    "tickets_hash": "ad9dbbb1625b0678da35402dcc97802aa0237ff222caff1a1e2421d23bd30e32",
+    "winning_tickets": "1,22,333,4444",
+    "seed_hash": null,
+    "winner_count": null
+   },
+   "hash": "a0dbffb4144cc29e88c17a9655a9d30f141da834f2f148ad978d4f04075ec72a"
+  },
+  {
+   "block": {
+    "block_index": 13,
+    "giveaway_id": "be1199be-6360-48b3-be27-0910cf0f2d89",
+    "ts_ms": 1700319929358,
+    "previous_hash": "8d6d8e29e5f97e5d85600144c7ad78d22431a8fd0be2cccd910512381176036a",
+    "block_type": "commit",
+    "seed_hash": "a1789056dedb7eb7d072a8c74156b47f429bc9fccccd999ddae57437e9643436",
+    "winner_count": 39,
+    "draw_id": null,
+    "seed": null,
+    "total_tickets": null,
+    "tickets_hash": null,
+    "winning_tickets": null
+   },
+   "hash": "a52c351a4b7956edeb5af8715f399bd41b5aafe265b9ea7e69e1e8289e3e4814"
+  },
+  {
+   "block": {
+    "block_index": 14,
+    "giveaway_id": "32106f65-36c1-40b4-979b-b7318bcb87e9",
+    "ts_ms": 1700184619317,
+    "previous_hash": "affbdf149ad9267d2bcfa0499ccee329c2061d2058db2a7f213fcc1d12c1a176",
+    "block_type": "result",
+    "draw_id": "3e7d5fe8-12a7-42ef-886a-540f8712996e",
+    "seed": "0986f934c99b99ee84ad3be1bb971dc33b3fd4444a305f82d0c0e8632b988cc5",
+    "total_tickets": 1595,
+    "tickets_hash": "f45012219dc52527eb92a2513fcb9a3e238dee144d7403172c2bfea4c590777f",
+    "winning_tickets": "1,22",
+    "seed_hash": null,
+    "winner_count": null
+   },
+   "hash": "b17a9df72f35f4522862ce3cb690bedf4becfa0fcbabcc82117c415c9e03e9c7"
+  },
+  {
+   "block": {
+    "block_index": 15,
+    "giveaway_id": "bc32a4ce-06db-40c6-aa68-e72af0d3d4cd",
+    "ts_ms": 1700937460676,
+    "previous_hash": "c199db4aa6292bdce4c70ac457e8651caaf5da9a1125947606354cf60ba57c51",
+    "block_type": "commit",
+    "seed_hash": "3d213f4a04d8b5e12fa7707a8f1913110f905d6177d12ed3cbb751d5c9446055",
+    "winner_count": 35,
+    "draw_id": null,
+    "seed": null,
+    "total_tickets": null,
+    "tickets_hash": null,
+    "winning_tickets": null
+   },
+   "hash": "43bc64fe37e084a5cfd15f1e18813922d49a63452c7a516595d2d7ef44de95cf"
+  },
+  {
+   "block": {
+    "block_index": 16,
+    "giveaway_id": "4c762520-e8be-41ae-91bc-ca09bc4cd0df",
+    "ts_ms": 1700999960223,
+    "previous_hash": "bbcda59f148233be04f8a197a46719bc147f48ac59f4f11fa10526a8e2c4e900",
+    "block_type": "result",
+    "draw_id": "ee4cf7f5-b939-455b-ade2-812ae4621da1",
+    "seed": "bcd67f93cf21ee8cd802718a0d82709d20300e6770060c3a2ff4524eef3416be",
+    "total_tickets": 4600,
+    "tickets_hash": "d3374489c7cc0dfd17a137b4d924a98e2858a8e7baf87a803d1c67356c9e48cc",
+    "winning_tickets": "",
+    "seed_hash": null,
+    "winner_count": null
+   },
+   "hash": "034bb0354321e31af645eb35cdf77074ac5e4e8d387c6f1fd0f1db5c745ce50e"
+  },
+  {
+   "block": {
+    "block_index": 17,
+    "giveaway_id": "d0be7605-c701-4644-9f01-3073b20f213d",
+    "ts_ms": 1700723723511,
+    "previous_hash": "3ee0545c81fa23151ca7073143b45ef2ee250aa5ae1d68dd9b460d049f3dcf50",
+    "block_type": "commit",
+    "seed_hash": "aa340527bc722a717a9aa3db2594cca6331e71b5207dfd6107bfcd52c2f9674c",
+    "winner_count": 5,
+    "draw_id": null,
+    "seed": null,
+    "total_tickets": null,
+    "tickets_hash": null,
+    "winning_tickets": null
+   },
+   "hash": "69abaa31826b669c65064454c57eaddaae185f6815b98d4f847d3d2a3c60e57b"
+  },
+  {
+   "block": {
+    "block_index": 18,
+    "giveaway_id": "dcc1abb2-0dff-4917-b0fe-116fb9751f46",
+    "ts_ms": 1700889946626,
+    "previous_hash": "3b49bc12c13cb47d7fa327197617ea61f3a9fa7995efb5b9e9b8c8c4cf6ff23c",
+    "block_type": "result",
+    "draw_id": "d8847b9e-2586-4dfa-aa1f-8959dfd76bed",
+    "seed": "0e89cd070a24df82f6857682883f464c0907246edf5e7f108cc97f87b6847421",
+    "total_tickets": 3214,
+    "tickets_hash": "3b25fdaa5bc191bae7f41a23bbd4459420a32160db87da88174fb1a20d7bb0ed",
+    "winning_tickets": "1,22",
+    "seed_hash": null,
+    "winner_count": null
+   },
+   "hash": "d9164624dbf430e9b27274d6f0e09fdadec68f56c403f2236fd8811642ad51c4"
+  },
+  {
+   "block": {
+    "block_index": 19,
+    "giveaway_id": "8ecbb98d-0ee1-419f-aaf4-e35ec805dfd8",
+    "ts_ms": 1700640844314,
+    "previous_hash": "1a2664ba8446e2e37d6fc574feb8049dcbb571f2998c621ce64b3663afb4204b",
+    "block_type": "commit",
+    "seed_hash": "b1017b7f585088fb45d4bbd2938731a6f2fb3eda42e497335f7a62b79f26e1a5",
+    "winner_count": 40,
+    "draw_id": null,
+    "seed": null,
+    "total_tickets": null,
+    "tickets_hash": null,
+    "winning_tickets": null
+   },
+   "hash": "60ff2b86e641df797db7ef49b8fc1bd9dea6a3f1366586015369d7b79ab56570"
+  },
+  {
+   "block": {
+    "block_index": 20,
+    "giveaway_id": "0cdb4265-35e0-4838-90cd-52d0f15e0fe3",
+    "ts_ms": 1700131527854,
+    "previous_hash": "24a5e7a042a3b9e9d581bc63b2583233541128bd2fb2b233f4f25ef9ca27f99b",
+    "block_type": "result",
+    "draw_id": "ac5ddbc6-d295-4867-b986-6cc8c0bd39a9",
+    "seed": "c0a41abc1261622567369378b531434c2453368d597d01d28b39bbaf7f7d44df",
+    "total_tickets": 1015,
+    "tickets_hash": "33d0955e2a9b2c7dac5baf5263f3a59ed98ebeaa06d361392c01dd41e8cf0560",
+    "winning_tickets": "1,22,333,4444",
+    "seed_hash": null,
+    "winner_count": null
+   },
+   "hash": "ca764b498df759edc056d31ffe42ca1f901ea70952cc5148288e6b49cda615bd"
+  },
+  {
+   "block": {
+    "block_index": 21,
+    "giveaway_id": "025c6efa-5556-4b8c-914d-33e00d633a79",
+    "ts_ms": 1700667548070,
+    "previous_hash": "15e2c275e418338680cac537a60d68a2fb23632112388c9dd65954935504c697",
+    "block_type": "commit",
+    "seed_hash": "770bb341ebfbc2f6dbaf181172d4c6f9c7474e57daeaaecbc629d6e6ba630a83",
+    "winner_count": 73,
+    "draw_id": null,
+    "seed": null,
+    "total_tickets": null,
+    "tickets_hash": null,
+    "winning_tickets": null
+   },
+   "hash": "461a2c6070cf7a5b37107b67a86021f55e2dac02ce4ac9bba6254cf65c10d483"
+  },
+  {
+   "block": {
+    "block_index": 22,
+    "giveaway_id": "2aa6a204-0c2b-4e93-85e9-e48d555a3d1b",
+    "ts_ms": 1700315766783,
+    "previous_hash": "3581e5c05744c2085d1a6a205cc7e84b0de1281b232a4894f5c3a68f75cf430b",
+    "block_type": "result",
+    "draw_id": "4cd9defe-42ca-42e1-a405-ea65fad345ef",
+    "seed": "ae319d3b20cc6b05c91ee0ceb2cee2c8cf6f28863484d2e832e758693659f9c4",
+    "total_tickets": 3317,
+    "tickets_hash": "d7a61b87fa1563c056e27d9e13f516cdb9bc16cdc4a505cf70a10e5a013b073c",
+    "winning_tickets": "1,22",
+    "seed_hash": null,
+    "winner_count": null
+   },
+   "hash": "8d6cc306d746290d1d2a3010bae3b03101ed559079230703bd2df9489d9bafeb"
+  },
+  {
+   "block": {
+    "block_index": 23,
+    "giveaway_id": "935464f3-7f6f-41cf-95ab-eb637cfc3f6f",
+    "ts_ms": 1700369762290,
+    "previous_hash": "7bb7cd843ababa51f338be192aa4f88e6d1c154d7c95e24f16ccfb97e947210f",
+    "block_type": "commit",
+    "seed_hash": "2936cd6e32832f0aa8ff11c9a729b86bfbbdd7446eb5d787eb51fd726a0893cb",
+    "winner_count": 24,
+    "draw_id": null,
+    "seed": null,
+    "total_tickets": null,
+    "tickets_hash": null,
+    "winning_tickets": null
+   },
+   "hash": "6447c15a424a35c9be3f10136b78b06fb0d4428e8fe4e8a4db1f3d71783b99cd"
+  },
+  {
+   "block": {
+    "block_index": 24,
+    "giveaway_id": "77d5071a-2c9f-4f74-b5de-618865a99dcd",
+    "ts_ms": 1700060113090,
+    "previous_hash": "6c13a9410edcf51373046fe5072aac61ed7b8cdec595d998210b09ef014a43a4",
+    "block_type": "result",
+    "draw_id": "48f45888-2da8-403d-9e5a-1ae20c60ef36",
+    "seed": "e387a652f761f77c8ed77edd3ffb313b079475dd58d1c4a967c345b851f0a647",
+    "total_tickets": 1761,
+    "tickets_hash": "6d2e7e4c756d93f6f771d6e410615472bf14d3e33678df9293f1695c9529fff4",
+    "winning_tickets": "1,22,333,4444",
+    "seed_hash": null,
+    "winner_count": null
+   },
+   "hash": "acac6588c08d740eb95881fddbd16b2a99df98629b8c900fae749a7055df4857"
+  },
+  {
+   "block": {
+    "block_index": 25,
+    "giveaway_id": "ad252e3f-dae1-4b12-9125-d5e7b77600e6",
+    "ts_ms": 1700642849293,
+    "previous_hash": "4251bba279ce357c3b47f788eeebec994ab077a2084f573b9b2a0d19de476d05",
+    "block_type": "commit",
+    "seed_hash": "33e5d7f012f9d38c2767ba5b16a834456cb4b9833b65e7fb11e8037ca386e6d2",
+    "winner_count": 9,
+    "draw_id": null,
+    "seed": null,
+    "total_tickets": null,
+    "tickets_hash": null,
+    "winning_tickets": null
+   },
+   "hash": "fec98d99e936beae9df15bf2d51783e8c0e892455627f0b5b1084fdf9d4d0d84"
+  },
+  {
+   "block": {
+    "block_index": 26,
+    "giveaway_id": "6f15c6bd-e7d0-4400-889b-955e53794afd",
+    "ts_ms": 1700737599320,
+    "previous_hash": "4d689ef3845eeff284d7a849bb4b39accd5036e64909448562b6392452fe9b98",
+    "block_type": "result",
+    "draw_id": "f096b987-842c-470e-88f2-4e7c68af8530",
+    "seed": "9945a77b7b263ceca859b2e4e3df4f94f4c79de5c8035a31b2a5e2802e31434d",
+    "total_tickets": 3454,
+    "tickets_hash": "54a2fc670d742a2766f8489d1c8332de28a17439c413dd6557c59ce8c15d8b34",
+    "winning_tickets": "1,22",
+    "seed_hash": null,
+    "winner_count": null
+   },
+   "hash": "29c7006566da7b2c884c637acc6edd4f2c794a6f564b8edf551300da824767b5"
+  },
+  {
+   "block": {
+    "block_index": 27,
+    "giveaway_id": "0147e530-ec99-44d1-ac50-1c81596b4ce0",
+    "ts_ms": 1700406835431,
+    "previous_hash": "584703789dae7a8728a4f237839f8c5b977bc289eb4eb791bf9e03a7e80dab12",
+    "block_type": "commit",
+    "seed_hash": "fd5e47a248f2396deafab2ea8f09aa3a0d3ee01755ffce0ed255e9458028de7d",
+    "winner_count": 22,
+    "draw_id": null,
+    "seed": null,
+    "total_tickets": null,
+    "tickets_hash": null,
+    "winning_tickets": null
+   },
+   "hash": "e6edb075b6221efff92a30325ea61321e07c24709ed09ee1412f41eabaa51373"
+  },
+  {
+   "block": {
+    "block_index": 28,
+    "giveaway_id": "62d608fd-50e9-48a8-9a78-95cbdc0a189e",
+    "ts_ms": 1700062226612,
+    "previous_hash": "1b418e09b1dc8122d57a0f814918cfe51c7f8db843c3a56bff1304baf0c6e65b",
+    "block_type": "result",
+    "draw_id": "af1c053a-3dfc-49e5-aed7-58bfcd7a4d0d",
+    "seed": "829796e49704ae24ff9fbbfa0801f49b2352de3a540299b2a21610e9a02dcdaa",
+    "total_tickets": 1342,
+    "tickets_hash": "c2f1e5b7d93d086e92e3005c267b9d058581314391093140f5b0da91f811b713",
+    "winning_tickets": "1,22,333,4444",
+    "seed_hash": null,
+    "winner_count": null
+   },
+   "hash": "832c868761c0503487274b178c3d3598470a2063febe75ad75cb74d20df92208"
+  },
+  {
+   "block": {
+    "block_index": 29,
+    "giveaway_id": "6a9f5e3f-92e8-44d9-8f2f-52fc26fcf7bf",
+    "ts_ms": 1700386521504,
+    "previous_hash": "71265d6578a2ae9359ce58e43cefebb34b7f5935365bb636aae98c6d884f5e4b",
+    "block_type": "commit",
+    "seed_hash": "14720343023de8add9ddd010505ffce030bca12bf9b59d6300c8af1c512b5962",
+    "winner_count": 32,
+    "draw_id": null,
+    "seed": null,
+    "total_tickets": null,
+    "tickets_hash": null,
+    "winning_tickets": null
+   },
+   "hash": "8c54b6115e8ad4cee56558fefb051a6069aa8f252598a7a138297b6aa63a6cb6"
+  },
+  {
+   "block": {
+    "block_index": 30,
+    "giveaway_id": "3bbe27ca-92ab-44c5-ba84-349919d00232",
+    "ts_ms": 1700058111321,
+    "previous_hash": "ed7cdca81d99ab807fd89f7226c233b4092f96989d893031144c3554c8721dbe",
+    "block_type": "result",
+    "draw_id": "14738336-2689-4c5e-8924-af38f2509f3d",
+    "seed": "8c1be3831c5d5b3df68a80da8e245a7b5ecd6078cdc315baa24a3e14b93b78eb",
+    "total_tickets": 4082,
+    "tickets_hash": "28645da28de0ff50f2f38ca3dcfa16c6e8e8a0d8843a748df30da329d94e5c80",
+    "winning_tickets": "",
+    "seed_hash": null,
+    "winner_count": null
+   },
+   "hash": "049051709f2cc713fa8f5716ab7b7f7e89670c79ea7388ff62e8d760f237c31d"
+  },
+  {
+   "block": {
+    "block_index": 31,
+    "giveaway_id": "a50afc59-19f7-4b1c-962b-fa78ba85f2ad",
+    "ts_ms": 1700294675781,
+    "previous_hash": "c2f404e9fc0fc80f0755ee7c9b752bee2092d631c1dca2560511b4992b7c5149",
+    "block_type": "commit",
+    "seed_hash": "507cf16083b631ab248c6070db07c1903546725dc4e724d113d5b8109fc1d2c6",
+    "winner_count": 62,
+    "draw_id": null,
+    "seed": null,
+    "total_tickets": null,
+    "tickets_hash": null,
+    "winning_tickets": null
+   },
+   "hash": "2b0fa9b234fef515d26d4567b43ff96bf37f5211a968d8c0732daa01cf0a60c3"
+  },
+  {
+   "block": {
+    "block_index": 32,
+    "giveaway_id": "4663dcbd-ef7b-439f-90e7-bfd7585a361b",
+    "ts_ms": 1700549992699,
+    "previous_hash": "bb9136bae0f0cc95d83b087267010402654c9dfc50ce7f793f982a6a1037605f",
+    "block_type": "result",
+    "draw_id": "e41c7ec6-d961-4897-a047-f7014c3fa59b",
+    "seed": "aa61363551daf2822214dba8cf26eb32ba30993521b7a25209dd9889d427d01f",
+    "total_tickets": 1873,
+    "tickets_hash": "4b280dde64e9f85738e1e08b54f15416ff72d101376f4ef10c13109f56c5c210",
+    "winning_tickets": "1,22,333,4444",
+    "seed_hash": null,
+    "winner_count": null
+   },
+   "hash": "92a560c2193ce1c6fdcc6326cf255c574b2b4985c0d091bc90aec9511a0de483"
+  },
+  {
+   "block": {
+    "block_index": 33,
+    "giveaway_id": "e967287e-4554-4698-a215-13ee327beea8",
+    "ts_ms": 1700478173555,
+    "previous_hash": "3705b374221d0e539f9b05508b382a95bd795f057ac40b66b608335d6eadc1cc",
+    "block_type": "commit",
+    "seed_hash": "7390303a762f8543e27ce6eb402f58f5b5adbd36eae9d8a94017aaf0fe814873",
+    "winner_count": 91,
+    "draw_id": null,
+    "seed": null,
+    "total_tickets": null,
+    "tickets_hash": null,
+    "winning_tickets": null
+   },
+   "hash": "8178c48c79b471711db0ef907e51054cbe0fd936230453a852298d6d5200460b"
+  },
+  {
+   "block": {
+    "block_index": 34,
+    "giveaway_id": "8c165516-fe96-41b5-bdfc-06dee2f19b75",
+    "ts_ms": 1700263591914,
+    "previous_hash": "a67bfd3655fc7a36cd3db1a0182aa5d163c94337f9d0704a3919ab94c3b3ce9f",
+    "block_type": "result",
+    "draw_id": "8ea68d9f-0138-4611-9beb-7dd3162727df",
+    "seed": "de8eb99cdbf1b485862289ffd7bbd94707b85c08bd53c12d6ff57133d55fcf60",
+    "total_tickets": 3413,
+    "tickets_hash": "116ce0afcba035e9bdd8c4b713d7aef0daad71655c23ce83a11dacaac8f61593",
+    "winning_tickets": "1,22",
+    "seed_hash": null,
+    "winner_count": null
+   },
+   "hash": "b3cb1895adc347b0a2b0d29069437c5fc2a348dd82268af921deb209aa3658ec"
+  },
+  {
+   "block": {
+    "block_index": 35,
+    "giveaway_id": "d13edc69-063c-4014-9003-ad23fd23bcdc",
+    "ts_ms": 1700621963504,
+    "previous_hash": "52edad8190a08be97707b62aefc4ebe4f09bbc5fe1495a8797cd84eb4b611b69",
+    "block_type": "commit",
+    "seed_hash": "8aa9134aec7c1c7fb7183efe237e19c4fa1e83c6dbca8b0ee363497c288da559",
+    "winner_count": 7,
+    "draw_id": null,
+    "seed": null,
+    "total_tickets": null,
+    "tickets_hash": null,
+    "winning_tickets": null
+   },
+   "hash": "d7b5a6dc4083ff5b542129522cdffca2f6e80e437d9de753b98cf9243b1461b7"
+  },
+  {
+   "block": {
+    "block_index": 36,
+    "giveaway_id": "8d00a214-0771-4e12-bfe7-be16f571de05",
+    "ts_ms": 1700552470091,
+    "previous_hash": "62b86f3f1214a6680f542508e43cfbf2de048af6a4fa0dd5de0ac347acdcfa2d",
+    "block_type": "result",
+    "draw_id": "3d46ccf2-e1b6-4cde-8cc0-1916f4850f7f",
+    "seed": "15aa44573ab76d7d721e564a24182eb916adfa79dd0a7fbe64470044cd430635",
+    "total_tickets": 1412,
+    "tickets_hash": "43429e185c600bb099a28a40c96743b8d9e21f35e0f651736156631666883e21",
+    "winning_tickets": "1,22,333,4444",
+    "seed_hash": null,
+    "winner_count": null
+   },
+   "hash": "fab4ca80276df84de1e45a0d5d4e8a50f03866101a40ea892750072cbc541e1f"
+  },
+  {
+   "block": {
+    "block_index": 37,
+    "giveaway_id": "6ec6908d-6275-4fc5-8c69-432e64afd7d3",
+    "ts_ms": 1700581104462,
+    "previous_hash": "8318b6d6c69c8f80c62c43b2a9b9e82e5e441743c1375d66b6b6445c7b8a2f24",
+    "block_type": "commit",
+    "seed_hash": "c99cbafe6e9cca634f3280eb8e1751c52240cabc29093f9a95d3006b08905277",
+    "winner_count": 66,
+    "draw_id": null,
+    "seed": null,
+    "total_tickets": null,
+    "tickets_hash": null,
+    "winning_tickets": null
+   },
+   "hash": "56a8480bfb45a97cbc7237f509db1eb096fb77e9f22c0ab70dfee53150fa38ff"
+  },
+  {
+   "block": {
+    "block_index": 38,
+    "giveaway_id": "fa24e005-a395-4179-9b35-87fc10f2b16b",
+    "ts_ms": 1700075606350,
+    "previous_hash": "45d6e98afa893776b4eabeba603d0777775a1ea924607b7235cc792fbcb4a090",
+    "block_type": "result",
+    "draw_id": "c7d5af31-b957-4e78-b145-4938d1944448",
+    "seed": "ccad33ede969441b894e82d3ca968fdf4efb8200dc549c21584b3bd253bd28f0",
+    "total_tickets": 831,
+    "tickets_hash": "29a75e57fd4161004cda426f53d0adc311b79c36bdfccb21c7dd9a0e898a1a79",
+    "winning_tickets": "1,22",
+    "seed_hash": null,
+    "winner_count": null
+   },
+   "hash": "089635d6a8a45f303b094755a01fca570899206e0227e7604d68177c69670165"
+  },
+  {
+   "block": {
+    "block_index": 39,
+    "giveaway_id": "798b7deb-2944-416e-b584-2a0cd8c8b7be",
+    "ts_ms": 1700450136297,
+    "previous_hash": "073b6b2636dafd44393192d41be3f305220280b744c2552b1aca9a4c88d18bb5",
+    "block_type": "commit",
+    "seed_hash": "9f76e9f62c7bd849b310987a222d1f43d2238a7ab07832af2f2b040fdcd9d6c9",
+    "winner_count": 66,
+    "draw_id": null,
+    "seed": null,
+    "total_tickets": null,
+    "tickets_hash": null,
+    "winning_tickets": null
+   },
+   "hash": "8dc89d6d55d94eff9a44f8f398ffbd1ed9aaa0a94b703bdf16733a6a0318453c"
+  },
+  {
+   "block": {
+    "block_index": 40,
+    "giveaway_id": "92d9c2c8-64b5-45df-abbd-fd813cc66dca",
+    "ts_ms": 1700477950571,
+    "previous_hash": "1a6e7f00b8c45e3c6b055eb6dd6f8919f5e968c814afd54d4896b713c4d25285",
+    "block_type": "result",
+    "draw_id": "11a57657-fb15-4f9f-b62d-6e07efe7d810",
+    "seed": "445594ba95bccbf9c45890ccacb35442803423deb830811b1c70229c2386c244",
+    "total_tickets": 2505,
+    "tickets_hash": "e13947594f85d64e7fb95a4d4fb178a54a89f1ec26e61d46aae2bcc66a3e4808",
+    "winning_tickets": "1,22,333,4444",
+    "seed_hash": null,
+    "winner_count": null
+   },
+   "hash": "170eebb1ad728b994c73e03cd22ecd09e207b2e09a3f66d7042d4845cfe0c67b"
+  }
+ ],
+ "picks": [
+  {
+   "seed": "4f64f15716481f11599bd323508bca1e40588d6bfd0242d801c86536c115cf41",
+   "gid": "109bdacc-2002-401a-95ac-0e4eb52abe54",
+   "k": 1,
+   "tickets": [
+    [
+     1,
+     "3f5cf1385df6"
+    ]
+   ],
+   "out": {
+    "tickets_hash": "b37dde0d46507c89f9c0265c34f93bff41ffc3437654180e9cc34dc3ea337728",
+    "winners": [
+     1
+    ]
+   }
+  },
+  {
+   "seed": "b07c5e7fe89f1926001340a1c5a97110d5637644eae6d71e1eb1a2b11ff06a67",
+   "gid": "1f04215e-20e5-48ba-99c4-2f7cd96d8140",
+   "k": 3,
+   "tickets": [
+    [
+     1,
+     "d7cee08eb511"
+    ],
+    [
+     2,
+     "d7cee08eb511"
+    ]
+   ],
+   "out": {
+    "tickets_hash": "f6b0771deac1d36c5808ace69d9f325cd88041d1b1f4408d6bc4af3d5b33cf1c",
+    "winners": [
+     2
+    ]
+   }
+  },
+  {
+   "seed": "659f4f207b25fd50c1a573d4032824686baff3ffe8db974d2567b04aa5fb68c2",
+   "gid": "c86696ba-9cad-456f-8f57-4a87afb6f99e",
+   "k": 2,
+   "tickets": [
+    [
+     1,
+     "7f2d4e0bf9d7"
+    ],
+    [
+     2,
+     "da679d4d2798"
+    ],
+    [
+     3,
+     "7f2d4e0bf9d7"
+    ],
+    [
+     4,
+     "7f2d4e0bf9d7"
+    ],
+    [
+     5,
+     "da679d4d2798"
+    ]
+   ],
+   "out": {
+    "tickets_hash": "b77a475b8c9fd2f5b97eaca9c3b3ef8012037f1fe5d7d1469ff4c7854ba3691b",
+    "winners": [
+     3,
+     2
+    ]
+   }
+  },
+  {
+   "seed": "e7ff63f052982da3118a653a238dcd8fac2a3bf7fa94ad230a36abb87561e1ff",
+   "gid": "4bbd43e9-a086-4be8-8bae-34b58051c32e",
+   "k": 4,
+   "tickets": [
+    [
+     1,
+     "61a28e145314"
+    ],
+    [
+     2,
+     "dfac06ddbf41"
+    ],
+    [
+     3,
+     "55b958a56be6"
+    ],
+    [
+     4,
+     "55b958a56be6"
+    ],
+    [
+     5,
+     "b3b1385a80b6"
+    ],
+    [
+     6,
+     "55b958a56be6"
+    ],
+    [
+     7,
+     "55b958a56be6"
+    ],
+    [
+     8,
+     "dfac06ddbf41"
+    ],
+    [
+     9,
+     "61a28e145314"
+    ],
+    [
+     10,
+     "61a28e145314"
+    ]
+   ],
+   "out": {
+    "tickets_hash": "b9cfc4daea1790cf903468da84cc2b2dfb5c3f356c096887f106507bf99788cd",
+    "winners": [
+     9,
+     4,
+     2,
+     5
+    ]
+   }
+  },
+  {
+   "seed": "189a6ea167ff53e6e8461bd8f805a394ba870e50deace97c91dc8abb4e85f285",
+   "gid": "70033879-876d-415a-be45-0c9a988b139d",
+   "k": 5,
+   "tickets": [
+    [
+     1,
+     "643d242fc24f"
+    ],
+    [
+     2,
+     "7f333ce49da9"
+    ],
+    [
+     3,
+     "e7992f883302"
+    ],
+    [
+     4,
+     "f0eb6c5417ad"
+    ],
+    [
+     5,
+     "9f0803251b86"
+    ],
+    [
+     6,
+     "4ac884270051"
+    ],
+    [
+     7,
+     "a028323537cc"
+    ],
+    [
+     8,
+     "e7992f883302"
+    ],
+    [
+     9,
+     "84e2f37650dc"
+    ],
+    [
+     10,
+     "1b8d4fb7b26a"
+    ],
+    [
+     11,
+     "f0eb6c5417ad"
+    ],
+    [
+     12,
+     "1b8d4fb7b26a"
+    ],
+    [
+     13,
+     "e7992f883302"
+    ],
+    [
+     14,
+     "9f0803251b86"
+    ],
+    [
+     15,
+     "1722fa938e51"
+    ],
+    [
+     16,
+     "a028323537cc"
+    ],
+    [
+     17,
+     "7f74cfc6b093"
+    ],
+    [
+     18,
+     "b028b5a4386d"
+    ],
+    [
+     19,
+     "f0eb6c5417ad"
+    ],
+    [
+     20,
+     "643d242fc24f"
+    ],
+    [
+     21,
+     "1722fa938e51"
+    ],
+    [
+     22,
+     "bf14f26329ef"
+    ],
+    [
+     23,
+     "f0eb6c5417ad"
+    ],
+    [
+     24,
+     "84e2f37650dc"
+    ],
+    [
+     25,
+     "9f0803251b86"
+    ],
+    [
+     26,
+     "bf14f26329ef"
+    ],
+    [
+     27,
+     "a028323537cc"
+    ],
+    [
+     28,
+     "e7992f883302"
+    ],
+    [
+     29,
+     "e7992f883302"
+    ],
+    [
+     30,
+     "4ac884270051"
+    ]
+   ],
+   "out": {
+    "tickets_hash": "d2a78b319f03cea7ac3e2a4aa492b70b72984df2da28132974c22cdaddfca928",
+    "winners": [
+     12,
+     30,
+     4,
+     9,
+     14
+    ]
+   }
+  },
+  {
+   "seed": "aefecdae4f9bb8391b7b7fedf4925c9032e2be90837fb94973ba71c908d806ad",
+   "gid": "818006d2-7e17-4d9d-b79c-f3497d19ee31",
+   "k": 10,
+   "tickets": [
+    [
+     1,
+     "ca096d46af22"
+    ],
+    [
+     2,
+     "7bc810c88acd"
+    ],
+    [
+     3,
+     "227bc2caa009"
+    ],
+    [
+     4,
+     "27e6c5765abc"
+    ],
+    [
+     5,
+     "7f8528bf19d2"
+    ],
+    [
+     6,
+     "dd32f01c859d"
+    ],
+    [
+     7,
+     "8098009c0f1b"
+    ],
+    [
+     8,
+     "7bc810c88acd"
+    ],
+    [
+     9,
+     "48f186ddb77c"
+    ],
+    [
+     10,
+     "7f8528bf19d2"
+    ],
+    [
+     11,
+     "2fbf336c36b9"
+    ],
+    [
+     12,
+     "d72436c74db6"
+    ],
+    [
+     13,
+     "227bc2caa009"
+    ],
+    [
+     14,
+     "ca096d46af22"
+    ],
+    [
+     15,
+     "ca096d46af22"
+    ],
+    [
+     16,
+     "acbdf0286dec"
+    ],
+    [
+     17,
+     "c9ea6eb0850a"
+    ],
+    [
+     18,
+     "7f8528bf19d2"
+    ],
+    [
+     19,
+     "8098009c0f1b"
+    ],
+    [
+     20,
+     "d72436c74db6"
+    ],
+    [
+     21,
+     "2fbf336c36b9"
+    ],
+    [
+     22,
+     "27e6c5765abc"
+    ],
+    [
+     23,
+     "3eee32726cb8"
+    ],
+    [
+     24,
+     "8a48323d7052"
+    ],
+    [
+     25,
+     "a98d35255ddb"
+    ],
+    [
+     26,
+     "6565cbae4937"
+    ],
+    [
+     27,
+     "c9ea6eb0850a"
+    ],
+    [
+     28,
+     "227bc2caa009"
+    ],
+    [
+     29,
+     "8287157f1a22"
+    ],
+    [
+     30,
+     "3d9d6f75930c"
+    ],
+    [
+     31,
+     "04a3b5631bfe"
+    ],
+    [
+     32,
+     "a98d35255ddb"
+    ],
+    [
+     33,
+     "c9ea6eb0850a"
+    ],
+    [
+     34,
+     "a98d35255ddb"
+    ],
+    [
+     35,
+     "3eee32726cb8"
+    ],
+    [
+     36,
+     "48f186ddb77c"
+    ],
+    [
+     37,
+     "7fd5a5ec2a46"
+    ],
+    [
+     38,
+     "3eee32726cb8"
+    ],
+    [
+     39,
+     "227bc2caa009"
+    ],
+    [
+     40,
+     "76042780531c"
+    ],
+    [
+     41,
+     "04a3b5631bfe"
+    ],
+    [
+     42,
+     "9054efb28b65"
+    ],
+    [
+     43,
+     "9054efb28b65"
+    ],
+    [
+     44,
+     "acbdf0286dec"
+    ],
+    [
+     45,
+     "9e26f97e7227"
+    ],
+    [
+     46,
+     "acbdf0286dec"
+    ],
+    [
+     47,
+     "c9ea6eb0850a"
+    ],
+    [
+     48,
+     "41a85f8c057d"
+    ],
+    [
+     49,
+     "fadc6dc0a3db"
+    ],
+    [
+     50,
+     "c9ea6eb0850a"
+    ],
+    [
+     51,
+     "227bc2caa009"
+    ],
+    [
+     52,
+     "3f3c7f0ee086"
+    ],
+    [
+     53,
+     "227bc2caa009"
+    ],
+    [
+     54,
+     "3f3c7f0ee086"
+    ],
+    [
+     55,
+     "1a081bd88b8f"
+    ],
+    [
+     56,
+     "9e26f97e7227"
+    ],
+    [
+     57,
+     "a98d35255ddb"
+    ],
+    [
+     58,
+     "add68eec0a46"
+    ],
+    [
+     59,
+     "227bc2caa009"
+    ],
+    [
+     60,
+     "7f8528bf19d2"
+    ]
+   ],
+   "out": {
+    "tickets_hash": "b1de1034c1bb44632e8d89bb6920f511d2261ebd5c477ced2d953ca182959540",
+    "winners": [
+     1,
+     42,
+     48,
+     12,
+     55,
+     16,
+     35,
+     17,
+     4,
+     58
+    ]
+   }
+  },
+  {
+   "seed": "2faacb682819be210a55d54fc87d0ed2dfadfa57872134fc6beba333f7515f4c",
+   "gid": "ff63e941-269c-4c5a-91b8-fb80bcba77d0",
+   "k": 7,
+   "tickets": [
+    [
+     1,
+     "4079f2e261bf"
+    ],
+    [
+     2,
+     "c9614ac42c4d"
+    ],
+    [
+     3,
+     "f98bccf3b6f8"
+    ],
+    [
+     4,
+     "f9b5908fb667"
+    ],
+    [
+     5,
+     "7d6f772f3fb6"
+    ],
+    [
+     6,
+     "1068b0664590"
+    ],
+    [
+     7,
+     "7790192a468b"
+    ],
+    [
+     8,
+     "5d1ea06be085"
+    ],
+    [
+     9,
+     "45e50642b61a"
+    ],
+    [
+     10,
+     "02f0011709b9"
+    ],
+    [
+     11,
+     "6f3dc0bd5d4a"
+    ],
+    [
+     12,
+     "9bebec2130be"
+    ],
+    [
+     13,
+     "208f54c3a2bb"
+    ],
+    [
+     14,
+     "d2a4d906f696"
+    ],
+    [
+     15,
+     "dec9cdae51a9"
+    ],
+    [
+     16,
+     "2cb05e36fc38"
+    ],
+    [
+     17,
+     "b5ad5491eba7"
+    ],
+    [
+     18,
+     "eb3e50e8f9da"
+    ],
+    [
+     19,
+     "6f3dc0bd5d4a"
+    ],
+    [
+     20,
+     "4e403b4b4cb1"
+    ],
+    [
+     21,
+     "fe95e5e11d3a"
+    ],
+    [
+     22,
+     "1f11148248a9"
+    ],
+    [
+     23,
+     "10d6fc059643"
+    ],
+    [
+     24,
+     "d18518224f06"
+    ],
+    [
+     25,
+     "f2a90bedc673"
+    ],
+    [
+     26,
+     "f4702052042b"
+    ],
+    [
+     27,
+     "5bce4c33d8fc"
+    ],
+    [
+     28,
+     "1fc5c92e6fe8"
+    ],
+    [
+     29,
+     "dec9cdae51a9"
+    ],
+    [
+     30,
+     "082ac567c691"
+    ],
+    [
+     31,
+     "d2a4d906f696"
+    ],
+    [
+     32,
+     "830b83111b7c"
+    ],
+    [
+     33,
+     "c4f3c55eaf42"
+    ],
+    [
+     34,
+     "02f0011709b9"
+    ],
+    [
+     35,
+     "3b1d3995d4c0"
+    ],
+    [
+     36,
+     "34bc6458724d"
+    ],
+    [
+     37,
+     "9bebec2130be"
+    ],
+    [
+     38,
+     "b3c679abf087"
+    ],
+    [
+     39,
+     "326a033b7be9"
+    ],
+    [
+     40,
+     "5adc27159d23"
+    ],
+    [
+     41,
+     "45e50642b61a"
+    ],
+    [
+     42,
+     "02de604126ee"
+    ],
+    [
+     43,
+     "9bebec2130be"
+    ],
+    [
+     44,
+     "dec9cdae51a9"
+    ],
+    [
+     45,
+     "f050354059c5"
+    ],
+    [
+     46,
+     "21866ed3c1c0"
+    ],
+    [
+     47,
+     "3b1d3995d4c0"
+    ],
+    [
+     48,
+     "afe8cbdc41ee"
+    ],
+    [
+     49,
+     "1068b0664590"
+    ],
+    [
+     50,
+     "3d6c99e998ba"
+    ],
+    [
+     51,
+     "670c91584c5d"
+    ],
+    [
+     52,
+     "b5ad5491eba7"
+    ],
+    [
+     53,
+     "c7760143de5d"
+    ],
+    [
+     54,
+     "d2a4d906f696"
+    ],
+    [
+     55,
+     "5adc27159d23"
+    ],
+    [
+     56,
+     "5b4703c8916f"
+    ],
+    [
+     57,
+     "6ed71ebc33cb"
+    ],
+    [
+     58,
+     "d3e1ffe04df7"
+    ],
+    [
+     59,
+     "151e7acb5adb"
+    ],
+    [
+     60,
+     "cca52ed93356"
+    ],
+    [
+     61,
+     "02de604126ee"
+    ],
+    [
+     62,
+     "dec9cdae51a9"
+    ],
+    [
+     63,
+     "1f11148248a9"
+    ],
+    [
+     64,
+     "208f54c3a2bb"
+    ],
+    [
+     65,
+     "9ccca2dd3f5c"
+    ],
+    [
+     66,
+     "3d6c99e998ba"
+    ],
+    [
+     67,
+     "f5a5abcc6a7e"
+    ],
+    [
+     68,
+     "aa0c410372d6"
+    ],
+    [
+     69,
+     "fe95e5e11d3a"
+    ],
+    [
+     70,
+     "7b47ea8f6b26"
+    ],
+    [
+     71,
+     "45e50642b61a"
+    ],
+    [
+     72,
+     "1068b0664590"
+    ],
+    [
+     73,
+     "afe8cbdc41ee"
+    ],
+    [
+     74,
+     "51930ef91327"
+    ],
+    [
+     75,
+     "eccf09d863ea"
+    ],
+    [
+     76,
+     "cc1146bee788"
+    ],
+    [
+     77,
+     "5196e305133e"
+    ],
+    [
+     78,
+     "63129e84f89b"
+    ],
+    [
+     79,
+     "14cf79754bff"
+    ],
+    [
+     80,
+     "9c2733065ca3"
+    ],
+    [
+     81,
+     "f98bccf3b6f8"
+    ],
+    [
+     82,
+     "1fc5c92e6fe8"
+    ],
+    [
+     83,
+     "be8ce2de913e"
+    ],
+    [
+     84,
+     "02de604126ee"
+    ],
+    [
+     85,
+     "c58720f3f704"
+    ],
+    [
+     86,
+     "0081c62406e2"
+    ],
+    [
+     87,
+     "b1f06f5ed861"
+    ],
+    [
+     88,
+     "34bc6458724d"
+    ],
+    [
+     89,
+     "60028a3cb689"
+    ],
+    [
+     90,
+     "1ed78b783ebe"
+    ],
+    [
+     91,
+     "b1f06f5ed861"
+    ],
+    [
+     92,
+     "82f700665ad7"
+    ],
+    [
+     93,
+     "f2a90bedc673"
+    ],
+    [
+     94,
+     "6ed71ebc33cb"
+    ],
+    [
+     95,
+     "204125d138a3"
+    ],
+    [
+     96,
+     "109c5937b141"
+    ],
+    [
+     97,
+     "7790192a468b"
+    ],
+    [
+     98,
+     "244a80d0f19e"
+    ],
+    [
+     99,
+     "afe8cbdc41ee"
+    ],
+    [
+     100,
+     "899ac38cd578"
+    ],
+    [
+     101,
+     "81a73e9b1f23"
+    ],
+    [
+     102,
+     "10d6fc059643"
+    ],
+    [
+     103,
+     "9ccca2dd3f5c"
+    ],
+    [
+     104,
+     "f1937a5606d1"
+    ],
+    [
+     105,
+     "60028a3cb689"
+    ],
+    [
+     106,
+     "1068b0664590"
+    ],
+    [
+     107,
+     "4e403b4b4cb1"
+    ],
+    [
+     108,
+     "2cb05e36fc38"
+    ],
+    [
+     109,
+     "3d6c99e998ba"
+    ],
+    [
+     110,
+     "f050354059c5"
+    ],
+    [
+     111,
+     "b5ad5491eba7"
+    ],
+    [
+     112,
+     "5d1ea06be085"
+    ],
+    [
+     113,
+     "ef2e92b2f21f"
+    ],
+    [
+     114,
+     "5196e305133e"
+    ],
+    [
+     115,
+     "3385cc57afa8"
+    ],
+    [
+     116,
+     "3b1d3995d4c0"
+    ],
+    [
+     117,
+     "21d3c74bed41"
+    ],
+    [
+     118,
+     "5b4703c8916f"
+    ],
+    [
+     119,
+     "411a8ba70a3d"
+    ],
+    [
+     120,
+     "5d1ea06be085"
+    ],
+    [
+     121,
+     "91d0b98641c4"
+    ],
+    [
+     122,
+     "b1f06f5ed861"
+    ],
+    [
+     123,
+     "7b47ea8f6b26"
+    ],
+    [
+     124,
+     "b5ad5491eba7"
+    ],
+    [
+     125,
+     "34bc6458724d"
+    ],
+    [
+     126,
+     "4079f2e261bf"
+    ],
+    [
+     127,
+     "244a80d0f19e"
+    ],
+    [
+     128,
+     "899ac38cd578"
+    ],
+    [
+     129,
+     "204125d138a3"
+    ],
+    [
+     130,
+     "bb82ecb1b78b"
+    ],
+    [
+     131,
+     "d8489f83c85e"
+    ],
+    [
+     132,
+     "208f54c3a2bb"
+    ],
+    [
+     133,
+     "f1937a5606d1"
+    ],
+    [
+     134,
+     "244a80d0f19e"
+    ],
+    [
+     135,
+     "21866ed3c1c0"
+    ],
+    [
+     136,
+     "9c2733065ca3"
+    ],
+    [
+     137,
+     "02de604126ee"
+    ],
+    [
+     138,
+     "d2a4d906f696"
+    ],
+    [
+     139,
+     "02de604126ee"
+    ],
+    [
+     140,
+     "dc774fec4b60"
+    ],
+    [
+     141,
+     "509285513975"
+    ],
+    [
+     142,
+     "b3c679abf087"
+    ],
+    [
+     143,
+     "b1f06f5ed861"
+    ],
+    [
+     144,
+     "f050354059c5"
+    ],
+    [
+     145,
+     "d18518224f06"
+    ],
+    [
+     146,
+     "b57b3129d983"
+    ],
+    [
+     147,
+     "5b4703c8916f"
+    ],
+    [
+     148,
+     "a1332042b013"
+    ],
+    [
+     149,
+     "d6d4d22e4986"
+    ],
+    [
+     150,
+     "75953144430d"
+    ],
+    [
+     151,
+     "8e7e1c6c11ea"
+    ],
+    [
+     152,
+     "411a8ba70a3d"
+    ],
+    [
+     153,
+     "cc1146bee788"
+    ],
+    [
+     154,
+     "be8ce2de913e"
+    ],
+    [
+     155,
+     "c4f3c55eaf42"
+    ],
+    [
+     156,
+     "c9614ac42c4d"
+    ],
+    [
+     157,
+     "8e7e1c6c11ea"
+    ],
+    [
+     158,
+     "d6d4d22e4986"
+    ],
+    [
+     159,
+     "5196e305133e"
+    ],
+    [
+     160,
+     "7790192a468b"
+    ],
+    [
+     161,
+     "a07e1d87aab5"
+    ],
+    [
+     162,
+     "bbfbcff93bec"
+    ],
+    [
+     163,
+     "cca52ed93356"
+    ],
+    [
+     164,
+     "f050354059c5"
+    ],
+    [
+     165,
+     "aa0c410372d6"
+    ],
+    [
+     166,
+     "9bebec2130be"
+    ],
+    [
+     167,
+     "f5a5abcc6a7e"
+    ],
+    [
+     168,
+     "4079f2e261bf"
+    ],
+    [
+     169,
+     "109c5937b141"
+    ],
+    [
+     170,
+     "f1937a5606d1"
+    ],
+    [
+     171,
+     "eb3e50e8f9da"
+    ],
+    [
+     172,
+     "f4702052042b"
+    ],
+    [
+     173,
+     "02de604126ee"
+    ],
+    [
+     174,
+     "5b4703c8916f"
+    ],
+    [
+     175,
+     "5d1ea06be085"
+    ],
+    [
+     176,
+     "afe8cbdc41ee"
+    ],
+    [
+     177,
+     "f5a5abcc6a7e"
+    ],
+    [
+     178,
+     "670c91584c5d"
+    ],
+    [
+     179,
+     "3b1d3995d4c0"
+    ],
+    [
+     180,
+     "082ac567c691"
+    ],
+    [
+     181,
+     "91d0b98641c4"
+    ],
+    [
+     182,
+     "f5a5abcc6a7e"
+    ],
+    [
+     183,
+     "d18518224f06"
+    ],
+    [
+     184,
+     "f4702052042b"
+    ],
+    [
+     185,
+     "a07e1d87aab5"
+    ],
+    [
+     186,
+     "ca364024e2bd"
+    ],
+    [
+     187,
+     "3385cc57afa8"
+    ],
+    [
+     188,
+     "bb82ecb1b78b"
+    ],
+    [
+     189,
+     "aa0c410372d6"
+    ],
+    [
+     190,
+     "4079f2e261bf"
+    ],
+    [
+     191,
+     "17be680520a5"
+    ],
+    [
+     192,
+     "10d6fc059643"
+    ],
+    [
+     193,
+     "34bc6458724d"
+    ],
+    [
+     194,
+     "1ed78b783ebe"
+    ],
+    [
+     195,
+     "208f54c3a2bb"
+    ],
+    [
+     196,
+     "0081c62406e2"
+    ],
+    [
+     197,
+     "7fee9f82bdcc"
+    ],
+    [
+     198,
+     "082ac567c691"
+    ],
+    [
+     199,
+     "7fee9f82bdcc"
+    ],
+    [
+     200,
+     "b3c679abf087"
+    ]
+   ],
+   "out": {
+    "tickets_hash": "7e3f74a62a3d07039a2790a6386166b18322c5cf0f0021ba29edc39d183eb83d",
+    "winners": [
+     197,
+     38,
+     144,
+     170,
+     167,
+     37,
+     157
+    ]
+   }
+  },
+  {
+   "seed": "0b40a77b51e49bb489a7f8688d3c3d988b40d36a22bf9a9ab7db5e2481ae7f18",
+   "gid": "5cbbecd6-9595-4ca3-904b-a9c24e6bb9fa",
+   "k": 3,
+   "tickets": [
+    [
+     1,
+     "69db59e0a83e"
+    ],
+    [
+     2,
+     "8be2debee458"
+    ],
+    [
+     3,
+     "d1dc7b1dd194"
+    ],
+    [
+     4,
+     "482bce01ae41"
+    ],
+    [
+     5,
+     "bfa921f7f865"
+    ],
+    [
+     6,
+     "be63a3039eae"
+    ],
+    [
+     7,
+     "4021c7ef3f9d"
+    ],
+    [
+     8,
+     "a01276277fda"
+    ],
+    [
+     9,
+     "d36ee9acf184"
+    ],
+    [
+     10,
+     "080ad78bd421"
+    ],
+    [
+     11,
+     "e5be04dff74a"
+    ],
+    [
+     12,
+     "0cf864d9d46d"
+    ],
+    [
+     13,
+     "b0af22999812"
+    ],
+    [
+     14,
+     "1daeab5c109f"
+    ],
+    [
+     15,
+     "2e919fb83259"
+    ],
+    [
+     16,
+     "a7eb52f30f07"
+    ],
+    [
+     17,
+     "3e713aad7547"
+    ],
+    [
+     18,
+     "a89c7bad07af"
+    ],
+    [
+     19,
+     "8f0aade0be50"
+    ],
+    [
+     20,
+     "ff741060f88c"
+    ],
+    [
+     21,
+     "d58cdf9662c5"
+    ],
+    [
+     22,
+     "68a71729255a"
+    ],
+    [
+     23,
+     "d1dc7b1dd194"
+    ],
+    [
+     24,
+     "3afd29663f8e"
+    ],
+    [
+     25,
+     "a0d470649873"
+    ],
+    [
+     26,
+     "a0f33bfee46b"
+    ],
+    [
+     27,
+     "3afd29663f8e"
+    ],
+    [
+     28,
+     "c59f606f4e05"
+    ],
+    [
+     29,
+     "68a71729255a"
+    ],
+    [
+     30,
+     "4555c904a4b3"
+    ],
+    [
+     31,
+     "abf170e4259e"
+    ],
+    [
+     32,
+     "ae5c44f55503"
+    ],
+    [
+     33,
+     "89dc4e62dca4"
+    ],
+    [
+     34,
+     "a89c7bad07af"
+    ],
+    [
+     35,
+     "8f6ba70abbc7"
+    ],
+    [
+     36,
+     "5e428d186c94"
+    ],
+    [
+     37,
+     "d19249784b4c"
+    ],
+    [
+     38,
+     "7785ac4df016"
+    ],
+    [
+     39,
+     "47895db1e8b5"
+    ],
+    [
+     40,
+     "e142eb7c31c3"
+    ],
+    [
+     41,
+     "eb3c47cd76a5"
+    ],
+    [
+     42,
+     "e01e5e54035b"
+    ],
+    [
+     43,
+     "da94409ebf07"
+    ],
+    [
+     44,
+     "5b08c82faa78"
+    ],
+    [
+     45,
+     "3c4f00806034"
+    ],
+    [
+     46,
+     "68a1fd4f5ae3"
+    ],
+    [
+     47,
+     "fe20bf85c0f0"
+    ],
+    [
+     48,
+     "584fc8dde0f0"
+    ],
+    [
+     49,
+     "f2651bee02f0"
+    ],
+    [
+     50,
+     "ac9b93932e08"
+    ],
+    [
+     51,
+     "2e919fb83259"
+    ],
+    [
+     52,
+     "54fc2305d820"
+    ],
+    [
+     53,
+     "69db59e0a83e"
+    ],
+    [
+     54,
+     "f336ca81951a"
+    ],
+    [
+     55,
+     "4d1f52f49cae"
+    ],
+    [
+     56,
+     "b0d7a7c61618"
+    ],
+    [
+     57,
+     "2ceca91d0477"
+    ],
+    [
+     58,
+     "a7eb52f30f07"
+    ],
+    [
+     59,
+     "5b08c82faa78"
+    ],
+    [
+     60,
+     "356cf8c7eb02"
+    ],
+    [
+     61,
+     "510e3802977a"
+    ],
+    [
+     62,
+     "d65e9aeff8d4"
+    ],
+    [
+     63,
+     "3afd29663f8e"
+    ],
+    [
+     64,
+     "50f88ce63e32"
+    ],
+    [
+     65,
+     "de595ae0c112"
+    ],
+    [
+     66,
+     "0dd637972316"
+    ],
+    [
+     67,
+     "09194ae3f5f6"
+    ],
+    [
+     68,
+     "8d94e0c9acd7"
+    ],
+    [
+     69,
+     "0e28fa09b2f4"
+    ],
+    [
+     70,
+     "06f1cd4507cc"
+    ],
+    [
+     71,
+     "5debcc5c1dac"
+    ],
+    [
+     72,
+     "3c4f00806034"
+    ],
+    [
+     73,
+     "9a35a4ae00b7"
+    ],
+    [
+     74,
+     "e2215f55f2c8"
+    ],
+    [
+     75,
+     "d36ee9acf184"
+    ],
+    [
+     76,
+     "39535b074d26"
+    ],
+    [
+     77,
+     "3e1d2e97240b"
+    ],
+    [
+     78,
+     "b41eb158dd2b"
+    ],
+    [
+     79,
+     "5e428d186c94"
+    ],
+    [
+     80,
+     "a45d377168d9"
+    ],
+    [
+     81,
+     "5e428d186c94"
+    ],
+    [
+     82,
+     "c7393d0824cf"
+    ],
+    [
+     83,
+     "6aaf88d15796"
+    ],
+    [
+     84,
+     "5debcc5c1dac"
+    ],
+    [
+     85,
+     "aa34c7fad18e"
+    ],
+    [
+     86,
+     "4d1f52f49cae"
+    ],
+    [
+     87,
+     "1daeab5c109f"
+    ],
+    [
+     88,
+     "32c05f9b2044"
+    ],
+    [
+     89,
+     "1a170ca4f887"
+    ],
+    [
+     90,
+     "048d8d03f8ac"
+    ],
+    [
+     91,
+     "ebd167102c00"
+    ],
+    [
+     92,
+     "184a47cfe372"
+    ],
+    [
+     93,
+     "1dec57569472"
+    ],
+    [
+     94,
+     "be1c1bdccf0d"
+    ],
+    [
+     95,
+     "a7729dc92cc6"
+    ],
+    [
+     96,
+     "75805eb9aa6b"
+    ],
+    [
+     97,
+     "da94409ebf07"
+    ],
+    [
+     98,
+     "3afd29663f8e"
+    ],
+    [
+     99,
+     "ba8af69c7b76"
+    ],
+    [
+     100,
+     "0dd637972316"
+    ],
+    [
+     101,
+     "4021c7ef3f9d"
+    ],
+    [
+     102,
+     "ff741060f88c"
+    ],
+    [
+     103,
+     "6182adb20f38"
+    ],
+    [
+     104,
+     "cba9f30db554"
+    ],
+    [
+     105,
+     "d0b3774bfad5"
+    ],
+    [
+     106,
+     "e8ff874e1c82"
+    ],
+    [
+     107,
+     "f5c217e35db6"
+    ],
+    [
+     108,
+     "c670ef0531b6"
+    ],
+    [
+     109,
+     "d0b3774bfad5"
+    ],
+    [
+     110,
+     "d19249784b4c"
+    ],
+    [
+     111,
+     "a6cd7659a84d"
+    ],
+    [
+     112,
+     "5067d36c9b80"
+    ],
+    [
+     113,
+     "5bd79bc36eb0"
+    ],
+    [
+     114,
+     "7192b3e51940"
+    ],
+    [
+     115,
+     "1fb92bb22ba5"
+    ],
+    [
+     116,
+     "fe20bf85c0f0"
+    ],
+    [
+     117,
+     "4d1f52f49cae"
+    ],
+    [
+     118,
+     "e2978fa312f1"
+    ],
+    [
+     119,
+     "5487e6a00d10"
+    ],
+    [
+     120,
+     "5edf9e4d1433"
+    ],
+    [
+     121,
+     "356cf8c7eb02"
+    ],
+    [
+     122,
+     "ad63226e3891"
+    ],
+    [
+     123,
+     "09194ae3f5f6"
+    ],
+    [
+     124,
+     "ebd167102c00"
+    ],
+    [
+     125,
+     "2e919fb83259"
+    ],
+    [
+     126,
+     "38bd5057f4f5"
+    ],
+    [
+     127,
+     "fe1a97db7648"
+    ],
+    [
+     128,
+     "5e428d186c94"
+    ],
+    [
+     129,
+     "4555c904a4b3"
+    ],
+    [
+     130,
+     "f2d9ce543dc0"
+    ],
+    [
+     131,
+     "6a998ebdadc6"
+    ],
+    [
+     132,
+     "9d0dc6c47994"
+    ],
+    [
+     133,
+     "482bce01ae41"
+    ],
+    [
+     134,
+     "184a47cfe372"
+    ],
+    [
+     135,
+     "bc0f6146c7b5"
+    ],
+    [
+     136,
+     "57fd2ff36e65"
+    ],
+    [
+     137,
+     "3afd29663f8e"
+    ],
+    [
+     138,
+     "6ad2df956f20"
+    ],
+    [
+     139,
+     "b41eb158dd2b"
+    ],
+    [
+     140,
+     "1a9b32a22827"
+    ],
+    [
+     141,
+     "47895db1e8b5"
+    ],
+    [
+     142,
+     "9000ac266138"
+    ],
+    [
+     143,
+     "1a9b32a22827"
+    ],
+    [
+     144,
+     "ac4413c7c6ec"
+    ],
+    [
+     145,
+     "a3ad8903f3d0"
+    ],
+    [
+     146,
+     "22eb02adee96"
+    ],
+    [
+     147,
+     "948c17963a0f"
+    ],
+    [
+     148,
+     "f552f9d8c79e"
+    ],
+    [
+     149,
+     "cac815638b51"
+    ],
+    [
+     150,
+     "44f723c2728f"
+    ],
+    [
+     151,
+     "a3ad8903f3d0"
+    ],
+    [
+     152,
+     "0ccd3f97f270"
+    ],
+    [
+     153,
+     "cd7ff3dda875"
+    ],
+    [
+     154,
+     "97aca309ec91"
+    ],
+    [
+     155,
+     "95702e357019"
+    ],
+    [
+     156,
+     "4f4dc765164b"
+    ],
+    [
+     157,
+     "1fb92bb22ba5"
+    ],
+    [
+     158,
+     "e5e2e14ffbb1"
+    ],
+    [
+     159,
+     "3e713aad7547"
+    ],
+    [
+     160,
+     "4f4dc765164b"
+    ],
+    [
+     161,
+     "a6cd7659a84d"
+    ],
+    [
+     162,
+     "d0b3774bfad5"
+    ],
+    [
+     163,
+     "e5be04dff74a"
+    ],
+    [
+     164,
+     "c252fdcf38c4"
+    ],
+    [
+     165,
+     "af7e355cb566"
+    ],
+    [
+     166,
+     "de595ae0c112"
+    ],
+    [
+     167,
+     "1db32504db4c"
+    ],
+    [
+     168,
+     "8f6ba70abbc7"
+    ],
+    [
+     169,
+     "71030b70ed13"
+    ],
+    [
+     170,
+     "ba09d0b5bd23"
+    ],
+    [
+     171,
+     "b455ba32ca77"
+    ],
+    [
+     172,
+     "22818d11cff4"
+    ],
+    [
+     173,
+     "cc64dbf86830"
+    ],
+    [
+     174,
+     "cac815638b51"
+    ],
+    [
+     175,
+     "0cc106d4b0ec"
+    ],
+    [
+     176,
+     "69db59e0a83e"
+    ],
+    [
+     177,
+     "a01276277fda"
+    ],
+    [
+     178,
+     "e8ff874e1c82"
+    ],
+    [
+     179,
+     "d1dc7b1dd194"
+    ],
+    [
+     180,
+     "e2978fa312f1"
+    ],
+    [
+     181,
+     "ba4df5aad9f6"
+    ],
+    [
+     182,
+     "a45d377168d9"
+    ],
+    [
+     183,
+     "1daeab5c109f"
+    ],
+    [
+     184,
+     "a93314081ea3"
+    ],
+    [
+     185,
+     "6434ee817f49"
+    ],
+    [
+     186,
+     "2ceca91d0477"
+    ],
+    [
+     187,
+     "e6d435288b66"
+    ],
+    [
+     188,
+     "584fc8dde0f0"
+    ],
+    [
+     189,
+     "de4387dea835"
+    ],
+    [
+     190,
+     "c7393d0824cf"
+    ],
+    [
+     191,
+     "54fc2305d820"
+    ],
+    [
+     192,
+     "854de0767bc7"
+    ],
+    [
+     193,
+     "e56790d698c8"
+    ],
+    [
+     194,
+     "a7eb52f30f07"
+    ],
+    [
+     195,
+     "482bce01ae41"
+    ],
+    [
+     196,
+     "71030b70ed13"
+    ],
+    [
+     197,
+     "f5eb84a625c5"
+    ],
+    [
+     198,
+     "07a993a1b6fa"
+    ],
+    [
+     199,
+     "21085ec417ae"
+    ],
+    [
+     200,
+     "72c709654c18"
+    ],
+    [
+     201,
+     "d1dc7b1dd194"
+    ],
+    [
+     202,
+     "a45d377168d9"
+    ],
+    [
+     203,
+     "22818d11cff4"
+    ],
+    [
+     204,
+     "f5c217e35db6"
+    ],
+    [
+     205,
+     "3afd29663f8e"
+    ],
+    [
+     206,
+     "abf170e4259e"
+    ],
+    [
+     207,
+     "ac4413c7c6ec"
+    ],
+    [
+     208,
+     "da94409ebf07"
+    ],
+    [
+     209,
+     "ebda718d64c1"
+    ],
+    [
+     210,
+     "482bce01ae41"
+    ],
+    [
+     211,
+     "2722ae9cf490"
+    ],
+    [
+     212,
+     "b6821d373b47"
+    ],
+    [
+     213,
+     "7b730d5121a6"
+    ],
+    [
+     214,
+     "38bd5057f4f5"
+    ],
+    [
+     215,
+     "71030b70ed13"
+    ],
+    [
+     216,
+     "343ef5f3f3ab"
+    ],
+    [
+     217,
+     "bc29d02d2572"
+    ],
+    [
+     218,
+     "1f0d8aa83302"
+    ],
+    [
+     219,
+     "22818d11cff4"
+    ],
+    [
+     220,
+     "7f8b53e5c2eb"
+    ],
+    [
+     221,
+     "95702e357019"
+    ],
+    [
+     222,
+     "b54729c6962c"
+    ],
+    [
+     223,
+     "ae5c44f55503"
+    ],
+    [
+     224,
+     "7785ac4df016"
+    ],
+    [
+     225,
+     "49fce5af6e53"
+    ],
+    [
+     226,
+     "56d1f51fe1c0"
+    ],
+    [
+     227,
+     "cac815638b51"
+    ],
+    [
+     228,
+     "013c9a22c8fc"
+    ],
+    [
+     229,
+     "332ae1a5de4d"
+    ],
+    [
+     230,
+     "3ecb113cbdff"
+    ],
+    [
+     231,
+     "f04ca62a95b3"
+    ],
+    [
+     232,
+     "e6d435288b66"
+    ],
+    [
+     233,
+     "2ceca91d0477"
+    ],
+    [
+     234,
+     "a93314081ea3"
+    ],
+    [
+     235,
+     "0cc106d4b0ec"
+    ],
+    [
+     236,
+     "0cc106d4b0ec"
+    ],
+    [
+     237,
+     "72c709654c18"
+    ],
+    [
+     238,
+     "4555c904a4b3"
+    ],
+    [
+     239,
+     "d58cdf9662c5"
+    ],
+    [
+     240,
+     "e56790d698c8"
+    ],
+    [
+     241,
+     "f2651bee02f0"
+    ],
+    [
+     242,
+     "39c4279a2cf3"
+    ],
+    [
+     243,
+     "7feae559468c"
+    ],
+    [
+     244,
+     "4555c904a4b3"
+    ],
+    [
+     245,
+     "948c17963a0f"
+    ],
+    [
+     246,
+     "a6cd7659a84d"
+    ],
+    [
+     247,
+     "22eb02adee96"
+    ],
+    [
+     248,
+     "63cd9d959235"
+    ],
+    [
+     249,
+     "ae5c44f55503"
+    ],
+    [
+     250,
+     "fee17b660051"
+    ],
+    [
+     251,
+     "6182adb20f38"
+    ],
+    [
+     252,
+     "d65e9aeff8d4"
+    ],
+    [
+     253,
+     "4e0f13260cf0"
+    ],
+    [
+     254,
+     "b0669bd4da51"
+    ],
+    [
+     255,
+     "8be2debee458"
+    ],
+    [
+     256,
+     "52a2f3713eba"
+    ],
+    [
+     257,
+     "c7393d0824cf"
+    ],
+    [
+     258,
+     "bc29d02d2572"
+    ],
+    [
+     259,
+     "20fced9a7d1a"
+    ],
+    [
+     260,
+     "1dec57569472"
+    ],
+    [
+     261,
+     "332ae1a5de4d"
+    ],
+    [
+     262,
+     "63ffe9747ef7"
+    ],
+    [
+     263,
+     "490029845044"
+    ],
+    [
+     264,
+     "10bbaef499ae"
+    ],
+    [
+     265,
+     "82310e413b29"
+    ],
+    [
+     266,
+     "fe20bf85c0f0"
+    ],
+    [
+     267,
+     "ba09d0b5bd23"
+    ],
+    [
+     268,
+     "9444c38c5c5c"
+    ],
+    [
+     269,
+     "510e3802977a"
+    ],
+    [
+     270,
+     "5067d36c9b80"
+    ],
+    [
+     271,
+     "0da901da920c"
+    ],
+    [
+     272,
+     "be1c1bdccf0d"
+    ],
+    [
+     273,
+     "1737f2d991bc"
+    ],
+    [
+     274,
+     "3a19cd9593e9"
+    ],
+    [
+     275,
+     "6ad2df956f20"
+    ],
+    [
+     276,
+     "ba8af69c7b76"
+    ],
+    [
+     277,
+     "a7eb52f30f07"
+    ],
+    [
+     278,
+     "95702e357019"
+    ],
+    [
+     279,
+     "f336ca81951a"
+    ],
+    [
+     280,
+     "20fced9a7d1a"
+    ],
+    [
+     281,
+     "a6cd7659a84d"
+    ],
+    [
+     282,
+     "bfa921f7f865"
+    ],
+    [
+     283,
+     "f2651bee02f0"
+    ],
+    [
+     284,
+     "f552f9d8c79e"
+    ],
+    [
+     285,
+     "1737f2d991bc"
+    ],
+    [
+     286,
+     "64e09be000dd"
+    ],
+    [
+     287,
+     "b54729c6962c"
+    ],
+    [
+     288,
+     "8f0aade0be50"
+    ],
+    [
+     289,
+     "948c17963a0f"
+    ],
+    [
+     290,
+     "0da901da920c"
+    ],
+    [
+     291,
+     "8f900a8165b9"
+    ],
+    [
+     292,
+     "c252fdcf38c4"
+    ],
+    [
+     293,
+     "af4de34a205c"
+    ],
+    [
+     294,
+     "a08b73324c2a"
+    ],
+    [
+     295,
+     "3e1d2e97240b"
+    ],
+    [
+     296,
+     "e5be04dff74a"
+    ],
+    [
+     297,
+     "9d0dc6c47994"
+    ],
+    [
+     298,
+     "e09d24928f10"
+    ],
+    [
+     299,
+     "f552f9d8c79e"
+    ],
+    [
+     300,
+     "9b421ec3b429"
+    ],
+    [
+     301,
+     "6af389e596b2"
+    ],
+    [
+     302,
+     "af7e355cb566"
+    ],
+    [
+     303,
+     "6af389e596b2"
+    ],
+    [
+     304,
+     "10bbaef499ae"
+    ],
+    [
+     305,
+     "6a998ebdadc6"
+    ],
+    [
+     306,
+     "800cda42f7d8"
+    ],
+    [
+     307,
+     "75805eb9aa6b"
+    ],
+    [
+     308,
+     "7feae559468c"
+    ],
+    [
+     309,
+     "0da901da920c"
+    ],
+    [
+     310,
+     "490029845044"
+    ],
+    [
+     311,
+     "abf170e4259e"
+    ],
+    [
+     312,
+     "68a71729255a"
+    ],
+    [
+     313,
+     "da94409ebf07"
+    ],
+    [
+     314,
+     "510e3802977a"
+    ],
+    [
+     315,
+     "356cf8c7eb02"
+    ],
+    [
+     316,
+     "4f4dc765164b"
+    ],
+    [
+     317,
+     "3ecb113cbdff"
+    ],
+    [
+     318,
+     "7f77e92dad39"
+    ],
+    [
+     319,
+     "f5eb84a625c5"
+    ],
+    [
+     320,
+     "9d7e5fa72b88"
+    ],
+    [
+     321,
+     "aa02549fda65"
+    ],
+    [
+     322,
+     "8f6ba70abbc7"
+    ],
+    [
+     323,
+     "b41eb158dd2b"
+    ],
+    [
+     324,
+     "7f77e92dad39"
+    ],
+    [
+     325,
+     "21085ec417ae"
+    ],
+    [
+     326,
+     "184a47cfe372"
+    ],
+    [
+     327,
+     "948c17963a0f"
+    ],
+    [
+     328,
+     "47895db1e8b5"
+    ],
+    [
+     329,
+     "f5c217e35db6"
+    ],
+    [
+     330,
+     "03f9535d8932"
+    ],
+    [
+     331,
+     "d847d84c4af1"
+    ],
+    [
+     332,
+     "eb3c47cd76a5"
+    ],
+    [
+     333,
+     "3ecb113cbdff"
+    ],
+    [
+     334,
+     "5067d36c9b80"
+    ],
+    [
+     335,
+     "69db59e0a83e"
+    ],
+    [
+     336,
+     "29c8f0ab9989"
+    ],
+    [
+     337,
+     "6a23b623d998"
+    ],
+    [
+     338,
+     "6182adb20f38"
+    ],
+    [
+     339,
+     "6a998ebdadc6"
+    ],
+    [
+     340,
+     "d58cdf9662c5"
+    ],
+    [
+     341,
+     "184a47cfe372"
+    ],
+    [
+     342,
+     "6434ee817f49"
+    ],
+    [
+     343,
+     "0dd637972316"
+    ],
+    [
+     344,
+     "2ceca91d0477"
+    ],
+    [
+     345,
+     "1daeab5c109f"
+    ],
+    [
+     346,
+     "a08b73324c2a"
+    ],
+    [
+     347,
+     "e2978fa312f1"
+    ],
+    [
+     348,
+     "a08b73324c2a"
+    ],
+    [
+     349,
+     "cc64dbf86830"
+    ],
+    [
+     350,
+     "7192b3e51940"
+    ],
+    [
+     351,
+     "72857bcf4440"
+    ],
+    [
+     352,
+     "a6cd7659a84d"
+    ],
+    [
+     353,
+     "63edd63be1ed"
+    ],
+    [
+     354,
+     "59371c443f97"
+    ],
+    [
+     355,
+     "38bd5057f4f5"
+    ],
+    [
+     356,
+     "948c17963a0f"
+    ],
+    [
+     357,
+     "f2d9ce543dc0"
+    ],
+    [
+     358,
+     "aa34c7fad18e"
+    ],
+    [
+     359,
+     "da94409ebf07"
+    ],
+    [
+     360,
+     "a379944050ca"
+    ],
+    [
+     361,
+     "9d7e5fa72b88"
+    ],
+    [
+     362,
+     "aa34c7fad18e"
+    ],
+    [
+     363,
+     "e5be04dff74a"
+    ],
+    [
+     364,
+     "510e3802977a"
+    ],
+    [
+     365,
+     "5bd79bc36eb0"
+    ],
+    [
+     366,
+     "2ace621a7ad6"
+    ],
+    [
+     367,
+     "aa34c7fad18e"
+    ],
+    [
+     368,
+     "f552f9d8c79e"
+    ],
+    [
+     369,
+     "49fce5af6e53"
+    ],
+    [
+     370,
+     "b0af22999812"
+    ],
+    [
+     371,
+     "5b08c82faa78"
+    ],
+    [
+     372,
+     "6af389e596b2"
+    ],
+    [
+     373,
+     "44f723c2728f"
+    ],
+    [
+     374,
+     "d9be8738b284"
+    ],
+    [
+     375,
+     "2ace621a7ad6"
+    ],
+    [
+     376,
+     "084479954ae8"
+    ],
+    [
+     377,
+     "2ace621a7ad6"
+    ],
+    [
+     378,
+     "f5eb84a625c5"
+    ],
+    [
+     379,
+     "ac4413c7c6ec"
+    ],
+    [
+     380,
+     "8d94e0c9acd7"
+    ],
+    [
+     381,
+     "95702e357019"
+    ],
+    [
+     382,
+     "0323e889bb75"
+    ],
+    [
+     383,
+     "0323e889bb75"
+    ],
+    [
+     384,
+     "af4de34a205c"
+    ],
+    [
+     385,
+     "e5be04dff74a"
+    ],
+    [
+     386,
+     "a7eb52f30f07"
+    ],
+    [
+     387,
+     "6bd22b88037e"
+    ],
+    [
+     388,
+     "4555c904a4b3"
+    ],
+    [
+     389,
+     "343ef5f3f3ab"
+    ],
+    [
+     390,
+     "1daeab5c109f"
+    ],
+    [
+     391,
+     "a08b73324c2a"
+    ],
+    [
+     392,
+     "e8ff874e1c82"
+    ],
+    [
+     393,
+     "af4de34a205c"
+    ],
+    [
+     394,
+     "a3ad8903f3d0"
+    ],
+    [
+     395,
+     "de4387dea835"
+    ],
+    [
+     396,
+     "10bbaef499ae"
+    ],
+    [
+     397,
+     "aba7757aa603"
+    ],
+    [
+     398,
+     "63ffe9747ef7"
+    ],
+    [
+     399,
+     "7f8b53e5c2eb"
+    ],
+    [
+     400,
+     "7785ac4df016"
+    ],
+    [
+     401,
+     "08ebe2dc53bf"
+    ],
+    [
+     402,
+     "f5c217e35db6"
+    ],
+    [
+     403,
+     "a9a88ec69bce"
+    ],
+    [
+     404,
+     "b41eb158dd2b"
+    ],
+    [
+     405,
+     "5067d36c9b80"
+    ],
+    [
+     406,
+     "38872b6e8d85"
+    ],
+    [
+     407,
+     "2ace621a7ad6"
+    ],
+    [
+     408,
+     "22818d11cff4"
+    ],
+    [
+     409,
+     "490029845044"
+    ],
+    [
+     410,
+     "a45d377168d9"
+    ],
+    [
+     411,
+     "caa1465a6ed0"
+    ],
+    [
+     412,
+     "9b421ec3b429"
+    ],
+    [
+     413,
+     "e09d24928f10"
+    ],
+    [
+     414,
+     "084479954ae8"
+    ],
+    [
+     415,
+     "a89c7bad07af"
+    ],
+    [
+     416,
+     "0e28fa09b2f4"
+    ],
+    [
+     417,
+     "9a35a4ae00b7"
+    ],
+    [
+     418,
+     "8f0aade0be50"
+    ],
+    [
+     419,
+     "ebd167102c00"
+    ],
+    [
+     420,
+     "ebd167102c00"
+    ],
+    [
+     421,
+     "4a97a2641d51"
+    ],
+    [
+     422,
+     "af4de34a205c"
+    ],
+    [
+     423,
+     "07feb57622e4"
+    ],
+    [
+     424,
+     "6ad2df956f20"
+    ],
+    [
+     425,
+     "6718eff5ab5c"
+    ],
+    [
+     426,
+     "e6d435288b66"
+    ],
+    [
+     427,
+     "f2651bee02f0"
+    ],
+    [
+     428,
+     "47895db1e8b5"
+    ],
+    [
+     429,
+     "3e1d2e97240b"
+    ],
+    [
+     430,
+     "cba9f30db554"
+    ],
+    [
+     431,
+     "a89c7bad07af"
+    ],
+    [
+     432,
+     "64e09be000dd"
+    ],
+    [
+     433,
+     "de595ae0c112"
+    ],
+    [
+     434,
+     "47895db1e8b5"
+    ],
+    [
+     435,
+     "0e28fa09b2f4"
+    ],
+    [
+     436,
+     "e2978fa312f1"
+    ],
+    [
+     437,
+     "0dd637972316"
+    ],
+    [
+     438,
+     "e56790d698c8"
+    ],
+    [
+     439,
+     "6bd22b88037e"
+    ],
+    [
+     440,
+     "3ecb113cbdff"
+    ],
+    [
+     441,
+     "de595ae0c112"
+    ],
+    [
+     442,
+     "d9be8738b284"
+    ],
+    [
+     443,
+     "3a19cd9593e9"
+    ],
+    [
+     444,
+     "22818d11cff4"
+    ],
+    [
+     445,
+     "75805eb9aa6b"
+    ],
+    [
+     446,
+     "ebda718d64c1"
+    ],
+    [
+     447,
+     "62f66eaa1640"
+    ],
+    [
+     448,
+     "b6821d373b47"
+    ],
+    [
+     449,
+     "0cf864d9d46d"
+    ],
+    [
+     450,
+     "b0d7a7c61618"
+    ],
+    [
+     451,
+     "ac9b93932e08"
+    ],
+    [
+     452,
+     "52a2f3713eba"
+    ],
+    [
+     453,
+     "73b40e064e1d"
+    ],
+    [
+     454,
+     "1a9b32a22827"
+    ],
+    [
+     455,
+     "bfa921f7f865"
+    ],
+    [
+     456,
+     "bc0f6146c7b5"
+    ],
+    [
+     457,
+     "4e0f13260cf0"
+    ],
+    [
+     458,
+     "1a9b32a22827"
+    ],
+    [
+     459,
+     "3c4f00806034"
+    ],
+    [
+     460,
+     "6ad2df956f20"
+    ],
+    [
+     461,
+     "59371c443f97"
+    ],
+    [
+     462,
+     "6ae3632528d0"
+    ],
+    [
+     463,
+     "e2978fa312f1"
+    ],
+    [
+     464,
+     "75805eb9aa6b"
+    ],
+    [
+     465,
+     "ff741060f88c"
+    ],
+    [
+     466,
+     "6bd22b88037e"
+    ],
+    [
+     467,
+     "6c1858527b43"
+    ],
+    [
+     468,
+     "b0af22999812"
+    ],
+    [
+     469,
+     "584fc8dde0f0"
+    ],
+    [
+     470,
+     "2c5a9d1e781e"
+    ],
+    [
+     471,
+     "6af389e596b2"
+    ],
+    [
+     472,
+     "b852094b793c"
+    ],
+    [
+     473,
+     "6ad2df956f20"
+    ],
+    [
+     474,
+     "2c5a9d1e781e"
+    ],
+    [
+     475,
+     "cba9f30db554"
+    ],
+    [
+     476,
+     "3ecb113cbdff"
+    ],
+    [
+     477,
+     "cc64dbf86830"
+    ],
+    [
+     478,
+     "5edf9e4d1433"
+    ],
+    [
+     479,
+     "a93314081ea3"
+    ],
+    [
+     480,
+     "800cda42f7d8"
+    ],
+    [
+     481,
+     "a0f33bfee46b"
+    ],
+    [
+     482,
+     "2850702debc4"
+    ],
+    [
+     483,
+     "cac815638b51"
+    ],
+    [
+     484,
+     "e2215f55f2c8"
+    ],
+    [
+     485,
+     "bfa921f7f865"
+    ],
+    [
+     486,
+     "69db59e0a83e"
+    ],
+    [
+     487,
+     "c21c07386dd4"
+    ],
+    [
+     488,
+     "63cd9d959235"
+    ],
+    [
+     489,
+     "4a97a2641d51"
+    ],
+    [
+     490,
+     "ff741060f88c"
+    ],
+    [
+     491,
+     "2850702debc4"
+    ],
+    [
+     492,
+     "be1c1bdccf0d"
+    ],
+    [
+     493,
+     "2ace621a7ad6"
+    ],
+    [
+     494,
+     "332ae1a5de4d"
+    ],
+    [
+     495,
+     "d0b3774bfad5"
+    ],
+    [
+     496,
+     "f2651bee02f0"
+    ],
+    [
+     497,
+     "0e28fa09b2f4"
+    ],
+    [
+     498,
+     "72857bcf4440"
+    ],
+    [
+     499,
+     "e2215f55f2c8"
+    ],
+    [
+     500,
+     "0323e889bb75"
+    ]
+   ],
+   "out": {
+    "tickets_hash": "80c097aa8eace1e9090e92627e63bc028e0626f6f15c18979e1fae479ec7eba0",
+    "winners": [
+     423,
+     153,
+     300
+    ]
+   }
+  },
+  {
+   "seed": "57310cb4ea1761615c6e10893fa66eb72caec2f274369d905f334369392ce2e3",
+   "gid": "24e4813b-7948-4518-a227-33363946cda3",
+   "k": 2,
+   "tickets": [],
+   "out": {
+    "tickets_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "winners": []
+   }
+  }
+ ],
+ "scenarios": [
+  {
+   "name": "valid",
+   "data": {
+    "giveaway": {
+     "id": "b0978303-1a85-451e-b178-3b3aa6eda1e6",
+     "winner_count": 3,
+     "status": "drawn",
+     "seed_hash": "1cbd1f15a03ecbedc2a09ebb1d189c4d827ad38cdbb4c48a80050573ecf6785e"
+    },
+    "chain": [
+     {
+      "block_type": "commit",
+      "giveaway_id": "40e5228d-991e-48f7-8672-91076ad43e5d",
+      "seed_hash": "fef03d64579ddc36c9f88abed25cafd25ec1f071253e940574741931c4b9c578",
+      "winner_count": 1,
+      "ts_ms": 1760000000000,
+      "block_index": 1,
+      "previous_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "seed": null,
+      "total_tickets": null,
+      "tickets_hash": null,
+      "winning_tickets": null,
+      "draw_id": null,
+      "block_hash": "960ccfb27773b6ce714ca1bd631f4bb3fe108edd593f7e2a7e3928c7be5f1bab"
+     },
+     {
+      "block_type": "commit",
+      "giveaway_id": "b0978303-1a85-451e-b178-3b3aa6eda1e6",
+      "seed_hash": "1cbd1f15a03ecbedc2a09ebb1d189c4d827ad38cdbb4c48a80050573ecf6785e",
+      "winner_count": 3,
+      "ts_ms": 1760000100000,
+      "block_index": 2,
+      "previous_hash": "960ccfb27773b6ce714ca1bd631f4bb3fe108edd593f7e2a7e3928c7be5f1bab",
+      "seed": null,
+      "total_tickets": null,
+      "tickets_hash": null,
+      "winning_tickets": null,
+      "draw_id": null,
+      "block_hash": "ae7c6e0753f30606825f1999fa3314369e7a4f9bf5989856917bf9bc1f128464"
+     },
+     {
+      "block_type": "result",
+      "giveaway_id": "b0978303-1a85-451e-b178-3b3aa6eda1e6",
+      "draw_id": "5c8c0135-e02b-4d3e-a4ce-a0249dae269d",
+      "seed": "2c52ee3f31b59d27f21ec5bc6c00c0a8ef64c321ad55107aeaa83cc07735057c",
+      "total_tickets": 12,
+      "tickets_hash": "130aa0695122f0180d944588274453d070689f2854a625541a517a5eecba2a46",
+      "winning_tickets": "7,3,9",
+      "ts_ms": 1760000900000,
+      "block_index": 3,
+      "previous_hash": "ae7c6e0753f30606825f1999fa3314369e7a4f9bf5989856917bf9bc1f128464",
+      "seed_hash": null,
+      "winner_count": null,
+      "block_hash": "8caea899a7d7430e0f13e29ecb95447bad9333e3cffc06c01c63d9d8c53ec0a4"
+     }
+    ],
+    "first_ticket_ms": 1760000200000,
+    "tickets": [
+     [
+      1,
+      "c8174c760347"
+     ],
+     [
+      2,
+      "5bbb06f05fee"
+     ],
+     [
+      3,
+      "a8ecc5c2f792"
+     ],
+     [
+      4,
+      "a8ecc5c2f792"
+     ],
+     [
+      5,
+      "9990714d55c9"
+     ],
+     [
+      6,
+      "88025a4bf08e"
+     ],
+     [
+      7,
+      "9e6dab5122aa"
+     ],
+     [
+      8,
+      "9b3586664301"
+     ],
+     [
+      9,
+      "cec8cfb85500"
+     ],
+     [
+      10,
+      "2b8f1e92adb1"
+     ],
+     [
+      11,
+      "a8ecc5c2f792"
+     ],
+     [
+      12,
+      "9b3586664301"
+     ]
+    ]
+   },
+   "ref_ok": true,
+   "ref_why": "valid",
+   "fail_step": null
+  },
+  {
+   "name": "winning_tickets diubah (hash blok tidak cocok)",
+   "data": {
+    "giveaway": {
+     "id": "b0978303-1a85-451e-b178-3b3aa6eda1e6",
+     "winner_count": 3,
+     "status": "drawn",
+     "seed_hash": "1cbd1f15a03ecbedc2a09ebb1d189c4d827ad38cdbb4c48a80050573ecf6785e"
+    },
+    "chain": [
+     {
+      "block_type": "commit",
+      "giveaway_id": "40e5228d-991e-48f7-8672-91076ad43e5d",
+      "seed_hash": "fef03d64579ddc36c9f88abed25cafd25ec1f071253e940574741931c4b9c578",
+      "winner_count": 1,
+      "ts_ms": 1760000000000,
+      "block_index": 1,
+      "previous_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "seed": null,
+      "total_tickets": null,
+      "tickets_hash": null,
+      "winning_tickets": null,
+      "draw_id": null,
+      "block_hash": "960ccfb27773b6ce714ca1bd631f4bb3fe108edd593f7e2a7e3928c7be5f1bab"
+     },
+     {
+      "block_type": "commit",
+      "giveaway_id": "b0978303-1a85-451e-b178-3b3aa6eda1e6",
+      "seed_hash": "1cbd1f15a03ecbedc2a09ebb1d189c4d827ad38cdbb4c48a80050573ecf6785e",
+      "winner_count": 3,
+      "ts_ms": 1760000100000,
+      "block_index": 2,
+      "previous_hash": "960ccfb27773b6ce714ca1bd631f4bb3fe108edd593f7e2a7e3928c7be5f1bab",
+      "seed": null,
+      "total_tickets": null,
+      "tickets_hash": null,
+      "winning_tickets": null,
+      "draw_id": null,
+      "block_hash": "ae7c6e0753f30606825f1999fa3314369e7a4f9bf5989856917bf9bc1f128464"
+     },
+     {
+      "block_type": "result",
+      "giveaway_id": "b0978303-1a85-451e-b178-3b3aa6eda1e6",
+      "draw_id": "5c8c0135-e02b-4d3e-a4ce-a0249dae269d",
+      "seed": "2c52ee3f31b59d27f21ec5bc6c00c0a8ef64c321ad55107aeaa83cc07735057c",
+      "total_tickets": 12,
+      "tickets_hash": "130aa0695122f0180d944588274453d070689f2854a625541a517a5eecba2a46",
+      "winning_tickets": "1,2,3",
+      "ts_ms": 1760000900000,
+      "block_index": 3,
+      "previous_hash": "ae7c6e0753f30606825f1999fa3314369e7a4f9bf5989856917bf9bc1f128464",
+      "seed_hash": null,
+      "winner_count": null,
+      "block_hash": "8caea899a7d7430e0f13e29ecb95447bad9333e3cffc06c01c63d9d8c53ec0a4"
+     }
+    ],
+    "first_ticket_ms": 1760000200000,
+    "tickets": [
+     [
+      1,
+      "c8174c760347"
+     ],
+     [
+      2,
+      "5bbb06f05fee"
+     ],
+     [
+      3,
+      "a8ecc5c2f792"
+     ],
+     [
+      4,
+      "a8ecc5c2f792"
+     ],
+     [
+      5,
+      "9990714d55c9"
+     ],
+     [
+      6,
+      "88025a4bf08e"
+     ],
+     [
+      7,
+      "9e6dab5122aa"
+     ],
+     [
+      8,
+      "9b3586664301"
+     ],
+     [
+      9,
+      "cec8cfb85500"
+     ],
+     [
+      10,
+      "2b8f1e92adb1"
+     ],
+     [
+      11,
+      "a8ecc5c2f792"
+     ],
+     [
+      12,
+      "9b3586664301"
+     ]
+    ]
+   },
+   "ref_ok": false,
+   "ref_why": "rantai hash tidak cocok (block_hash)",
+   "fail_step": "chain"
+  },
+  {
+   "name": "pemenang dipalsukan, hash blok disesuaikan",
+   "data": {
+    "giveaway": {
+     "id": "b0978303-1a85-451e-b178-3b3aa6eda1e6",
+     "winner_count": 3,
+     "status": "drawn",
+     "seed_hash": "1cbd1f15a03ecbedc2a09ebb1d189c4d827ad38cdbb4c48a80050573ecf6785e"
+    },
+    "chain": [
+     {
+      "block_type": "commit",
+      "giveaway_id": "40e5228d-991e-48f7-8672-91076ad43e5d",
+      "seed_hash": "fef03d64579ddc36c9f88abed25cafd25ec1f071253e940574741931c4b9c578",
+      "winner_count": 1,
+      "ts_ms": 1760000000000,
+      "block_index": 1,
+      "previous_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "seed": null,
+      "total_tickets": null,
+      "tickets_hash": null,
+      "winning_tickets": null,
+      "draw_id": null,
+      "block_hash": "960ccfb27773b6ce714ca1bd631f4bb3fe108edd593f7e2a7e3928c7be5f1bab"
+     },
+     {
+      "block_type": "commit",
+      "giveaway_id": "b0978303-1a85-451e-b178-3b3aa6eda1e6",
+      "seed_hash": "1cbd1f15a03ecbedc2a09ebb1d189c4d827ad38cdbb4c48a80050573ecf6785e",
+      "winner_count": 3,
+      "ts_ms": 1760000100000,
+      "block_index": 2,
+      "previous_hash": "960ccfb27773b6ce714ca1bd631f4bb3fe108edd593f7e2a7e3928c7be5f1bab",
+      "seed": null,
+      "total_tickets": null,
+      "tickets_hash": null,
+      "winning_tickets": null,
+      "draw_id": null,
+      "block_hash": "ae7c6e0753f30606825f1999fa3314369e7a4f9bf5989856917bf9bc1f128464"
+     },
+     {
+      "block_type": "result",
+      "giveaway_id": "b0978303-1a85-451e-b178-3b3aa6eda1e6",
+      "draw_id": "5c8c0135-e02b-4d3e-a4ce-a0249dae269d",
+      "seed": "2c52ee3f31b59d27f21ec5bc6c00c0a8ef64c321ad55107aeaa83cc07735057c",
+      "total_tickets": 12,
+      "tickets_hash": "130aa0695122f0180d944588274453d070689f2854a625541a517a5eecba2a46",
+      "winning_tickets": "1,2,3",
+      "ts_ms": 1760000900000,
+      "block_index": 3,
+      "previous_hash": "ae7c6e0753f30606825f1999fa3314369e7a4f9bf5989856917bf9bc1f128464",
+      "seed_hash": null,
+      "winner_count": null,
+      "block_hash": "213a4503c9496584c58ef3c84a3fd33c0a7825575d7d09b417d77f5fa71b1b8a"
+     }
+    ],
+    "first_ticket_ms": 1760000200000,
+    "tickets": [
+     [
+      1,
+      "c8174c760347"
+     ],
+     [
+      2,
+      "5bbb06f05fee"
+     ],
+     [
+      3,
+      "a8ecc5c2f792"
+     ],
+     [
+      4,
+      "a8ecc5c2f792"
+     ],
+     [
+      5,
+      "9990714d55c9"
+     ],
+     [
+      6,
+      "88025a4bf08e"
+     ],
+     [
+      7,
+      "9e6dab5122aa"
+     ],
+     [
+      8,
+      "9b3586664301"
+     ],
+     [
+      9,
+      "cec8cfb85500"
+     ],
+     [
+      10,
+      "2b8f1e92adb1"
+     ],
+     [
+      11,
+      "a8ecc5c2f792"
+     ],
+     [
+      12,
+      "9b3586664301"
+     ]
+    ]
+   },
+   "ref_ok": false,
+   "ref_why": "pemenang tidak cocok",
+   "fail_step": "winners"
+  },
+  {
+   "name": "satu karakter komitmen diubah",
+   "data": {
+    "giveaway": {
+     "id": "b0978303-1a85-451e-b178-3b3aa6eda1e6",
+     "winner_count": 3,
+     "status": "drawn",
+     "seed_hash": "1cbd1f15a03ecbedc2a09ebb1d189c4d827ad38cdbb4c48a80050573ecf6785e"
+    },
+    "chain": [
+     {
+      "block_type": "commit",
+      "giveaway_id": "40e5228d-991e-48f7-8672-91076ad43e5d",
+      "seed_hash": "fef03d64579ddc36c9f88abed25cafd25ec1f071253e940574741931c4b9c578",
+      "winner_count": 1,
+      "ts_ms": 1760000000000,
+      "block_index": 1,
+      "previous_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "seed": null,
+      "total_tickets": null,
+      "tickets_hash": null,
+      "winning_tickets": null,
+      "draw_id": null,
+      "block_hash": "960ccfb27773b6ce714ca1bd631f4bb3fe108edd593f7e2a7e3928c7be5f1bab"
+     },
+     {
+      "block_type": "commit",
+      "giveaway_id": "b0978303-1a85-451e-b178-3b3aa6eda1e6",
+      "seed_hash": "1cbd1f15a03ecbedc2a09ebb1d189c4d827ad38cdbb4c48a80050573ecf67850",
+      "winner_count": 3,
+      "ts_ms": 1760000100000,
+      "block_index": 2,
+      "previous_hash": "960ccfb27773b6ce714ca1bd631f4bb3fe108edd593f7e2a7e3928c7be5f1bab",
+      "seed": null,
+      "total_tickets": null,
+      "tickets_hash": null,
+      "winning_tickets": null,
+      "draw_id": null,
+      "block_hash": "ae7c6e0753f30606825f1999fa3314369e7a4f9bf5989856917bf9bc1f128464"
+     },
+     {
+      "block_type": "result",
+      "giveaway_id": "b0978303-1a85-451e-b178-3b3aa6eda1e6",
+      "draw_id": "5c8c0135-e02b-4d3e-a4ce-a0249dae269d",
+      "seed": "2c52ee3f31b59d27f21ec5bc6c00c0a8ef64c321ad55107aeaa83cc07735057c",
+      "total_tickets": 12,
+      "tickets_hash": "130aa0695122f0180d944588274453d070689f2854a625541a517a5eecba2a46",
+      "winning_tickets": "7,3,9",
+      "ts_ms": 1760000900000,
+      "block_index": 3,
+      "previous_hash": "ae7c6e0753f30606825f1999fa3314369e7a4f9bf5989856917bf9bc1f128464",
+      "seed_hash": null,
+      "winner_count": null,
+      "block_hash": "8caea899a7d7430e0f13e29ecb95447bad9333e3cffc06c01c63d9d8c53ec0a4"
+     }
+    ],
+    "first_ticket_ms": 1760000200000,
+    "tickets": [
+     [
+      1,
+      "c8174c760347"
+     ],
+     [
+      2,
+      "5bbb06f05fee"
+     ],
+     [
+      3,
+      "a8ecc5c2f792"
+     ],
+     [
+      4,
+      "a8ecc5c2f792"
+     ],
+     [
+      5,
+      "9990714d55c9"
+     ],
+     [
+      6,
+      "88025a4bf08e"
+     ],
+     [
+      7,
+      "9e6dab5122aa"
+     ],
+     [
+      8,
+      "9b3586664301"
+     ],
+     [
+      9,
+      "cec8cfb85500"
+     ],
+     [
+      10,
+      "2b8f1e92adb1"
+     ],
+     [
+      11,
+      "a8ecc5c2f792"
+     ],
+     [
+      12,
+      "9b3586664301"
+     ]
+    ]
+   },
+   "ref_ok": false,
+   "ref_why": "rantai hash tidak cocok (block_hash)",
+   "fail_step": "chain"
+  },
+  {
+   "name": "seed tidak cocok komitmen (rantai disesuaikan)",
+   "data": {
+    "giveaway": {
+     "id": "b0978303-1a85-451e-b178-3b3aa6eda1e6",
+     "winner_count": 3,
+     "status": "drawn",
+     "seed_hash": "1cbd1f15a03ecbedc2a09ebb1d189c4d827ad38cdbb4c48a80050573ecf6785e"
+    },
+    "chain": [
+     {
+      "block_type": "commit",
+      "giveaway_id": "40e5228d-991e-48f7-8672-91076ad43e5d",
+      "seed_hash": "fef03d64579ddc36c9f88abed25cafd25ec1f071253e940574741931c4b9c578",
+      "winner_count": 1,
+      "ts_ms": 1760000000000,
+      "block_index": 1,
+      "previous_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "seed": null,
+      "total_tickets": null,
+      "tickets_hash": null,
+      "winning_tickets": null,
+      "draw_id": null,
+      "block_hash": "960ccfb27773b6ce714ca1bd631f4bb3fe108edd593f7e2a7e3928c7be5f1bab"
+     },
+     {
+      "block_type": "commit",
+      "giveaway_id": "b0978303-1a85-451e-b178-3b3aa6eda1e6",
+      "seed_hash": "1cbd1f15a03ecbedc2a09ebb1d189c4d827ad38cdbb4c48a80050573ecf6785e",
+      "winner_count": 3,
+      "ts_ms": 1760000100000,
+      "block_index": 2,
+      "previous_hash": "960ccfb27773b6ce714ca1bd631f4bb3fe108edd593f7e2a7e3928c7be5f1bab",
+      "seed": null,
+      "total_tickets": null,
+      "tickets_hash": null,
+      "winning_tickets": null,
+      "draw_id": null,
+      "block_hash": "ae7c6e0753f30606825f1999fa3314369e7a4f9bf5989856917bf9bc1f128464"
+     },
+     {
+      "block_type": "result",
+      "giveaway_id": "b0978303-1a85-451e-b178-3b3aa6eda1e6",
+      "draw_id": "5c8c0135-e02b-4d3e-a4ce-a0249dae269d",
+      "seed": "6b2410115f41794ab98804a9a4546a778de1006dd96e273115ee015e2fbf3329",
+      "total_tickets": 12,
+      "tickets_hash": "130aa0695122f0180d944588274453d070689f2854a625541a517a5eecba2a46",
+      "winning_tickets": "7,3,9",
+      "ts_ms": 1760000900000,
+      "block_index": 3,
+      "previous_hash": "ae7c6e0753f30606825f1999fa3314369e7a4f9bf5989856917bf9bc1f128464",
+      "seed_hash": null,
+      "winner_count": null,
+      "block_hash": "4cd551d4765d6a50ccc54c84ac43bd1d54603fd106006c8c2749d0146d8e758c"
+     }
+    ],
+    "first_ticket_ms": 1760000200000,
+    "tickets": [
+     [
+      1,
+      "c8174c760347"
+     ],
+     [
+      2,
+      "5bbb06f05fee"
+     ],
+     [
+      3,
+      "a8ecc5c2f792"
+     ],
+     [
+      4,
+      "a8ecc5c2f792"
+     ],
+     [
+      5,
+      "9990714d55c9"
+     ],
+     [
+      6,
+      "88025a4bf08e"
+     ],
+     [
+      7,
+      "9e6dab5122aa"
+     ],
+     [
+      8,
+      "9b3586664301"
+     ],
+     [
+      9,
+      "cec8cfb85500"
+     ],
+     [
+      10,
+      "2b8f1e92adb1"
+     ],
+     [
+      11,
+      "a8ecc5c2f792"
+     ],
+     [
+      12,
+      "9b3586664301"
+     ]
+    ]
+   },
+   "ref_ok": false,
+   "ref_why": "seed tidak sesuai commitment",
+   "fail_step": "seed"
+  },
+  {
+   "name": "daftar tiket dibalik",
+   "data": {
+    "giveaway": {
+     "id": "b0978303-1a85-451e-b178-3b3aa6eda1e6",
+     "winner_count": 3,
+     "status": "drawn",
+     "seed_hash": "1cbd1f15a03ecbedc2a09ebb1d189c4d827ad38cdbb4c48a80050573ecf6785e"
+    },
+    "chain": [
+     {
+      "block_type": "commit",
+      "giveaway_id": "40e5228d-991e-48f7-8672-91076ad43e5d",
+      "seed_hash": "fef03d64579ddc36c9f88abed25cafd25ec1f071253e940574741931c4b9c578",
+      "winner_count": 1,
+      "ts_ms": 1760000000000,
+      "block_index": 1,
+      "previous_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "seed": null,
+      "total_tickets": null,
+      "tickets_hash": null,
+      "winning_tickets": null,
+      "draw_id": null,
+      "block_hash": "960ccfb27773b6ce714ca1bd631f4bb3fe108edd593f7e2a7e3928c7be5f1bab"
+     },
+     {
+      "block_type": "commit",
+      "giveaway_id": "b0978303-1a85-451e-b178-3b3aa6eda1e6",
+      "seed_hash": "1cbd1f15a03ecbedc2a09ebb1d189c4d827ad38cdbb4c48a80050573ecf6785e",
+      "winner_count": 3,
+      "ts_ms": 1760000100000,
+      "block_index": 2,
+      "previous_hash": "960ccfb27773b6ce714ca1bd631f4bb3fe108edd593f7e2a7e3928c7be5f1bab",
+      "seed": null,
+      "total_tickets": null,
+      "tickets_hash": null,
+      "winning_tickets": null,
+      "draw_id": null,
+      "block_hash": "ae7c6e0753f30606825f1999fa3314369e7a4f9bf5989856917bf9bc1f128464"
+     },
+     {
+      "block_type": "result",
+      "giveaway_id": "b0978303-1a85-451e-b178-3b3aa6eda1e6",
+      "draw_id": "5c8c0135-e02b-4d3e-a4ce-a0249dae269d",
+      "seed": "2c52ee3f31b59d27f21ec5bc6c00c0a8ef64c321ad55107aeaa83cc07735057c",
+      "total_tickets": 12,
+      "tickets_hash": "130aa0695122f0180d944588274453d070689f2854a625541a517a5eecba2a46",
+      "winning_tickets": "7,3,9",
+      "ts_ms": 1760000900000,
+      "block_index": 3,
+      "previous_hash": "ae7c6e0753f30606825f1999fa3314369e7a4f9bf5989856917bf9bc1f128464",
+      "seed_hash": null,
+      "winner_count": null,
+      "block_hash": "8caea899a7d7430e0f13e29ecb95447bad9333e3cffc06c01c63d9d8c53ec0a4"
+     }
+    ],
+    "first_ticket_ms": 1760000200000,
+    "tickets": [
+     [
+      12,
+      "9b3586664301"
+     ],
+     [
+      11,
+      "a8ecc5c2f792"
+     ],
+     [
+      10,
+      "2b8f1e92adb1"
+     ],
+     [
+      9,
+      "cec8cfb85500"
+     ],
+     [
+      8,
+      "9b3586664301"
+     ],
+     [
+      7,
+      "9e6dab5122aa"
+     ],
+     [
+      6,
+      "88025a4bf08e"
+     ],
+     [
+      5,
+      "9990714d55c9"
+     ],
+     [
+      4,
+      "a8ecc5c2f792"
+     ],
+     [
+      3,
+      "a8ecc5c2f792"
+     ],
+     [
+      2,
+      "5bbb06f05fee"
+     ],
+     [
+      1,
+      "c8174c760347"
+     ]
+    ]
+   },
+   "ref_ok": false,
+   "ref_why": "tickets_hash tidak cocok",
+   "fail_step": "winners"
+  },
+  {
+   "name": "komitmen dibuat setelah tiket pertama",
+   "data": {
+    "giveaway": {
+     "id": "b0978303-1a85-451e-b178-3b3aa6eda1e6",
+     "winner_count": 3,
+     "status": "drawn",
+     "seed_hash": "1cbd1f15a03ecbedc2a09ebb1d189c4d827ad38cdbb4c48a80050573ecf6785e"
+    },
+    "chain": [
+     {
+      "block_type": "commit",
+      "giveaway_id": "40e5228d-991e-48f7-8672-91076ad43e5d",
+      "seed_hash": "fef03d64579ddc36c9f88abed25cafd25ec1f071253e940574741931c4b9c578",
+      "winner_count": 1,
+      "ts_ms": 1760000000000,
+      "block_index": 1,
+      "previous_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "seed": null,
+      "total_tickets": null,
+      "tickets_hash": null,
+      "winning_tickets": null,
+      "draw_id": null,
+      "block_hash": "960ccfb27773b6ce714ca1bd631f4bb3fe108edd593f7e2a7e3928c7be5f1bab"
+     },
+     {
+      "block_type": "commit",
+      "giveaway_id": "b0978303-1a85-451e-b178-3b3aa6eda1e6",
+      "seed_hash": "1cbd1f15a03ecbedc2a09ebb1d189c4d827ad38cdbb4c48a80050573ecf6785e",
+      "winner_count": 3,
+      "ts_ms": 1760000100000,
+      "block_index": 2,
+      "previous_hash": "960ccfb27773b6ce714ca1bd631f4bb3fe108edd593f7e2a7e3928c7be5f1bab",
+      "seed": null,
+      "total_tickets": null,
+      "tickets_hash": null,
+      "winning_tickets": null,
+      "draw_id": null,
+      "block_hash": "ae7c6e0753f30606825f1999fa3314369e7a4f9bf5989856917bf9bc1f128464"
+     },
+     {
+      "block_type": "result",
+      "giveaway_id": "b0978303-1a85-451e-b178-3b3aa6eda1e6",
+      "draw_id": "5c8c0135-e02b-4d3e-a4ce-a0249dae269d",
+      "seed": "2c52ee3f31b59d27f21ec5bc6c00c0a8ef64c321ad55107aeaa83cc07735057c",
+      "total_tickets": 12,
+      "tickets_hash": "130aa0695122f0180d944588274453d070689f2854a625541a517a5eecba2a46",
+      "winning_tickets": "7,3,9",
+      "ts_ms": 1760000900000,
+      "block_index": 3,
+      "previous_hash": "ae7c6e0753f30606825f1999fa3314369e7a4f9bf5989856917bf9bc1f128464",
+      "seed_hash": null,
+      "winner_count": null,
+      "block_hash": "8caea899a7d7430e0f13e29ecb95447bad9333e3cffc06c01c63d9d8c53ec0a4"
+     }
+    ],
+    "first_ticket_ms": 1760000050000,
+    "tickets": [
+     [
+      1,
+      "c8174c760347"
+     ],
+     [
+      2,
+      "5bbb06f05fee"
+     ],
+     [
+      3,
+      "a8ecc5c2f792"
+     ],
+     [
+      4,
+      "a8ecc5c2f792"
+     ],
+     [
+      5,
+      "9990714d55c9"
+     ],
+     [
+      6,
+      "88025a4bf08e"
+     ],
+     [
+      7,
+      "9e6dab5122aa"
+     ],
+     [
+      8,
+      "9b3586664301"
+     ],
+     [
+      9,
+      "cec8cfb85500"
+     ],
+     [
+      10,
+      "2b8f1e92adb1"
+     ],
+     [
+      11,
+      "a8ecc5c2f792"
+     ],
+     [
+      12,
+      "9b3586664301"
+     ]
+    ]
+   },
+   "ref_ok": false,
+   "ref_why": "commit dibuat setelah tiket",
+   "fail_step": "commit"
+  },
+  {
+   "name": "previous_hash putus",
+   "data": {
+    "giveaway": {
+     "id": "b0978303-1a85-451e-b178-3b3aa6eda1e6",
+     "winner_count": 3,
+     "status": "drawn",
+     "seed_hash": "1cbd1f15a03ecbedc2a09ebb1d189c4d827ad38cdbb4c48a80050573ecf6785e"
+    },
+    "chain": [
+     {
+      "block_type": "commit",
+      "giveaway_id": "40e5228d-991e-48f7-8672-91076ad43e5d",
+      "seed_hash": "fef03d64579ddc36c9f88abed25cafd25ec1f071253e940574741931c4b9c578",
+      "winner_count": 1,
+      "ts_ms": 1760000000000,
+      "block_index": 1,
+      "previous_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "seed": null,
+      "total_tickets": null,
+      "tickets_hash": null,
+      "winning_tickets": null,
+      "draw_id": null,
+      "block_hash": "960ccfb27773b6ce714ca1bd631f4bb3fe108edd593f7e2a7e3928c7be5f1bab"
+     },
+     {
+      "block_type": "commit",
+      "giveaway_id": "b0978303-1a85-451e-b178-3b3aa6eda1e6",
+      "seed_hash": "1cbd1f15a03ecbedc2a09ebb1d189c4d827ad38cdbb4c48a80050573ecf6785e",
+      "winner_count": 3,
+      "ts_ms": 1760000100000,
+      "block_index": 2,
+      "previous_hash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "seed": null,
+      "total_tickets": null,
+      "tickets_hash": null,
+      "winning_tickets": null,
+      "draw_id": null,
+      "block_hash": "ae7c6e0753f30606825f1999fa3314369e7a4f9bf5989856917bf9bc1f128464"
+     },
+     {
+      "block_type": "result",
+      "giveaway_id": "b0978303-1a85-451e-b178-3b3aa6eda1e6",
+      "draw_id": "5c8c0135-e02b-4d3e-a4ce-a0249dae269d",
+      "seed": "2c52ee3f31b59d27f21ec5bc6c00c0a8ef64c321ad55107aeaa83cc07735057c",
+      "total_tickets": 12,
+      "tickets_hash": "130aa0695122f0180d944588274453d070689f2854a625541a517a5eecba2a46",
+      "winning_tickets": "7,3,9",
+      "ts_ms": 1760000900000,
+      "block_index": 3,
+      "previous_hash": "ae7c6e0753f30606825f1999fa3314369e7a4f9bf5989856917bf9bc1f128464",
+      "seed_hash": null,
+      "winner_count": null,
+      "block_hash": "8caea899a7d7430e0f13e29ecb95447bad9333e3cffc06c01c63d9d8c53ec0a4"
+     }
+    ],
+    "first_ticket_ms": 1760000200000,
+    "tickets": [
+     [
+      1,
+      "c8174c760347"
+     ],
+     [
+      2,
+      "5bbb06f05fee"
+     ],
+     [
+      3,
+      "a8ecc5c2f792"
+     ],
+     [
+      4,
+      "a8ecc5c2f792"
+     ],
+     [
+      5,
+      "9990714d55c9"
+     ],
+     [
+      6,
+      "88025a4bf08e"
+     ],
+     [
+      7,
+      "9e6dab5122aa"
+     ],
+     [
+      8,
+      "9b3586664301"
+     ],
+     [
+      9,
+      "cec8cfb85500"
+     ],
+     [
+      10,
+      "2b8f1e92adb1"
+     ],
+     [
+      11,
+      "a8ecc5c2f792"
+     ],
+     [
+      12,
+      "9b3586664301"
+     ]
+    ]
+   },
+   "ref_ok": false,
+   "ref_why": "rantai hash tidak cocok (previous_hash)",
+   "fail_step": "chain"
+  },
+  {
+   "name": "belum diundi",
+   "data": {
+    "giveaway": {
+     "id": "b0978303-1a85-451e-b178-3b3aa6eda1e6",
+     "winner_count": 3,
+     "status": "active",
+     "seed_hash": "1cbd1f15a03ecbedc2a09ebb1d189c4d827ad38cdbb4c48a80050573ecf6785e"
+    },
+    "chain": [
+     {
+      "block_type": "commit",
+      "giveaway_id": "40e5228d-991e-48f7-8672-91076ad43e5d",
+      "seed_hash": "fef03d64579ddc36c9f88abed25cafd25ec1f071253e940574741931c4b9c578",
+      "winner_count": 1,
+      "ts_ms": 1760000000000,
+      "block_index": 1,
+      "previous_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "seed": null,
+      "total_tickets": null,
+      "tickets_hash": null,
+      "winning_tickets": null,
+      "draw_id": null,
+      "block_hash": "960ccfb27773b6ce714ca1bd631f4bb3fe108edd593f7e2a7e3928c7be5f1bab"
+     },
+     {
+      "block_type": "commit",
+      "giveaway_id": "b0978303-1a85-451e-b178-3b3aa6eda1e6",
+      "seed_hash": "1cbd1f15a03ecbedc2a09ebb1d189c4d827ad38cdbb4c48a80050573ecf6785e",
+      "winner_count": 3,
+      "ts_ms": 1760000100000,
+      "block_index": 2,
+      "previous_hash": "960ccfb27773b6ce714ca1bd631f4bb3fe108edd593f7e2a7e3928c7be5f1bab",
+      "seed": null,
+      "total_tickets": null,
+      "tickets_hash": null,
+      "winning_tickets": null,
+      "draw_id": null,
+      "block_hash": "ae7c6e0753f30606825f1999fa3314369e7a4f9bf5989856917bf9bc1f128464"
+     }
+    ],
+    "first_ticket_ms": 1760000200000,
+    "tickets": null
+   },
+   "ref_ok": true,
+   "ref_why": "belum di-draw (seed masih terkunci)",
+   "fail_step": null
+  },
+  {
+   "name": "tiga tiket tiga pemenang",
+   "data": {
+    "giveaway": {
+     "id": "08e7a37a-2cae-434c-97cd-bf12700231dc",
+     "winner_count": 3,
+     "status": "drawn",
+     "seed_hash": "3a2ad5e942d8593e65ba1ed958c281d790a849217b3b1cd6801ef6fab18cd4e3"
+    },
+    "chain": [
+     {
+      "block_type": "commit",
+      "giveaway_id": "cfec5027-1bf3-4254-ad89-e24f66d4c8d1",
+      "seed_hash": "fc32bd77f67b64b0fe97e5a26a33a0506b9e31362127f48594d9bea06b8d5bab",
+      "winner_count": 1,
+      "ts_ms": 1760000000000,
+      "block_index": 1,
+      "previous_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "seed": null,
+      "total_tickets": null,
+      "tickets_hash": null,
+      "winning_tickets": null,
+      "draw_id": null,
+      "block_hash": "940243c784fcf56f66d48a7711a69b839105eea45b1dd358c3b176b293eab12b"
+     },
+     {
+      "block_type": "commit",
+      "giveaway_id": "08e7a37a-2cae-434c-97cd-bf12700231dc",
+      "seed_hash": "3a2ad5e942d8593e65ba1ed958c281d790a849217b3b1cd6801ef6fab18cd4e3",
+      "winner_count": 3,
+      "ts_ms": 1760000100000,
+      "block_index": 2,
+      "previous_hash": "940243c784fcf56f66d48a7711a69b839105eea45b1dd358c3b176b293eab12b",
+      "seed": null,
+      "total_tickets": null,
+      "tickets_hash": null,
+      "winning_tickets": null,
+      "draw_id": null,
+      "block_hash": "84bd7dbb62027ed682cda3b373f1062821c7885f4c2f220833ed64afec9c777d"
+     },
+     {
+      "block_type": "result",
+      "giveaway_id": "08e7a37a-2cae-434c-97cd-bf12700231dc",
+      "draw_id": "da5c532e-a58b-489a-8599-d99676ec873f",
+      "seed": "04343bb3c26d7c4bb0c194599559e50f32d373c3de5dabd9bd7dabc2a266318e",
+      "total_tickets": 3,
+      "tickets_hash": "e12cd7b85a1d5399d6c9436a8f8591fa1bd0f7ffb05e9e9fc9468697bb96ad6d",
+      "winning_tickets": "3",
+      "ts_ms": 1760000900000,
+      "block_index": 3,
+      "previous_hash": "84bd7dbb62027ed682cda3b373f1062821c7885f4c2f220833ed64afec9c777d",
+      "seed_hash": null,
+      "winner_count": null,
+      "block_hash": "68e7fb34c2c620cb31d3b18b9e623f25d32a7681a0a85ba4b5418da42f796139"
+     }
+    ],
+    "first_ticket_ms": 1760000200000,
+    "tickets": [
+     [
+      1,
+      "9eee20cca044"
+     ],
+     [
+      2,
+      "9eee20cca044"
+     ],
+     [
+      3,
+      "9eee20cca044"
+     ]
+    ]
+   },
+   "ref_ok": true,
+   "ref_why": "valid",
+   "fail_step": null
+  }
+ ]
+}
