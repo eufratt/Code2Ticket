@@ -31,7 +31,7 @@ Login/session dibuat sendiri (bukan Firebase/Supabase Auth). Scheduler draw: nod
 
 ## Aturan kerja
 - Repo PUBLIC. Jangan pernah meng-commit rahasia: .env, DATABASE_URL, TICK_SECRET, password, token, kunci API. URL hanya lewat --dart-define / env.
-- Jangan git push dan jangan --force kecuali diminta. Commit per fitur, pesan Indonesia yang jelas, tanpa trailer co-author.
+- Jangan git push dan jangan --force kecuali diminta. Commit per fitur dalam bahasa Inggris menggunakan format Conventional Commits (mis. "feat: add admin giveaway form", "fix: handle empty notifications"), tanpa trailer co-author.
 - Sebelum menyatakan selesai: flutter analyze --no-pub dan flutter test bersih; bila backend disentuh, tes backend juga tidak boleh rusak.
 - Permintaan POST yang mengubah data (register, redeem, dll.) tidak boleh di-retry otomatis. Server Render free bisa lambat saat bangun: tampilkan "Server sedang bangun" (isWakingUp).
 - State management: Provider/ChangeNotifier. Jangan menambah state management baru. Parsing JSON lewat kelas model, bukan Map mentah di UI.
