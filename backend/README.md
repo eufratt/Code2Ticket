@@ -26,6 +26,32 @@ npm start
   (draw dikunci per baris giveaway dan idempotent).
 - `npm run verify-chain` mengaudit seluruh hash-chain.
 
+## Perilaku yang perlu diketahui (M8a)
+
+- **Status giveaway** (`status` di `GET /giveaways`, `GET /giveaways/:id`, `GET /tickets` > `giveaway_status`, dan konteks Asisten) dihitung dari waktu
+  saat dibaca: `upcoming` / `active` / `waiting_draw`, `drawn` bila sudah diundi. Kolom `giveaways.status` hanya dipakai internal dan baru disegarkan scheduler.
+- **Draw terjadwal yang gagal `seed_mismatch`** dicoba sekali lalu dilewati scheduler (event `draw_seed_mismatch` di `system_events` dicatat sekali; `draw_chain` tidak disentuh).
+  Draw manual admin tetap bisa dicoba. Setelah penyebabnya diperbaiki, buka lagi untuk scheduler dengan menghapus event itu:
+  `delete from system_events where event = 'draw_seed_mismatch' and details->>'giveaway_id' = '<id>';`
+- **Batas redeem**: hanya tebakan kode yang dihitung ke batas 5 kegagalan / 10 menit (`invalid_format`, `code_not_found`, `code_used` oleh orang lain). Alasan sah
+  (`giveaway_not_started`, `giveaway_ended`, `giveaway_not_ready`, `ticket_limit`, `location_required`, `out_of_area`, kode yang sudah dipakai dirinya sendiri) tetap dicatat di
+  `code_attempts` tetapi tidak dihitung. Kode galat ke klien tidak berubah. Kunci login 5 salah / 15 menit tidak berubah.
+- **Pembersihan**: `login_attempts` (> 24 jam, bukan kunci aktif) dan `code_attempts` (> 1 hari) dibuang tiap jam oleh scheduler dan, karena Render gratis bisa tertidur,
+  juga dari `POST /internal/tick` (maks. sekali per jam per proses). Cleanup harian untuk sesi tetap.
+- **Salt**: `POST /auth/register` hanya menerima salt 32 hex huruf kecil (format yang dibuat app) sehingga sama dengan salt palsu (HMAC `fake_salt_key`) untuk identifier tak dikenal.
+  Akun lama dengan format lain (hanya mungkin bila didaftarkan lewat klien lain) dapat dicari dengan `select id, username from users where salt !~ '^[0-9a-f]{32}$';`.
+
+## Batas laju (rate limit) dan demo banyak perangkat
+
+Batas dihitung per IP per menit (`express-rate-limit`). Default: `RATE_LIMIT_MAX=300` (semua endpoint), `AUTH_RATE_LIMIT_MAX=20` (semua `/auth/*`), `UPLOAD_RATE_LIMIT_MAX=10` (`PUT /me/photo`).
+Catatan penting untuk demo (banyak ponsel di satu Wi-Fi = satu IP publik):
+- **`TRUST_PROXY=1` wajib di Render.** Tanpa itu `req.ip` adalah IP proxy Render sehingga SEMUA pengguna berbagi satu bucket.
+- Satu login memakai 2 permintaan `/auth/*` (`salt` + `login`), pembukaan app dengan sesi tersimpan 1 (`/auth/me`), dan pendaftaran 1. Dengan 20/menit, hanya ~10 ponsel yang bisa login bersamaan
+  dari satu IP; sisanya mendapat 429 `too_many_requests`. Satu layar Home memakai ~5-8 permintaan, sehingga 300/menit kira-kira cukup untuk 40 ponsel yang aktif bersamaan (perkiraan, belum diukur).
+- Perlindungan tebak password tidak bergantung pada batas IP ini (kunci per akun 5 salah / 15 menit, bcrypt), jadi menaikkan batas IP aman.
+- Nilai yang disarankan untuk hari demo (env Render, kembalikan sesudahnya): `TRUST_PROXY=1`, `AUTH_RATE_LIMIT_MAX=120`, `RATE_LIMIT_MAX=1200`, `UPLOAD_RATE_LIMIT_MAX=30`.
+  Default di kode tidak diubah. Batas `POST /chat` tidak memakai IP, melainkan per pengguna (`AI_RATE_PER_MINUTE`, `AI_DAILY_LIMIT_PER_USER`).
+
 ## Data demo
 
 Membuat 2 giveaway aktif (satu gaming, satu travel; keduanya tanpa batas lokasi) dengan 10 kode tiap giveaway, lewat API (login admin + `POST /admin/giveaways` + `POST /admin/giveaways/:id/codes`). Kode hanya dicetak ke terminal. Akun harus admin (lihat `npm run create-admin`). Menjalankan ulang membuat giveaway baru.

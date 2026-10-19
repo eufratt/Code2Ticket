@@ -53,6 +53,7 @@ M5b notifikasi (lonceng + lencana di Home, layar Notifikasi) dan Admin (menu han
 M6 hasil draw, verifikasi hash-chain di perangkat (app\lib\core\verify, vektor dari test_m1.py di app\test\fixtures), shake to reveal (sensors_plus).
 M7a Game Maze (accelerometer + D-pad, skor ke /game/scores), papan peringkat, rekomendasi "Untuk kamu" (/me/affinity) dan pencatatan aktivitas (/activity).
 M7b Asisten AI: POST /chat (OpenAI Chat Completions lewat fetch, RAG sederhana dari giveaway aktif, batas pemakaian di memori), layar Asisten (gelembung chat, saran cepat, kartu giveaway, riwayat SQLite per pengguna, hapus percakapan, kirim ulang manual); FAB Input Code disembunyikan di tab Asisten.
+M8a utang teknis backend: status giveaway dihitung saat dibaca, seed_mismatch tidak diulang scheduler, hanya tebakan kode yang dihitung ke batas redeem, pembersihan login_attempts tiap jam (juga dari /internal/tick), salt palsu = format salt asli (register hanya menerima 32 hex). Detail dan saran rate limit demo: backend\README.md.
 Sisa:
 M8 pengujian dan data demo; M9 laporan.
 
