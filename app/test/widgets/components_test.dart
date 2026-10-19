@@ -112,6 +112,26 @@ void main() {
       expect(top.contains(const Offset(20, 20)), isTrue);
     });
 
+    for (final b in Brightness.values) {
+      testWidgets('satu bentuk selebar penuh: bagian atas dan bawah sama lebar, sejajar, di tema ${b.name}', (tester) async {
+        await setViewport(tester, brightness: b);
+        // Isi bawah sengaja pendek (Wrap tanpa lebar tetap): dulu menyusut dan bergeser.
+        await tester.pumpWidget(host(const Padding(
+          padding: EdgeInsets.all(16),
+          child: TicketCard(title: 'A', category: null, ticketNumber: '#1', status: AppStatus.ticketWon),
+        )));
+        final parts = find.descendant(of: find.byType(TicketCard), matching: find.byWidgetPredicate((w) => w is ClipPath && w.clipper.runtimeType.toString() == '_TicketPartClipper'));
+        expect(parts, findsNWidgets(2));
+        final topRect = tester.getRect(parts.at(0)), bottomRect = tester.getRect(parts.at(1));
+        final card = tester.getRect(find.byType(TicketCard));
+        expect(topRect.width, 360 - 32);
+        expect(bottomRect.width, topRect.width);
+        expect(bottomRect.left, topRect.left);
+        expect(card.width, topRect.width);
+        expect(bottomRect.top, topRect.bottom); // menyambung tanpa celah
+      });
+    }
+
     testWidgets('nomor tiket memakai angka tabular', (tester) async {
       await tester.pumpWidget(card());
       final t = tester.widget<Text>(find.byKey(const Key('ticket_card_number')));
