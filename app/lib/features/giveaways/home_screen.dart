@@ -12,6 +12,7 @@ import '../notifications/notification_bell.dart';
 import '../notifications/notifications_controller.dart';
 import '../profile/user_avatar.dart';
 import '../tickets/tickets_controller.dart';
+import 'affinity_controller.dart';
 import 'giveaway_card.dart';
 import 'giveaway_models.dart';
 import 'giveaways_controller.dart';
@@ -47,6 +48,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     // Ringkasan tiket memakai TicketsController yang sama dengan My Tickets; dimuat sekali bila belum.
     final tickets = context.read<TicketsController?>();
     if (tickets != null && tickets.state == LoadState.idle) Future.microtask(tickets.load);
+    // Minat per kategori untuk "Untuk kamu": dimuat sekali saat Home pertama dibuka.
+    final affinity = context.read<AffinityController?>();
+    if (affinity != null) Future.microtask(affinity.loadOnce);
     // Hitungan notifikasi: saat Home dibuka dan saat app kembali ke foreground (tanpa polling).
     WidgetsBinding.instance.addObserver(this);
     final notifs = context.read<NotificationsController?>();
@@ -103,6 +107,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         : ([for (final g in discover.items) if (g.distanceKm != null && (selected == null || g.category == selected)) g]
           ..sort((a, b) => a.distanceKm!.compareTo(b.distanceKm!)));
     final soon = soonestDraws(visible, now);
+    final forYou = recommendFor(visible, context.watch<AffinityController?>()?.scores ?? const {}, now);
     void open(Giveaway g) => context.push('/giveaway/${g.id}', extra: g);
 
     return CustomScrollView(
@@ -115,6 +120,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           SliverToBoxAdapter(
             child: _CategoryChips(categories: categories, selected: selected, onSelected: (v) => setState(() => _category = v)),
           ),
+        if (forYou.isNotEmpty) ...[
+          const SliverToBoxAdapter(
+            key: Key('for_you'),
+            child: SectionHeader('Untuk kamu', padding: EdgeInsets.fromLTRB(Spacing.screen, Spacing.s16, Spacing.s8, 0)),
+          ),
+          SliverToBoxAdapter(child: _Carousel(items: forYou, onOpen: open)),
+        ],
         if (soon.isNotEmpty) ...[
           SliverToBoxAdapter(
             child: SectionHeader('Segera draw',

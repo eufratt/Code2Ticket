@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/activity.dart';
 import '../../core/api/authed_api.dart';
 import '../../core/display.dart';
 import '../../core/settings/settings_controller.dart';
@@ -63,13 +64,8 @@ class _GiveawayDetailScreenState extends State<GiveawayDetailScreen> {
     }
   }
 
-  /// Gagal mencatat aktivitas tidak boleh mengganggu layar.
-  Future<void> _logView(Giveaway g) async {
-    try {
-      await context.read<AuthedApi>().post('/activity',
-          body: {'type': 'view_giveaway', 'giveaway_id': g.id, 'category': g.category});
-    } catch (_) {}
-  }
+  /// Tembak-dan-lupa: gagal mencatat aktivitas tidak boleh mengganggu layar (lihat ActivityLogger).
+  void _logView(Giveaway g) => ActivityLogger(context.read<AuthedApi>()).viewGiveaway(giveawayId: g.id, category: g.category);
 
   @override
   Widget build(BuildContext context) {
