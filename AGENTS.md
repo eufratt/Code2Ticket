@@ -6,11 +6,11 @@ pemenang dapat diverifikasi lewat hash-chain (commit-reveal). Bahasa antarmuka d
 
 ## Arsitektur
 Flutter (app\) -> HTTPS -> Express (backend\, di Render: https://code2ticket.onrender.com) -> Postgres (Supabase, hanya sebagai database).
-Aplikasi tidak memakai Supabase Auth, anon key, maupun akses tabel langsung. SQLite lokal di app untuk cache, riwayat pencarian, dan pengaturan.
+Aplikasi tidak memakai Supabase Auth, anon key, maupun akses tabel langsung. SQLite lokal di app untuk cache, riwayat pencarian, pengaturan, dan riwayat chat Asisten (tabel chat_messages, DB lokal v2).
 Login/session dibuat sendiri (bukan Firebase/Supabase Auth). Scheduler draw: node-cron + endpoint /internal/tick yang dipanggil tiap menit (Render free bisa tertidur).
 
 ## Struktur
-- app\      Flutter. lib\core (api, crypto, db, security, session), lib\features (auth, giveaways, tickets, profile, shell), test\
+- app\      Flutter. lib\core (api, crypto, db, security, session), lib\features (auth, giveaways, tickets, profile, assistant, shell), test\
 - backend\  Express (JavaScript ESM). src\ (rute, services, lib), db\ (01_schema.sql, 06_backend.sql, shim uji), test\ (vitest), scripts\demo-seed.js
 - Dokumen (PRD, ERD, Context) ada DI LUAR repo: ..\docs\ (hanya dibaca; jangan disalin ke repo). Istilah RPC di dokumen itu sudah usang;
   bila bertentangan dengan kode, yang berlaku adalah backend\src dan backend\README.md. Laporkan pertentangannya.
@@ -33,8 +33,9 @@ Login/session dibuat sendiri (bukan Firebase/Supabase Auth). Scheduler draw: nod
 - Repo PUBLIC. Jangan pernah meng-commit rahasia: .env, DATABASE_URL, TICK_SECRET, password, token, kunci API. URL hanya lewat --dart-define / env.
 - Jangan git push dan jangan --force kecuali diminta. Commit per fitur dalam bahasa Inggris menggunakan format Conventional Commits (mis. "feat: add admin giveaway form", "fix: handle empty notifications"), tanpa trailer co-author.
 - Sebelum menyatakan selesai: flutter analyze --no-pub dan flutter test bersih; bila backend disentuh, tes backend juga tidak boleh rusak.
-- Permintaan POST yang mengubah data (register, redeem, dll.) tidak boleh di-retry otomatis. Server Render free bisa lambat saat bangun: tampilkan "Server sedang bangun" (isWakingUp).
+- Permintaan POST yang mengubah data (register, redeem, dll.) dan POST /chat (biaya LLM) tidak boleh di-retry otomatis. Server Render free bisa lambat saat bangun: tampilkan "Server sedang bangun" (isWakingUp).
 - State management: Provider/ChangeNotifier. Jangan menambah state management baru. Parsing JSON lewat kelas model, bukan Map mentah di UI.
+- Kunci OpenAI (OPENAI_API_KEY) hanya ada di env server (Render/.env lokal): jangan di repo, app, log, atau respons. Env AI lain: OPENAI_MODEL (wajib), AI_DAILY_LIMIT_PER_USER; lihat backend\README.md.
 - Jangan simpan token/password di SQLite. Jangan simpan lokasi pengguna di server maupun lokal.
 - Jangan ubah password_hasher.dart, tes hash, kontrak hash/draw, atau skema database tanpa persetujuan eksplisit; bila menemukan bug di backend, laporkan.
 - Bila ragu pada keputusan yang tidak bisa dibalik atau PRD dan kode bertentangan, berhenti dan tanya.
@@ -51,8 +52,9 @@ Desain DESIGN.md diterapkan ke semua layar yang ada (tema terang/gelap, komponen
 M5b notifikasi (lonceng + lencana di Home, layar Notifikasi) dan Admin (menu hanya untuk role admin: Buat Giveaway, Generate Code, Daftar Kode, Draw manual).
 M6 hasil draw, verifikasi hash-chain di perangkat (app\lib\core\verify, vektor dari test_m1.py di app\test\fixtures), shake to reveal (sensors_plus).
 M7a Game Maze (accelerometer + D-pad, skor ke /game/scores), papan peringkat, rekomendasi "Untuk kamu" (/me/affinity) dan pencatatan aktivitas (/activity).
+M7b Asisten AI: POST /chat (OpenAI Chat Completions lewat fetch, RAG sederhana dari giveaway aktif, batas pemakaian di memori), layar Asisten (gelembung chat, saran cepat, kartu giveaway, riwayat SQLite per pengguna, hapus percakapan, kirim ulang manual); FAB Input Code disembunyikan di tab Asisten.
 Sisa:
-M7b AI Assistant (lewat backend, kunci LLM hanya di server); M8 pengujian dan data demo; M9 laporan.
+M8 pengujian dan data demo; M9 laporan.
 
 ## Peta kode (graphify)
 Bila graphify-out\GRAPH_REPORT.md ada, baca dulu sebelum mencari file satu per satu. Perbarui dengan "graphify update ." setelah perubahan besar
