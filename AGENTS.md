@@ -19,6 +19,7 @@ Login/session dibuat sendiri (bukan Firebase/Supabase Auth). Scheduler draw: nod
 - Flutter (di app\): flutter pub get ; flutter analyze --no-pub ; flutter test ;
   flutter run --dart-define=API_BASE_URL=https://code2ticket.onrender.com
 - Backend (di backend\): npm ci ; npm test (butuh Postgres uji dan Python 3, lihat backend\README.md) ; npm run demo-seed (env ADMIN_USERNAME/ADMIN_PASSWORD/API_BASE_URL)
+- Kontrol Maze: logika kemiringan murni di app\libeatures\game	ilt_filter.dart (parameter tiltTau/zona mati/gain/batas didokumentasikan di sana, tesnya app	est\game	ilt_filter_test.dart); adaptor sensor_plus di tilt.dart. Jangan menaruh logika filter di layar.
 - Android: android\gradle.properties berisi kotlin.incremental=false (proyek di drive D:, pub cache di C:); jangan dihapus.
 
 ## Kontrak yang tidak boleh diubah diam-diam
@@ -51,7 +52,7 @@ M5a kurs Frankfurter (langsung dari app) + zona waktu 4 zona + hitung mundur, Ko
 Desain DESIGN.md diterapkan ke semua layar yang ada (tema terang/gelap, komponen bersama, tes tata letak).
 M5b notifikasi (lonceng + lencana di Home, layar Notifikasi) dan Admin (menu hanya untuk role admin: Buat Giveaway, Generate Code, Daftar Kode, Draw manual).
 M6 hasil draw, verifikasi hash-chain di perangkat (app\lib\core\verify, vektor dari test_m1.py di app\test\fixtures), shake to reveal (sensors_plus).
-M7a Game Maze (accelerometer + D-pad, skor ke /game/scores), papan peringkat, rekomendasi "Untuk kamu" (/me/affinity) dan pencatatan aktivitas (/activity).
+M7a Game Maze (kemiringan = filter komplementer gyroscope + accelerometer, fallback accelerometer saja; kalibrasi saat Mulai + tombol "Kalibrasi ulang"; D-pad; skor ke /game/scores), papan peringkat, rekomendasi "Untuk kamu" (/me/affinity) dan pencatatan aktivitas (/activity).
 M7b Asisten AI: POST /chat (OpenAI Chat Completions lewat fetch, RAG sederhana dari giveaway aktif, batas pemakaian di memori), layar Asisten (gelembung chat, saran cepat, kartu giveaway, riwayat SQLite per pengguna, hapus percakapan, kirim ulang manual); FAB Input Code disembunyikan di tab Asisten.
 M8a utang teknis backend: status giveaway dihitung saat dibaca, seed_mismatch tidak diulang scheduler, hanya tebakan kode yang dihitung ke batas redeem, pembersihan login_attempts tiap jam (juga dari /internal/tick), salt palsu = format salt asli (register hanya menerima 32 hex). Detail dan saran rate limit demo: backend\README.md.
 Sisa:

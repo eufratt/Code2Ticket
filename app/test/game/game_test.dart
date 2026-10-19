@@ -13,6 +13,7 @@ import 'package:code2ticket/features/game/leaderboard_screen.dart';
 import 'package:code2ticket/features/game/maze.dart';
 import 'package:code2ticket/features/game/maze_game.dart';
 import 'package:code2ticket/features/game/maze_play_screen.dart';
+import 'package:code2ticket/features/game/tilt_filter.dart';
 import 'package:code2ticket/features/giveaways/giveaways_controller.dart' show LoadState;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -194,9 +195,9 @@ void main() {
   }
 
   group('layar Maze', () {
-    late StreamController<({double x, double y})> tilt;
+    late StreamController<TiltInput> tilt;
     setUp(() {
-      tilt = StreamController<({double x, double y})>.broadcast();
+      tilt = StreamController<TiltInput>.broadcast();
       addTearDown(tilt.close);
     });
 
@@ -304,13 +305,40 @@ void main() {
       await tester.tap(find.byKey(const Key('maze_start')));
       await tester.pump();
       final east = m.canMove(0, 0, Dir.e);
-      tilt.add(east ? (x: 8, y: 0) : (x: 0, y: 8));
+      // Kemiringan ±45° lewat accelerometer: sisi kanan turun (x sensor negatif) atau sisi bawah turun (y sensor positif).
+      tilt.add(east ? const AccelInput(-6.9, 0, 6.9) : const AccelInput(0, 6.9, 6.9));
       await tester.pump();
       for (var i = 0; i < 20; i++) {
         await tester.pump(const Duration(milliseconds: 16));
       }
       // Waktu berjalan (ticker hidup) dan tidak ada galat; posisi bola diuji pada tes logika (maze_test).
       expect(find.byKey(const Key('maze_board')), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('label sensor: accelerometer saja, lalu gyroscope + accelerometer saat gyroscope aktif, kembali bila hilang', (tester) async {
+      await pump(tester, screen);
+      String label() => tester.widget<Text>(find.byKey(const Key('maze_sensor'))).data!;
+      expect(label(), 'Sensor: accelerometer');
+      tilt.add(const GyroInput(0, 0, 0.02));
+      await tester.pump(); // pengiriman event = microtask; pump kedua membangun ulang
+      await tester.pump();
+      expect(label(), 'Sensor: gyroscope + accelerometer');
+      tilt.add(const GyroLost());
+      await tester.pump();
+      await tester.pump();
+      expect(label(), 'Sensor: accelerometer');
+    });
+
+    testWidgets('tombol Kalibrasi ulang: nonaktif sebelum Mulai, aktif saat bermain', (tester) async {
+      await pump(tester, screen);
+      TextButton btn() => tester.widget<TextButton>(find.descendant(of: find.byKey(const Key('maze_calibrate')), matching: find.byType(TextButton)));
+      expect(btn().onPressed, isNull);
+      await tester.tap(find.byKey(const Key('maze_start')));
+      await tester.pump();
+      expect(btn().onPressed, isNotNull);
+      await tester.tap(find.byKey(const Key('maze_calibrate')));
+      await tester.pump();
       expect(tester.takeException(), isNull);
     });
 

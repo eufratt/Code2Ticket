@@ -13,12 +13,11 @@ import 'game_controller.dart';
 import 'maze.dart';
 import 'maze_game.dart';
 import 'tilt.dart';
-
-/// Percepatan bola (sel/detik^2) per m/s^2 kemiringan, dan zona mati supaya ponsel yang diam di tangan tidak menggeser bola.
-const double tiltGain = 1.5, tiltDeadZone = 0.6, tiltMax = 8;
+import 'tilt_filter.dart';
 
 /// Layar permainan: HUD (waktu, bintang, jeda), labirin (CustomPainter, digerakkan Ticker), tombol panah sebagai kontrol
-/// alternatif (aksesibilitas, emulator), dan hasil (waktu, bintang, skor). Logika ada di [MazeGame]; layar hanya menyajikan.
+/// alternatif (aksesibilitas, emulator), dan hasil (waktu, bintang, skor). Logika ada di [MazeGame] dan [TiltFilter]
+/// (gyroscope + accelerometer, parameter di tilt_filter.dart); layar hanya menyajikan.
 /// Tidak ada animasi dekoratif, jadi "kurangi animasi" sistem tidak mengubah apa pun selain tidak adanya efek tambahan.
 class MazePlayScreen extends StatefulWidget {
   const MazePlayScreen({super.key, required this.levelIndex, this.seed, this.tilt = deviceTilt});
@@ -27,8 +26,8 @@ class MazePlayScreen extends StatefulWidget {
   /// Hanya untuk tes: labirin deterministik.
   final int? seed;
 
-  /// Sumber kemiringan (sensor); diganti di tes.
-  final Stream<({double x, double y})> Function() tilt;
+  /// Sumber masukan sensor (gyroscope + accelerometer); diganti di tes.
+  final Stream<TiltInput> Function() tilt;
 
   @override
   State<MazePlayScreen> createState() => _MazePlayScreenState();
@@ -38,9 +37,9 @@ class _MazePlayScreenState extends State<MazePlayScreen> with SingleTickerProvid
   late MazeGame _game;
   late final Ticker _ticker;
   final ValueNotifier<int> _frame = ValueNotifier(0);
-  StreamSubscription<({double x, double y})>? _sub;
+  StreamSubscription<TiltInput>? _sub;
+  final TiltFilter _tilt = TiltFilter();
   Duration _last = Duration.zero;
-  double _ax = 0, _ay = 0;
   GameOutcome? _outcome;
   bool _submitted = false;
 
@@ -53,10 +52,10 @@ class _MazePlayScreenState extends State<MazePlayScreen> with SingleTickerProvid
     _newGame();
     WidgetsBinding.instance.addObserver(this);
     try {
-      _sub = widget.tilt().listen((t) {
-        double f(double v) => v.abs() < tiltDeadZone ? 0 : v.clamp(-tiltMax, tiltMax) * tiltGain;
-        _ax = f(t.x);
-        _ay = f(t.y);
+      _sub = widget.tilt().listen((e) {
+        final gyro = _tilt.gyroActive;
+        _tilt.add(e);
+        if (gyro != _tilt.gyroActive && mounted) setState(() {}); // label sensor
       }, onError: (_) {});
     } catch (_) {
       _sub = null; // tanpa sensor: tombol panah tetap ada
@@ -109,7 +108,8 @@ class _MazePlayScreenState extends State<MazePlayScreen> with SingleTickerProvid
     final dt = (elapsed - _last).inMicroseconds / 1e6;
     _last = elapsed;
     if (_game.status != GameStatus.playing) return;
-    _game.tick(dt, ax: _ax, ay: _ay);
+    final a = _tilt.ballAccel;
+    _game.tick(dt, ax: a.x, ay: a.y);
     _frame.value++;
     if (_game.finished) _finish();
   }
@@ -135,6 +135,14 @@ class _MazePlayScreenState extends State<MazePlayScreen> with SingleTickerProvid
     });
   }
 
+  /// Posisi ponsel saat ini dianggap datar.
+  void _calibrate() => _tilt.calibrate();
+
+  void _begin() {
+    _calibrate();
+    _update(_game.start);
+  }
+
   void _again() => _update(_newGame);
 
   @override
@@ -156,7 +164,7 @@ class _MazePlayScreenState extends State<MazePlayScreen> with SingleTickerProvid
         children: [
           LayoutBuilder(builder: (context, box) {
             // Papan persegi: sisanya untuk HUD dan tombol panah (kontrol ~190 dp); tidak lebih kecil dari 220.
-            final side = min(box.maxWidth - Spacing.screen * 2, max(220.0, box.maxHeight - 72 - 200));
+            final side = min(box.maxWidth - Spacing.screen * 2, max(220.0, box.maxHeight - 72 - 250));
             return SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(Spacing.screen, Spacing.s4, Spacing.screen, Spacing.s16),
               child: Column(
@@ -175,8 +183,26 @@ class _MazePlayScreenState extends State<MazePlayScreen> with SingleTickerProvid
                   const SizedBox(height: Spacing.s12),
                   _DPad(onMove: _nudge, enabled: status == GameStatus.playing),
                   const SizedBox(height: Spacing.s8),
+                  Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                    Flexible(
+                      child: Text(
+                        _tilt.gyroActive ? 'Sensor: gyroscope + accelerometer' : 'Sensor: accelerometer',
+                        key: const Key('maze_sensor'),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: context.colors.muted),
+                      ),
+                    ),
+                    const SizedBox(width: Spacing.s8),
+                    PrimaryButton(
+                      key: const Key('maze_calibrate'),
+                      label: 'Kalibrasi ulang',
+                      icon: Icons.my_location,
+                      variant: ButtonVariant.text,
+                      expand: false,
+                      onPressed: status == GameStatus.playing ? _calibrate : null,
+                    ),
+                  ]),
                   Text(
-                    'Miringkan ponsel untuk menggulirkan bola, atau pakai tombol panah (satu sel tiap ketukan).',
+                    'Posisi ponsel saat Mulai dianggap datar. Miringkan untuk menggulirkan bola, atau pakai tombol panah (satu sel tiap ketukan).',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(color: context.colors.muted),
                   ),
@@ -197,7 +223,7 @@ class _MazePlayScreenState extends State<MazePlayScreen> with SingleTickerProvid
           icon: Icons.sports_esports_outlined,
           title: 'Siap?',
           message: 'Bawa bola ke pintu keluar secepatnya dan ambil bintang di jalan. Waktu: ${_level.seconds} detik.',
-          actions: [PrimaryButton(key: const Key('maze_start'), label: 'Mulai', icon: Icons.play_arrow, onPressed: () => _update(_game.start))],
+          actions: [PrimaryButton(key: const Key('maze_start'), label: 'Mulai', icon: Icons.play_arrow, onPressed: _begin)],
         );
       case GameStatus.paused:
         return _Panel(
