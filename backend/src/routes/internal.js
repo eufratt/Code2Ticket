@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { runDueDraws } from '../services/draw.js';
+import { runDueDraws, runMaintenance } from '../services/draw.js';
 import { timingSafeEqualStr } from '../lib/util.js';
 
 // Pemicu scheduler dari luar (cron host / layanan terjadwal). Dilindungi header X-Tick-Secret.
@@ -11,7 +11,9 @@ export default function internalRoutes({ pool, config }) {
     if (!given || !timingSafeEqualStr(given, config.TICK_SECRET)) {
       return res.status(403).json({ ok: false, error: 'forbidden' });
     }
-    res.json({ ok: true, drawn: await runDueDraws(pool) });
+    const drawn = await runDueDraws(pool);
+    await runMaintenance(pool).catch(() => {}); // gagal bersih-bersih tidak boleh menggagalkan tick
+    res.json({ ok: true, drawn });
   });
   return r;
 }

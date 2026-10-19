@@ -130,12 +130,27 @@ export async function refreshGiveawayStatus(pool) {
   return r.rowCount;
 }
 
+// Percobaan login/redeem lama dibuang. Kunci yang masih aktif dan percobaan < 24 jam tidak disentuh (aturan lockout tetap).
+export async function cleanupAttempts(pool) {
+  await pool.query("delete from code_attempts where attempted_at < now() - interval '1 day'");
+  await pool.query(
+    "delete from login_attempts where last_attempt_at < now() - interval '24 hours' and (locked_until is null or locked_until < now())",
+  );
+}
+
+// Dijalankan tiap jam oleh scheduler dan, karena Render gratis bisa tertidur sehingga cron internal tidak jalan,
+// juga dari /internal/tick (dibatasi sekali per jam per proses). Tanpa ini login_attempts bisa tumbuh dengan identifier acak.
+let lastMaintenance = 0;
+export async function runMaintenance(pool, { force = false, now = Date.now() } = {}) {
+  if (!force && now - lastMaintenance < 3_600_000) return false;
+  lastMaintenance = now;
+  await cleanupAttempts(pool);
+  return true;
+}
+
 export async function cleanup(pool) {
   await pool.query(
     "delete from sessions where expires_at < now() - interval '30 days' or (not is_valid and created_at < now() - interval '30 days')",
   );
-  await pool.query("delete from code_attempts where attempted_at < now() - interval '1 day'");
-  await pool.query(
-    "delete from login_attempts where last_attempt_at < now() - interval '1 day' and (locked_until is null or locked_until < now())",
-  );
+  await cleanupAttempts(pool);
 }

@@ -141,3 +141,41 @@ describe('3. kegagalan sah tidak dihitung ke batas 5 kegagalan redeem', () => {
     expect(r.retry_after_seconds).toBeGreaterThan(0);
   });
 });
+
+describe('4. login_attempts dibersihkan berkala (bukan hanya cleanup harian)', () => {
+  const tick = () => api.raw('post', '/internal/tick', { headers: { 'x-tick-secret': real.config.TICK_SECRET } });
+  const seedOld = () =>
+    real.su.query(`insert into login_attempts(identifier, failed_count, last_attempt_at, locked_until) values
+      ('basi-1', 2, now() - interval '25 hours', null),
+      ('basi-terkunci-lewat', 0, now() - interval '30 hours', now() - interval '20 hours'),
+      ('terkunci-aktif', 0, now() - interval '25 hours', now() + interval '10 minutes'),
+      ('segar', 1, now() - interval '1 hour', null)
+      on conflict (identifier) do update set last_attempt_at = excluded.last_attempt_at, locked_until = excluded.locked_until`);
+  const ids = async () => (await real.su.query("select identifier from login_attempts where identifier in ('basi-1','basi-terkunci-lewat','terkunci-aktif','segar') order by 1")).rows.map((r) => r.identifier);
+
+  it('/internal/tick (dipanggil tiap menit saat cron host tertidur) membersihkan percobaan > 24 jam; kunci aktif dan yang segar tetap', async () => {
+    await seedOld();
+    expect((await tick()).status).toBe(200);
+    expect(await ids()).toEqual(['segar', 'terkunci-aktif']);
+  });
+
+  it('dibatasi sekali per jam; paksa untuk jadwal per jam', async () => {
+    const { runMaintenance } = await import('../src/services/draw.js');
+    await seedOld();
+    await tick(); // < 1 jam sejak pembersihan sebelumnya: dilewati
+    expect(await ids()).toContain('basi-1');
+    expect(await runMaintenance(real.pool)).toBe(false);
+    expect(await runMaintenance(real.pool, { force: true })).toBe(true);
+    expect(await ids()).toEqual(['segar', 'terkunci-aktif']);
+  });
+
+  it('aturan lockout tidak berubah: 5 salah mengunci, kunci aktif bertahan melewati pembersihan', async () => {
+    await register(api, 'dina01', 'dina@example.com', 'Passw0rd!1', 'Dina');
+    const bad = () => api.post('/auth/login', { body: { identifier: 'dina01', password_hash: 'a'.repeat(64) } });
+    for (let i = 0; i < 4; i++) expect((await bad()).error).toBe('invalid_credentials');
+    expect((await bad()).error).toBe('locked');
+    const { runMaintenance } = await import('../src/services/draw.js');
+    await runMaintenance(real.pool, { force: true });
+    expect((await login(api, 'dina01', 'Passw0rd!1')).error).toBe('locked');
+  });
+});
