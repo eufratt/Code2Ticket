@@ -94,7 +94,15 @@ export async function adminRunDraw(pool, giveawayId) {
 export async function runDueDraws(pool) {
   await refreshGiveawayStatus(pool);
   const due = (
-    await pool.query("select id from giveaways where status <> 'drawn' and draw_at <= now() order by draw_at")
+    // Giveaway yang pernah gagal seed_mismatch dilewati: seed tidak akan membaik sendiri, jadi mengulang tiap menit hanya
+    // memenuhi system_events. Dicatat sekali oleh drawInTx; operator membukanya lagi dengan menghapus event itu
+    // setelah seed diperbaiki (lihat README). Draw manual admin tetap bisa dicoba.
+    await pool.query(
+      `select g.id from giveaways g
+        where g.status <> 'drawn' and g.draw_at <= now()
+          and not exists (select 1 from system_events e where e.event = 'draw_seed_mismatch' and e.details->>'giveaway_id' = g.id::text)
+        order by g.draw_at`,
+    )
   ).rows;
   let done = 0;
   for (const { id } of due) {
