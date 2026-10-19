@@ -1,24 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
-import 'features/auth/auth_controller.dart';
+import 'core/theme/app_tokens.dart';
+import 'core/widgets/widgets.dart';
 
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
   @override
   Widget build(BuildContext context) {
-    final auth = context.watch<AuthController>();
-    return Scaffold(
+    return const Scaffold(
       body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const CircularProgressIndicator(),
-            if (auth.isWakingUp) ...[
-              const SizedBox(height: 16),
-              const Text('Server sedang bangun, tunggu sebentar...'),
+        child: Padding(
+          padding: EdgeInsets.all(Spacing.s24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              BrandHeader(),
+              SizedBox(height: Spacing.s32),
+              CircularProgressIndicator(),
+              WakingUpNotice(),
             ],
-          ],
+          ),
         ),
       ),
     );
