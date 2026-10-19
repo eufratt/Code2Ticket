@@ -9,6 +9,7 @@ import '../auth/auth_controller.dart';
 import '../discover/discover_controller.dart';
 import '../discover/discover_filters.dart' show categoryLabel;
 import '../notifications/notification_bell.dart';
+import '../notifications/notification_permission.dart';
 import '../notifications/notifications_controller.dart';
 import '../profile/user_avatar.dart';
 import '../tickets/tickets_controller.dart';
@@ -56,6 +57,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     final notifs = context.read<NotificationsController?>();
     if (notifs != null) Future.microtask(notifs.refreshUnread);
+    // Izin notifikasi sistem: sekali, dengan dialog penjelasan dulu.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) promptNotificationPermissionOnce(context);
+    });
   }
 
   @override

@@ -27,12 +27,12 @@ class AppShell extends StatelessWidget {
     final auth = context.read<AuthController>();
     final ok = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Keluar dari akun?'),
         content: const Text('Kamu perlu masuk lagi untuk melihat tiketmu.'),
         actions: [
-          TextButton(key: const Key('logout_cancel'), onPressed: () => Navigator.pop(context, false), child: const Text('Batal')),
-          FilledButton(key: const Key('logout_confirm'), onPressed: () => Navigator.pop(context, true), child: const Text('Keluar')),
+          TextButton(key: const Key('logout_cancel'), onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Batal')),
+          FilledButton(key: const Key('logout_confirm'), onPressed: () => Navigator.pop(dialogContext, true), child: const Text('Keluar')),
         ],
       ),
     );

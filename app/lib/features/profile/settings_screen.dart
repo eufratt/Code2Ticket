@@ -2,13 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/currency/currency.dart';
+import '../../core/notifications/notification_service.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/widgets.dart';
 import '../../core/settings/settings_controller.dart';
 import '../../core/time/zones.dart';
 import '../auth/auth_controller.dart';
+import '../notifications/notification_permission.dart';
 
-/// Pengaturan: mata uang dan zona waktu default (disimpan di app_settings, per perangkat) + kunci biometric.
+/// Pengaturan: mata uang dan zona waktu default (disimpan di app_settings, per perangkat), notifikasi pengingat + status izin, dan kunci biometric.
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
   @override
@@ -85,6 +87,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           const SizedBox(height: Spacing.sectionGap),
+          if (context.watch<NotificationService?>() case final n?) ...[
+            const SectionHeader('Notifikasi'),
+            _NotificationSection(service: n),
+            const SizedBox(height: Spacing.sectionGap),
+          ],
           const SectionHeader('Keamanan'),
           SurfaceCard(
             padding: const EdgeInsets.symmetric(vertical: Spacing.s4),
@@ -100,6 +107,54 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Saklar pengingat + status izin notifikasi sistem (ikon + teks, bukan hanya warna) dan tombol ke pengaturan sistem.
+class _NotificationSection extends StatelessWidget {
+  const _NotificationSection({required this.service});
+  final NotificationService service;
+
+  @override
+  Widget build(BuildContext context) {
+    final granted = service.permissionGranted;
+    return SurfaceCard(
+      padding: const EdgeInsets.symmetric(vertical: Spacing.s4),
+      child: Column(children: [
+        SwitchListTile(
+          key: const Key('switch_reminders'),
+          secondary: const Icon(Icons.alarm),
+          title: const Text('Notifikasi pengingat'),
+          subtitle: const Text('Ingatkan 1 jam sebelum draw dan saat draw dijalankan, untuk giveaway yang tiketnya kamu punya.'),
+          value: service.remindersEnabled,
+          onChanged: (v) async {
+            // Menyalakan tanpa izin: jelaskan dulu, baru minta izin sistem. Mematikan membatalkan semua jadwal.
+            if (v && !service.permissionGranted) await explainAndRequestNotifications(context);
+            await service.setRemindersEnabled(v);
+          },
+        ),
+        const Divider(indent: Spacing.s16, endIndent: Spacing.s16),
+        ListTile(
+          key: const Key('notif_permission_status'),
+          leading: Icon(granted ? Icons.notifications_active_outlined : Icons.notifications_off_outlined),
+          title: Text(granted ? 'Izin notifikasi: diizinkan' : 'Izin notifikasi: belum diizinkan'),
+          subtitle: Text(granted
+              ? 'Tiket baru, pengingat, dan hasil draw muncul di bilah status.'
+              : 'Notifikasi tetap tersedia di pusat notifikasi dalam aplikasi (ikon lonceng di Home).'),
+        ),
+        if (!granted)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(Spacing.s16, 0, Spacing.s16, Spacing.s8),
+            child: PrimaryButton(
+              key: const Key('open_system_notif_settings'),
+              label: 'Buka pengaturan sistem',
+              icon: Icons.settings_outlined,
+              variant: ButtonVariant.secondary,
+              onPressed: service.openSystemSettings,
+            ),
+          ),
+      ]),
     );
   }
 }

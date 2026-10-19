@@ -12,6 +12,7 @@ import 'core/db/local_db.dart';
 import 'core/db/rate_cache.dart' show SettingsStore;
 import 'core/geocoding/geocoder.dart';
 import 'core/location/location_service.dart';
+import 'core/notifications/notification_service.dart';
 import 'core/session/session_store.dart';
 import 'core/theme/app_theme.dart';
 import 'features/admin/admin_controller.dart';
@@ -21,6 +22,7 @@ import 'features/discover/discover_controller.dart';
 import 'features/game/game_controller.dart';
 import 'features/giveaways/affinity_controller.dart';
 import 'features/giveaways/giveaways_controller.dart';
+import 'features/notifications/notification_bridge.dart';
 import 'features/notifications/notifications_controller.dart';
 import 'features/tickets/tickets_controller.dart';
 
@@ -45,12 +47,14 @@ class _Code2TicketAppState extends State<Code2TicketApp> with WidgetsBindingObse
   late final Geocoder _geocoder = Geocoder();
   late final SettingsController _settings = SettingsController(LocalDb.instance)..load();
   late final RatesController _rates = RatesController(LocalDb.instance)..ensureFresh();
+  late final NotificationService _notifService = NotificationService(PluginNotificationGateway(), LocalDb.instance);
   late final _router = buildRouter(_auth);
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _notifService.init(); // izin tidak diminta di sini: dialog penjelasan dulu (Home / Pengaturan)
   }
 
   @override
@@ -96,6 +100,7 @@ class _Code2TicketAppState extends State<Code2TicketApp> with WidgetsBindingObse
         Provider<Geocoder>.value(value: _geocoder),
         ChangeNotifierProvider<SettingsController>.value(value: _settings),
         ChangeNotifierProvider<RatesController>.value(value: _rates),
+        ChangeNotifierProvider<NotificationService>.value(value: _notifService),
         ChangeNotifierProvider(create: (_) => GiveawaysController(_authed, _auth, LocalDb.instance)),
         ChangeNotifierProvider(create: (_) => TicketsController(_authed, _auth, LocalDb.instance)),
         ChangeNotifierProvider(create: (_) => NotificationsController(_authed, _auth)),
@@ -105,7 +110,9 @@ class _Code2TicketAppState extends State<Code2TicketApp> with WidgetsBindingObse
         ChangeNotifierProvider(create: (_) => AssistantController(_authed, _auth, LocalDb.instance)),
         ChangeNotifierProvider(create: (_) => DiscoverController(_authed, _auth, LocalDb.instance, _location)),
       ],
-      child: MaterialApp.router(
+      child: NotificationBridge(
+        router: _router,
+        child: MaterialApp.router(
         title: 'Code2Ticket',
         theme: AppTheme.light(),
         darkTheme: AppTheme.dark(),
@@ -116,6 +123,7 @@ class _Code2TicketAppState extends State<Code2TicketApp> with WidgetsBindingObse
           child: child!,
         ),
         routerConfig: _router,
+        ),
       ),
     );
   }

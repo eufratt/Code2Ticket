@@ -10,6 +10,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/widgets.dart';
+import '../../core/notifications/notification_service.dart';
 import 'ticket_models.dart';
 import 'tickets_controller.dart';
 
@@ -73,7 +74,10 @@ class _InputCodeScreenState extends State<InputCodeScreen> {
     // Posisi hanya bila izin sudah ada; tanpa dialog izin, dan hanya hidup di variabel lokal ini.
     final fix = await context.read<LocationService>().locate(prompt: false);
     if (!mounted) return;
+    final notifier = context.read<NotificationService?>();
     final outcome = await tickets.redeem(code, lat: fix.ok ? fix.lat : null, lng: fix.ok ? fix.lng : null);
+    // Notifikasi sistem tetap muncul walau layar sudah ditinggalkan; isinya tanpa kode.
+    if (outcome?.ticket != null) notifier?.onTicketCreated(outcome!.ticket!);
     if (!mounted) return;
     setState(() {
       _busy = false;

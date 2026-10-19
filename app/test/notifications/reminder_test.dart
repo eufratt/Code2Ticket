@@ -21,7 +21,7 @@ class FakeGateway implements NotificationGateway {
   void Function(String?)? onTap;
   final Map<int, PlannedReminder> scheduled = {};
   final List<(int, String, String, String)> shown = [];
-  int cancelAllCalls = 0, settingsOpened = 0;
+  int cancelAllCalls = 0, settingsOpened = 0, requests = 0;
 
   @override
   Future<void> init(void Function(String? payload) tap) async => onTap = tap;
@@ -30,7 +30,10 @@ class FakeGateway implements NotificationGateway {
   @override
   Future<bool> areEnabled() async => enabled;
   @override
-  Future<bool> requestPermission() async => enabled = grantOnRequest;
+  Future<bool> requestPermission() async {
+    requests++;
+    return enabled = grantOnRequest;
+  }
   @override
   Future<void> openSystemSettings() async => settingsOpened++;
   @override
