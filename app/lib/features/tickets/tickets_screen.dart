@@ -165,11 +165,11 @@ class _Group extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(bottom: Spacing.cardGap),
             child: TicketCard(
-              title: t.giveawayTitle,
+              // Judul giveaway sudah ada di header grup: kartu menampilkan yang berbeda (hadiah, jadwal draw, kode).
+              title: t.prizeName.isNotEmpty ? t.prizeName : t.giveawayTitle,
               category: t.category,
               ticketNumber: formatTicketNumber(t.ticketNumber),
               status: statusOfResult(t.result),
-              prizeText: t.prizeName,
               subtitle: [
                 if (t.drawAt != null) 'Draw ${context.when(t.drawAt!)}',
                 if (t.codeMasked.isNotEmpty) 'Kode ${t.codeMasked}',
