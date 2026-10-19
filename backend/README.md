@@ -42,6 +42,28 @@ Remove-Item Env:ADMIN_PASSWORD
 
 Server gratis Render bisa butuh sekitar 1 menit untuk bangun pada permintaan pertama.
 
+## Asisten AI (`POST /chat`)
+
+Asisten tab "Asisten" memanggil OpenAI Chat Completions dari server (fetch bawaan Node, tanpa SDK). Kunci tidak pernah dikirim ke klien.
+
+Env (tanpa nilai bawaan untuk rahasia; lihat `.env.example`):
+
+| Env | Arti |
+|---|---|
+| `OPENAI_API_KEY` | Kunci OpenAI. Kosong = fitur mati. Jangan commit; isi di env Render. |
+| `OPENAI_MODEL` | Nama model, WAJIB diatur. Kosong -> `ai_not_configured`. |
+| `AI_DAILY_LIMIT_PER_USER` | Kuota pesan per pengguna per hari Asia/Jakarta (bawaan 30). |
+| `AI_RATE_PER_MINUTE` | Batas pesan per pengguna per menit (bawaan 8). |
+| `OPENAI_TIMEOUT_MS` | Timeout panggilan OpenAI (bawaan 20000). |
+
+Perilaku:
+- Sukses: `{"ok":true,"reply":"...","related":[ringkasan giveaway aktif, maks. 3]}`. `related` = bentuk sama dengan item `GET /giveaways`, hanya giveaway aktif yang cocok kata kunci pesan.
+- Galat (HTTP 200): `invalid_input` (+`field` `message`/`history`), `ai_not_configured`, `rate_limited` (+`retry_after_seconds`), `daily_limit`, `ai_unavailable` (rate limit/5xx/timeout/400 dari OpenAI; detail upstream tidak dibocorkan). Sesi tidak valid: 401.
+- Panggilan memakai `max_completion_tokens: 400` dan tanpa `temperature`. Peran `system` hanya dari server; `history` dari klien hanya `user`/`assistant` (selain itu `invalid_input`).
+- Konteks (RAG sederhana): sampai 5 giveaway aktif (kata kunci, lalu minat pengguna dari `/me/affinity`, lalu draw terdekat) dimasukkan ke prompt sebagai DATA; tanpa data pengguna lain.
+- Log hanya `CHAT upstream status=<n> type=<jenis>` / `timeout` / `network`. Isi pesan, kunci, dan pesan galat upstream tidak dicatat. Aktivitas `chat` dicatat ke `user_activity` tanpa isi pesan.
+- Batas pemakaian dihitung di MEMORI proses (tanpa perubahan skema): hilang saat server restart dan tidak dibagi antar instance. Cukup untuk satu instance Render; untuk beberapa instance butuh tabel (belum ada).
+
 ## Tes
 
 Butuh Postgres dengan ekstensi `pgcrypto` dan `pg_trgm`, serta Python 3 (tes kontrak memuat
@@ -84,6 +106,7 @@ Token dikirim lewat `Authorization: Bearer <token>`.
 | `GET /me/affinity` | session | `rpc_get_category_affinity` |
 | `POST /game/scores` (`stars,seconds_left,cleared,duration_sec`), `GET /game/leaderboard?limit=` | session | `rpc_submit_game_score`, `rpc_get_leaderboard` |
 | `GET /notifications?after_id=&limit=`, `POST /notifications/read` (`ids`) | session | `rpc_get_notifications`, `rpc_mark_notifications_read` |
+| `POST /chat` (`message` 1-500 karakter, `history` maks. 6 giliran terakhir dipakai: `{role: user|assistant, content <= 1000}`) | session | (baru) |
 | `POST /feedback` (`suggestion,impression`), `GET /feedback` | session | `rpc_submit_feedback`, `rpc_get_my_feedback` |
 | `POST /admin/giveaways` (tanpa `id` = buat, dengan `id` = ubah) | admin | `rpc_admin_upsert_giveaway` |
 | `POST /admin/giveaways/:id/codes` (`count,geo_lat,geo_lng,geo_radius_km`), `GET` daftar | admin | `rpc_admin_generate_codes`, `rpc_admin_list_codes` |

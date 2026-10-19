@@ -6,6 +6,7 @@ import { requireSession } from './middleware/auth.js';
 import { HttpError } from './lib/util.js';
 import adminRoutes from './routes/admin.js';
 import authRoutes from './routes/auth.js';
+import chatRoutes from './routes/chat.js';
 import giveawayRoutes from './routes/giveaways.js';
 import meRoutes from './routes/me.js';
 import internalRoutes from './routes/internal.js';
@@ -18,7 +19,8 @@ const limiter = (limit) =>
 // logger: hanya method, path (tanpa query), status, durasi. Tidak pernah body/header.
 const defaultLog = (line) => console.log(line);
 
-export function createApp({ pool, config, log = defaultLog }) {
+// fetchImpl: hanya untuk tes (menggantikan fetch ke OpenAI).
+export function createApp({ pool, config, log = defaultLog, fetchImpl }) {
   const app = express();
   app.disable('x-powered-by');
   if (config.TRUST_PROXY > 0) app.set('trust proxy', config.TRUST_PROXY);
@@ -40,13 +42,14 @@ export function createApp({ pool, config, log = defaultLog }) {
   app.use(limiter(config.RATE_LIMIT_MAX));
   app.use(express.json({ limit: '100kb' }));
 
-  const deps = { pool, config, session: requireSession(pool), uploadLimit: limiter(config.UPLOAD_RATE_LIMIT_MAX ?? 10) };
+  const deps = { pool, config, log, fetchImpl, session: requireSession(pool), uploadLimit: limiter(config.UPLOAD_RATE_LIMIT_MAX ?? 10) };
   app.use('/auth', limiter(config.AUTH_RATE_LIMIT_MAX), authRoutes(deps));
   app.use('/giveaways', giveawayRoutes(deps));
   app.use('/admin', adminRoutes(deps));
   app.use('/internal', internalRoutes(deps));
   app.use('/', ticketRoutes(deps));
   app.use('/', meRoutes(deps));
+  app.use('/', chatRoutes(deps));
 
   app.use((_req, res) => res.status(404).json({ ok: false, error: 'not_found' }));
   // eslint-disable-next-line no-unused-vars

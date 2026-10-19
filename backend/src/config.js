@@ -15,6 +15,12 @@ const schema = z.object({
   AUTH_RATE_LIMIT_MAX: z.coerce.number().int().min(1).default(20),
   UPLOAD_RATE_LIMIT_MAX: z.coerce.number().int().min(1).default(10),
   TRUST_PROXY: z.coerce.number().int().min(0).default(0),
+  // Asisten AI (POST /chat). Kosong = fitur mati (jawaban ai_not_configured). JANGAN pernah di-log.
+  OPENAI_API_KEY: z.string().default(''),
+  OPENAI_MODEL: z.string().default(''),
+  AI_DAILY_LIMIT_PER_USER: z.coerce.number().int().min(1).default(30),
+  AI_RATE_PER_MINUTE: z.coerce.number().int().min(1).default(8),
+  OPENAI_TIMEOUT_MS: z.coerce.number().int().min(1000).max(60000).default(20000),
 });
 
 // Hanya mengembalikan nilai terurai; tidak pernah mencetak isi env.
