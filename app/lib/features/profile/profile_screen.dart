@@ -162,6 +162,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ListTile(key: const Key('open_admin'), leading: const Icon(Icons.admin_panel_settings_outlined), title: const Text('Admin'), subtitle: const Text('Buat giveaway, kode, dan draw'), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/admin')),
                   const Divider(indent: Spacing.s16, endIndent: Spacing.s16),
                 ],
+                ListTile(key: const Key('open_game'), leading: const Icon(Icons.sports_esports_outlined), title: const Text('Game Maze'), subtitle: const Text('Main, raih lencana, dan lihat peringkat'), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/game')),
+                const Divider(indent: Spacing.s16, endIndent: Spacing.s16),
                 ListTile(key: const Key('open_converter'), leading: const Icon(Icons.currency_exchange), title: const Text('Konverter'), subtitle: const Text('Mata uang dan waktu'), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/converter')),
                 const Divider(indent: Spacing.s16, endIndent: Spacing.s16),
                 ListTile(key: const Key('open_feedback'), leading: const Icon(Icons.rate_review_outlined), title: const Text('Saran & Kesan'), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/feedback')),
