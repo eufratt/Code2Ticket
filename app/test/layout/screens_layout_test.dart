@@ -13,6 +13,8 @@ import 'package:code2ticket/features/giveaways/giveaway_detail_screen.dart';
 import 'package:code2ticket/features/giveaways/giveaway_models.dart';
 import 'package:code2ticket/features/giveaways/giveaways_controller.dart';
 import 'package:code2ticket/features/giveaways/home_screen.dart';
+import 'package:code2ticket/features/notifications/notifications_controller.dart';
+import 'package:code2ticket/features/notifications/notifications_screen.dart';
 import 'package:code2ticket/features/profile/profile_screen.dart';
 import 'package:code2ticket/features/profile/settings_screen.dart';
 import 'package:code2ticket/features/tickets/input_code_screen.dart';
@@ -85,12 +87,27 @@ List<Map<String, dynamic>> sampleTickets() {
   return [t(1, 'eligible', 'g1'), t(123456, 'waiting_for_draw', 'g1'), t(3, 'winner', 'g2'), t(4, 'not_selected', 'g3')];
 }
 
-AppUser sampleUser() => AppUser(
+List<Map<String, dynamic>> sampleNotifications() {
+  final now = DateTime.now().toUtc().toIso8601String();
+  Map<String, dynamic> n(int id, String type, String title, {bool read = false, String? gid = 'g1'}) => {
+        'id': id, 'type': type, 'title': title, 'is_read': read, 'giveaway_id': gid, 'created_at': now,
+        'body': 'Tiket #000012 memenangkan Hadiah utama berupa paket lengkap berukuran besar pada undian $sampleLongTitle.',
+      };
+  return [
+    n(5, 'winner', 'Selamat, kamu menang!'),
+    n(4, 'draw_result', 'Hasil undian sudah keluar', read: true),
+    n(3, 'ticket_created', 'Tiket berhasil dibuat', gid: null),
+    n(2, 'reminder', 'Draw sebentar lagi'),
+    n(1, 'jenis_baru_tak_dikenal', 'Info umum', read: true, gid: null),
+  ];
+}
+
+AppUser sampleUser({String role = 'user'}) => AppUser(
       id: 'u1',
       username: 'pengguna_dengan_username_panjang',
       email: 'alamat.email.yang.sangat.panjang@contoh-domain-panjang.co.id',
       fullName: 'Nama Lengkap Pengguna yang Sangat Panjang Sekali',
-      role: 'user',
+      role: role,
       xp: 1234,
       level: 3,
       badges: ['first_ticket', 'early_bird'],
@@ -111,6 +128,8 @@ class SampleEnv {
       if (p.startsWith('/giveaways/')) return sampleGiveaways().first;
       if (p.startsWith('/giveaways')) return {'ok': true, 'data': sampleGiveaways()};
       if (p.startsWith('/tickets')) return {'ok': true, 'data': List.of(tickets)};
+      if (p.startsWith('/notifications/read')) return {'ok': true, 'updated': 1};
+      if (p.startsWith('/notifications')) return {'ok': true, 'data': sampleNotifications()};
       if (p.startsWith('/feedback')) {
         return {
           'ok': true,
@@ -142,6 +161,7 @@ class SampleEnv {
           ...displayProviders(),
           ChangeNotifierProvider(create: (_) => GiveawaysController(authed, auth, MemoryCacheStore(), retryInterval: null)),
           ChangeNotifierProvider(create: (_) => TicketsController(authed, auth, MemoryCacheStore(), retryInterval: null)),
+          ChangeNotifierProvider(create: (_) => NotificationsController(authed, auth)),
           ChangeNotifierProvider(
               create: (_) => DiscoverController(authed, auth, MemoryCacheStore(), LocationService(FakeGateway()), retryInterval: null)),
         ],
@@ -166,6 +186,7 @@ void main() {
     'Home': (() => const HomeScreen(), 'Segera draw'),
     'Detail Giveaway': (() => GiveawayDetailScreen(giveawayId: 'g1', initial: Giveaway.tryParse(sampleGiveaways().first)), 'Input Code'),
     'My Tickets': (() => const TicketsScreen(), '#123456'),
+    'Notifikasi': (() => const NotificationsScreen(), 'Selamat, kamu menang!'),
     'Profil': (() => const ProfileScreen(), 'Level 3'),
     'Login': (() => const LoginScreen(), 'Belum punya akun? Daftar'),
     'Daftar': (() => const RegisterScreen(), 'Sudah punya akun? Masuk'),

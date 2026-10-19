@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_tokens.dart';
+import '../notifications/notifications_controller.dart';
 
 /// Lokasi kustom FAB melayang di tengah horizontal, tepat di atas bottom navigation bar.
 class AboveNavCenterFloatLocation extends FloatingActionButtonLocation {
@@ -48,7 +50,10 @@ class AppShell extends StatelessWidget {
         child: Semantics(
           selected: selected,
           child: InkWell(
-            onTap: () => navigationShell.goBranch(index, initialLocation: index == current),
+            onTap: () {
+              if (index == 0 && current != 0) context.read<NotificationsController?>()?.refreshUnread();
+              navigationShell.goBranch(index, initialLocation: index == current);
+            },
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: Spacing.s4, horizontal: 2),
               child: Column(

@@ -16,6 +16,7 @@ import 'core/theme/app_theme.dart';
 import 'features/auth/auth_controller.dart';
 import 'features/discover/discover_controller.dart';
 import 'features/giveaways/giveaways_controller.dart';
+import 'features/notifications/notifications_controller.dart';
 import 'features/tickets/tickets_controller.dart';
 
 void main() {
@@ -91,6 +92,7 @@ class _Code2TicketAppState extends State<Code2TicketApp> with WidgetsBindingObse
         ChangeNotifierProvider<RatesController>.value(value: _rates),
         ChangeNotifierProvider(create: (_) => GiveawaysController(_authed, _auth, LocalDb.instance)),
         ChangeNotifierProvider(create: (_) => TicketsController(_authed, _auth, LocalDb.instance)),
+        ChangeNotifierProvider(create: (_) => NotificationsController(_authed, _auth)),
         ChangeNotifierProvider(create: (_) => DiscoverController(_authed, _auth, LocalDb.instance, _location)),
       ],
       child: MaterialApp.router(

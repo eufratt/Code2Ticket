@@ -8,6 +8,8 @@ import '../../core/widgets/widgets.dart';
 import '../auth/auth_controller.dart';
 import '../discover/discover_controller.dart';
 import '../discover/discover_filters.dart' show categoryLabel;
+import '../notifications/notification_bell.dart';
+import '../notifications/notifications_controller.dart';
 import '../profile/user_avatar.dart';
 import '../tickets/tickets_controller.dart';
 import 'giveaway_card.dart';
@@ -34,7 +36,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   String? _category;
 
   @override
@@ -45,6 +47,21 @@ class _HomeScreenState extends State<HomeScreen> {
     // Ringkasan tiket memakai TicketsController yang sama dengan My Tickets; dimuat sekali bila belum.
     final tickets = context.read<TicketsController?>();
     if (tickets != null && tickets.state == LoadState.idle) Future.microtask(tickets.load);
+    // Hitungan notifikasi: saat Home dibuka dan saat app kembali ke foreground (tanpa polling).
+    WidgetsBinding.instance.addObserver(this);
+    final notifs = context.read<NotificationsController?>();
+    if (notifs != null) Future.microtask(notifs.refreshUnread);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) context.read<NotificationsController?>()?.refreshUnread();
   }
 
   @override
@@ -164,6 +181,7 @@ class _Header extends StatelessWidget {
               ],
             ),
           ),
+          const NotificationBell(),
           Semantics(
             button: true,
             label: 'Buka profil',

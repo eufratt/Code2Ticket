@@ -11,6 +11,7 @@ import 'features/feedback/feedback_screen.dart';
 import 'features/giveaways/giveaway_detail_screen.dart';
 import 'features/giveaways/giveaway_models.dart';
 import 'features/giveaways/home_screen.dart';
+import 'features/notifications/notifications_screen.dart';
 import 'features/profile/profile_screen.dart';
 import 'features/profile/settings_screen.dart';
 import 'features/shell/app_shell.dart';
@@ -50,6 +51,7 @@ GoRouter buildRouter(AuthController auth) => GoRouter(
         GoRoute(path: '/converter', builder: (_, _) => const ConverterScreen()),
         GoRoute(path: '/feedback', builder: (_, _) => const FeedbackScreen()),
         GoRoute(path: '/settings', builder: (_, _) => const SettingsScreen()),
+        GoRoute(path: '/notifications', builder: (_, _) => const NotificationsScreen()),
         GoRoute(
           path: '/giveaway/:id',
           builder: (_, state) => GiveawayDetailScreen(
