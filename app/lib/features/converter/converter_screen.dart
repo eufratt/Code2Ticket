@@ -3,6 +3,10 @@ import 'package:provider/provider.dart';
 
 import '../../core/currency/currency.dart';
 import '../../core/currency/rates_controller.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_tokens.dart';
+import '../../core/theme/app_typography.dart';
+import '../../core/widgets/widgets.dart';
 import '../../core/time/zones.dart';
 
 /// Konverter (dari Profil): tab Mata Uang dan tab Waktu.
@@ -59,15 +63,46 @@ class _CurrencyConverterState extends State<CurrencyConverter> {
     DropdownButtonFormField<String> dropdown(Key key, String label, String current, ValueChanged<String> on) =>
         DropdownButtonFormField<String>(
           key: key,
+          isExpanded: true,
           initialValue: current,
           decoration: InputDecoration(labelText: label),
           items: [for (final c in supportedCurrencies) DropdownMenuItem(value: c, child: Text(currencyName(c)))],
           onChanged: (v) => v == null ? null : setState(() => on(v)),
         );
 
+    final theme = Theme.of(context);
+    final c = context.colors;
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(Spacing.screen),
       children: [
+        // Hasil besar di atas.
+        SurfaceCard(
+          color: c.primaryContainer,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (value == null || invalid)
+                Text('-', style: theme.textTheme.displaySmall?.copyWith(color: c.onPrimaryContainer))
+              else if (converted == null)
+                Text(rates.loading ? 'Memuat kurs...' : 'Kurs belum tersedia. Hubungkan ke internet sekali untuk mengambil kurs.',
+                    key: const Key('currency_result'), style: theme.textTheme.bodyMedium?.copyWith(color: c.onPrimaryContainer))
+              else ...[
+                Text('${formatMoney(value, _from)} =', style: theme.textTheme.bodyMedium?.copyWith(color: c.onPrimaryContainer)),
+                const SizedBox(height: Spacing.s4),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    formatMoney(converted, _to),
+                    key: const Key('currency_result'),
+                    style: AppTypography.tabular(theme.textTheme.displaySmall!.copyWith(color: c.onPrimaryContainer)),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: Spacing.sectionGap),
         TextField(
           key: const Key('amount_field'),
           controller: _amount,
@@ -75,44 +110,24 @@ class _CurrencyConverterState extends State<CurrencyConverter> {
           decoration: InputDecoration(labelText: 'Jumlah', errorText: invalid ? 'Masukkan angka yang valid.' : null),
           onChanged: (_) => setState(() {}),
         ),
-        const SizedBox(height: 12),
-        Row(children: [
-          Expanded(child: dropdown(const Key('from_currency'), 'Dari', _from, (v) => _from = v)),
-          IconButton(
+        const SizedBox(height: Spacing.s12),
+        dropdown(const Key('from_currency'), 'Dari', _from, (v) => _from = v),
+        Align(
+          child: IconButton(
             key: const Key('swap_currency'),
-            tooltip: 'Tukar',
-            icon: const Icon(Icons.swap_horiz),
+            tooltip: 'Tukar mata uang asal dan tujuan',
+            icon: const Icon(Icons.swap_vert),
             onPressed: () => setState(() {
               final t = _from;
               _from = _to;
               _to = t;
             }),
           ),
-          Expanded(child: dropdown(const Key('to_currency'), 'Ke', _to, (v) => _to = v)),
-        ]),
-        const SizedBox(height: 24),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (value == null || invalid)
-                  const Text('-')
-                else if (converted == null)
-                  Text(rates.loading ? 'Memuat kurs...' : 'Kurs belum tersedia. Hubungkan ke internet sekali untuk mengambil kurs.',
-                      key: const Key('currency_result'))
-                else ...[
-                  Text('${formatMoney(value, _from)} =', style: Theme.of(context).textTheme.bodyMedium),
-                  Text(formatMoney(converted, _to),
-                      key: const Key('currency_result'), style: Theme.of(context).textTheme.headlineSmall),
-                ],
-                const SizedBox(height: 8),
-                _RateLabel(rates: rates),
-              ],
-            ),
-          ),
         ),
+        dropdown(const Key('to_currency'), 'Ke', _to, (v) => _to = v),
+        const SizedBox(height: Spacing.s16),
+        // Keterangan kurs/tanggal dan label offline di kaki.
+        _RateLabel(rates: rates),
       ],
     );
   }
@@ -128,7 +143,7 @@ class _RateLabel extends StatelessWidget {
     return Text(
       'Kurs per ${d == null ? '-' : formatDate(d)}${rates.offline ? ' · offline (kurs tersimpan)' : ''} · Frankfurter',
       key: const Key('converter_rate_label'),
-      style: Theme.of(context).textTheme.bodySmall,
+      style: Theme.of(context).textTheme.bodySmall?.copyWith(color: context.colors.muted),
     );
   }
 }
@@ -165,12 +180,42 @@ class _TimeConverterState extends State<TimeConverter> {
   @override
   Widget build(BuildContext context) {
     final instant = _instant;
+    final theme = Theme.of(context);
+    final c = context.colors;
     String two(int n) => n.toString().padLeft(2, '0');
+    final dateButton = PrimaryButton(
+      key: const Key('pick_date'),
+      label: formatDate(_date),
+      icon: Icons.calendar_today,
+      variant: ButtonVariant.secondary,
+      onPressed: () async {
+        final d = await showDatePicker(
+          context: context,
+          initialDate: _date,
+          firstDate: DateTime(2000),
+          lastDate: DateTime(2100),
+        );
+        if (d != null) setState(() => _date = d);
+      },
+    );
+    final timeButton = PrimaryButton(
+      key: const Key('pick_time'),
+      label: '${two(_time.hour)}.${two(_time.minute)}',
+      icon: Icons.schedule,
+      variant: ButtonVariant.secondary,
+      onPressed: () async {
+        final t = await showTimePicker(context: context, initialTime: _time);
+        if (t != null) setState(() => _time = t);
+      },
+    );
+    // Skala font besar: tombol ditumpuk supaya label tidak terpotong.
+    final stacked = MediaQuery.textScalerOf(context).scale(1) > 1.15;
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(Spacing.screen),
       children: [
         DropdownButtonFormField<AppZone>(
           key: const Key('source_zone'),
+          isExpanded: true,
           initialValue: _zone,
           decoration: const InputDecoration(labelText: 'Zona asal'),
           items: [for (final z in AppZone.values) DropdownMenuItem(value: z, child: Text(z.title))],
@@ -182,60 +227,32 @@ class _TimeConverterState extends State<TimeConverter> {
                   _setFrom(keep);
                 }),
         ),
-        const SizedBox(height: 12),
-        Row(children: [
-          Expanded(
-            child: OutlinedButton.icon(
-              key: const Key('pick_date'),
-              icon: const Icon(Icons.calendar_today),
-              label: Text(formatDate(_date)),
-              onPressed: () async {
-                final d = await showDatePicker(
-                  context: context,
-                  initialDate: _date,
-                  firstDate: DateTime(2000),
-                  lastDate: DateTime(2100),
-                );
-                if (d != null) setState(() => _date = d);
-              },
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: OutlinedButton.icon(
-              key: const Key('pick_time'),
-              icon: const Icon(Icons.schedule),
-              label: Text('${two(_time.hour)}.${two(_time.minute)}'),
-              onPressed: () async {
-                final t = await showTimePicker(context: context, initialTime: _time);
-                if (t != null) setState(() => _time = t);
-              },
-            ),
-          ),
+        const SizedBox(height: Spacing.s12),
+        if (stacked) ...[dateButton, const SizedBox(height: Spacing.s8), timeButton] else Row(children: [
+          Expanded(child: dateButton),
+          const SizedBox(width: Spacing.s12),
+          Expanded(child: timeButton),
         ]),
-        const SizedBox(height: 20),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                for (final z in AppZone.values)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Row(children: [
-                      SizedBox(width: 72, child: Text(z.title, style: TextStyle(fontWeight: z == _zone ? FontWeight.bold : null))),
-                      Expanded(child: Text(formatInZone(instant, z), key: Key('conv_${z.name}'))),
-                      Text(formatOffset(instant, z), style: Theme.of(context).textTheme.bodySmall),
-                    ]),
-                  ),
+        const SizedBox(height: Spacing.sectionGap),
+        SurfaceCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              for (final (i, z) in AppZone.values.indexed) ...[
+                if (i > 0) const Divider(height: Spacing.s24),
+                Row(children: [
+                  Expanded(child: Text(z.title, style: theme.textTheme.titleSmall?.copyWith(color: z == _zone ? c.primary : null))),
+                  Text(formatOffset(instant, z), style: theme.textTheme.bodySmall?.copyWith(color: c.muted)),
+                ]),
+                const SizedBox(height: Spacing.s4),
+                Text(formatInZone(instant, z), key: Key('conv_${z.name}'), style: AppTypography.tabular(theme.textTheme.bodyLarge!)),
               ],
-            ),
+            ],
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: Spacing.s12),
         Text('Waktu musim panas London (GMT/BST) dihitung otomatis dari data zona waktu IANA.',
-            style: Theme.of(context).textTheme.bodySmall),
+            style: theme.textTheme.bodySmall?.copyWith(color: c.muted)),
       ],
     );
   }

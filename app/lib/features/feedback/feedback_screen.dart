@@ -3,6 +3,9 @@ import 'package:provider/provider.dart';
 
 import '../../core/api/authed_api.dart';
 import '../../core/display.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_tokens.dart';
+import '../../core/widgets/widgets.dart';
 import 'feedback_controller.dart';
 
 /// S-FEEDBACK: Saran & Kesan untuk mata kuliah Pemrograman Aplikasi Mobile + riwayat kiriman sendiri.
@@ -53,75 +56,73 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final c = context.colors;
     return ListenableBuilder(
       listenable: _c,
       builder: (context, _) => Scaffold(
         appBar: AppBar(title: const Text('Saran & Kesan')),
         body: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(Spacing.screen),
           children: [
-            Text('Untuk mata kuliah Pemrograman Aplikasi Mobile', style: theme.textTheme.bodySmall),
-            const SizedBox(height: 12),
+            Text('Untuk mata kuliah Pemrograman Aplikasi Mobile', style: theme.textTheme.bodySmall?.copyWith(color: c.muted)),
+            const SizedBox(height: Spacing.s12),
             TextField(
               key: const Key('suggestion_field'),
               controller: _suggestion,
               enabled: !_c.sending,
               maxLines: 4,
               maxLength: feedbackMaxLength,
-              decoration: const InputDecoration(labelText: 'Saran', alignLabelWithHint: true, border: OutlineInputBorder()),
+              decoration: const InputDecoration(labelText: 'Saran', alignLabelWithHint: true),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: Spacing.s12),
             TextField(
               key: const Key('impression_field'),
               controller: _impression,
               enabled: !_c.sending,
               maxLines: 4,
               maxLength: feedbackMaxLength,
-              decoration: const InputDecoration(labelText: 'Kesan', alignLabelWithHint: true, border: OutlineInputBorder()),
+              decoration: const InputDecoration(labelText: 'Kesan', alignLabelWithHint: true),
             ),
             if (_error != null)
               Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Text(_error!, key: const Key('feedback_error'), style: TextStyle(color: theme.colorScheme.error)),
+                padding: const EdgeInsets.only(top: Spacing.s4),
+                child: InlineMessage(_error!, key: const Key('feedback_error')),
               ),
             if (_success != null)
               Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Text(_success!, key: const Key('feedback_success'), style: TextStyle(color: theme.colorScheme.primary)),
+                padding: const EdgeInsets.only(top: Spacing.s4),
+                child: InlineMessage(_success!, key: const Key('feedback_success'), tone: StatusTone.success),
               ),
-            const SizedBox(height: 12),
-            FilledButton(
-              key: const Key('send_feedback'),
-              onPressed: _c.sending ? null : _send,
-              child: _c.sending
-                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Text('Kirim'),
-            ),
-            const Divider(height: 40),
-            Text('Riwayat kirimanmu', style: theme.textTheme.titleMedium),
-            const SizedBox(height: 8),
+            const SizedBox(height: Spacing.s16),
+            PrimaryButton(key: const Key('send_feedback'), label: 'Kirim', loading: _c.sending, onPressed: _c.sending ? null : _send),
+            if (_c.sending) const WakingUpNotice(),
+            const SizedBox(height: Spacing.sectionGap),
+            const SectionHeader('Riwayat kirimanmu'),
             if (_c.loadingHistory && _c.history.isEmpty)
-              const Center(child: Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator()))
+              const SkeletonLoader(shape: SkeletonShape.ticket, count: 2, shrinkWrap: true, showWakingNotice: false)
             else if (_c.historyError != null && _c.history.isEmpty)
-              Column(children: [
-                Text(_c.historyError!, key: const Key('history_error')),
-                TextButton(onPressed: _c.loadHistory, child: const Text('Coba lagi')),
-              ])
+              ErrorState(key: const Key('history_error'), compact: true, message: _c.historyError!, onRetry: _c.loadHistory)
             else if (_c.history.isEmpty)
-              const Text('Belum ada kiriman.', key: Key('history_empty'))
+              const EmptyState(
+                key: Key('history_empty'),
+                compact: true,
+                icon: Icons.rate_review_outlined,
+                title: 'Belum ada kiriman.',
+                message: 'Saran dan kesan yang kamu kirim akan muncul di sini.',
+              )
             else
               for (final e in _c.history)
-                Card(
-                  key: Key('feedback_${e.id}'),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: Spacing.cardGap),
+                  child: SurfaceCard(
+                    key: Key('feedback_${e.id}'),
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      if (e.createdAt != null) Text(context.when(e.createdAt!), style: theme.textTheme.bodySmall),
-                      const SizedBox(height: 4),
-                      Text('Saran', style: theme.textTheme.labelMedium),
+                      if (e.createdAt != null) Text(context.when(e.createdAt!), style: theme.textTheme.bodySmall?.copyWith(color: c.muted)),
+                      const SizedBox(height: Spacing.s8),
+                      Text('Saran', style: theme.textTheme.labelMedium?.copyWith(color: c.muted)),
                       Text(e.suggestion),
-                      const SizedBox(height: 6),
-                      Text('Kesan', style: theme.textTheme.labelMedium),
+                      const SizedBox(height: Spacing.s8),
+                      Text('Kesan', style: theme.textTheme.labelMedium?.copyWith(color: c.muted)),
                       Text(e.impression),
                     ]),
                   ),

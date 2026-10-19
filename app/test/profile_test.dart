@@ -222,6 +222,7 @@ void main() {
       expect(find.byKey(const Key('avatar_initials')), findsOneWidget);
       expect(find.text('EA'), findsOneWidget);
       for (final t in ['Konverter', 'Saran & Kesan', 'Pengaturan', 'Keluar']) {
+        await tester.scrollUntilVisible(find.text(t), 200, scrollable: find.byType(Scrollable).first);
         expect(find.text(t), findsOneWidget, reason: t);
       }
     });

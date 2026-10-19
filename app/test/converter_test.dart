@@ -165,6 +165,9 @@ void main() {
       await tester.pumpAndSettle();
       expect(settings.currency, 'EUR');
       expect(store.values['|display_currency'], 'EUR');
+      for (final c in ['IDR', 'USD', 'EUR', 'JPY']) {
+        expect(find.byKey(Key('currency_$c')), findsOneWidget);
+      }
 
       await tester.scrollUntilVisible(find.byKey(const Key('zone_london')), 200, scrollable: find.byType(Scrollable).first);
       await tester.ensureVisible(find.byKey(const Key('zone_london')));
@@ -173,9 +176,6 @@ void main() {
       await tester.pumpAndSettle();
       expect(settings.zone, AppZone.london);
       expect(store.values['|display_timezone'], 'london');
-      for (final c in ['IDR', 'USD', 'EUR', 'JPY']) {
-        expect(find.byKey(Key('currency_$c')), findsOneWidget);
-      }
       await tester.scrollUntilVisible(find.text('Kunci biometric'), 200, scrollable: find.byType(Scrollable).first);
       expect(find.text('Kunci biometric'), findsOneWidget);
       expect(find.text('Perangkat tidak mendukung biometric'), findsOneWidget);

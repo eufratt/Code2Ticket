@@ -6,6 +6,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/api/authed_api.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_tokens.dart';
+import '../../core/widgets/widgets.dart';
 import '../auth/auth_controller.dart';
 import 'profile_controller.dart';
 import 'user_avatar.dart';
@@ -18,6 +21,12 @@ String badgeLabel(String code) => switch (code) {
       'early_bird' => 'Early Bird',
       _ => code,
     };
+
+/// Semua lencana yang dikenal (yang belum diraih tampil abu-abu, terkunci).
+const knownBadges = ['first_ticket', 'ten_tickets', 'first_maze_clear', 'maze_master', 'early_bird'];
+
+/// XP per level: kolom users.level = xp / 500 + 1 (backend/db/01_schema.sql).
+const xpPerLevel = 500;
 
 /// Memilih gambar dari kamera/galeri; bisa diganti di tes.
 typedef PhotoPicker = Future<Uint8List?> Function(ImageSource source);
@@ -98,64 +107,181 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final auth = context.watch<AuthController>();
     final u = auth.user;
     final theme = Theme.of(context);
+    final c = context.colors;
     return ListenableBuilder(
       listenable: _profile,
       builder: (context, _) => Scaffold(
         appBar: AppBar(title: const Text('Profil')),
         body: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 140),
+          padding: const EdgeInsets.fromLTRB(Spacing.screen, Spacing.s8, Spacing.screen, Spacing.listBottom),
           children: [
             Center(
-              child: Stack(children: [
-                InkWell(
-                  key: const Key('avatar_button'),
-                  customBorder: const CircleBorder(),
-                  onTap: _profile.saving ? null : _changePhoto,
-                  child: UserAvatar(user: u, radius: 48),
-                ),
-                Positioned(
-                  right: 0,
-                  bottom: 0,
-                  child: CircleAvatar(
-                    radius: 15,
-                    backgroundColor: theme.colorScheme.primary,
-                    child: _profile.saving
-                        ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                        : Icon(Icons.photo_camera, size: 16, color: theme.colorScheme.onPrimary),
+              child: Semantics(
+                button: true,
+                label: 'Ubah foto profil',
+                child: Stack(children: [
+                  InkWell(
+                    key: const Key('avatar_button'),
+                    customBorder: const CircleBorder(),
+                    onTap: _profile.saving ? null : _changePhoto,
+                    child: UserAvatar(user: u, radius: 48),
                   ),
-                ),
-              ]),
+                  Positioned(
+                    right: 0,
+                    bottom: 0,
+                    child: CircleAvatar(
+                      radius: 16,
+                      backgroundColor: c.primary,
+                      child: _profile.saving
+                          ? SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: c.onPrimary))
+                          : Icon(Icons.photo_camera, size: 16, color: c.onPrimary),
+                    ),
+                  ),
+                ]),
+              ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: Spacing.s12),
             Row(mainAxisAlignment: MainAxisAlignment.center, children: [
               Flexible(child: Text(u?.fullName ?? '-', key: const Key('profile_name'), style: theme.textTheme.titleLarge, textAlign: TextAlign.center)),
               IconButton(key: const Key('edit_name'), tooltip: 'Ubah nama', icon: const Icon(Icons.edit, size: 18), onPressed: _profile.saving ? null : _editName),
             ]),
-            Center(child: Text('@${u?.username ?? '-'}')),
-            Center(child: Text(u?.email ?? '-', style: theme.textTheme.bodySmall)),
-            const SizedBox(height: 12),
-            Wrap(alignment: WrapAlignment.center, spacing: 8, runSpacing: 4, children: [
-              Chip(label: Text(u?.role ?? '-')),
-              Chip(label: Text('Level ${u?.level ?? 1}')),
-              Chip(label: Text('${u?.xp ?? 0} XP')),
-            ]),
-            if (u != null && u.badges.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Center(child: Text('Lencana', style: theme.textTheme.titleSmall)),
-              Wrap(alignment: WrapAlignment.center, spacing: 8, children: [
-                for (final b in u.badges) Chip(avatar: const Icon(Icons.military_tech, size: 18), label: Text(badgeLabel(b))),
-              ]),
-            ],
-            const SizedBox(height: 16),
-            Card(
+            Center(child: Text('@${u?.username ?? '-'}', style: theme.textTheme.bodyMedium)),
+            Center(child: Text(u?.email ?? '-', style: theme.textTheme.bodySmall?.copyWith(color: c.muted))),
+            const SizedBox(height: Spacing.s12),
+            Center(child: StatusChip.custom(label: u?.role ?? '-', tone: u?.isAdmin == true ? StatusTone.info : StatusTone.neutral, icon: Icons.person_outline)),
+            const SizedBox(height: Spacing.s16),
+            if (u != null) _LevelCard(level: u.level, xp: u.xp),
+            const SizedBox(height: Spacing.sectionGap),
+            const SectionHeader('Lencana'),
+            _BadgeGrid(earned: u?.badges ?? const []),
+            const SizedBox(height: Spacing.sectionGap),
+            SurfaceCard(
+              padding: EdgeInsets.zero,
               child: Column(children: [
                 ListTile(key: const Key('open_converter'), leading: const Icon(Icons.currency_exchange), title: const Text('Konverter'), subtitle: const Text('Mata uang dan waktu'), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/converter')),
+                const Divider(indent: Spacing.s16, endIndent: Spacing.s16),
                 ListTile(key: const Key('open_feedback'), leading: const Icon(Icons.rate_review_outlined), title: const Text('Saran & Kesan'), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/feedback')),
+                const Divider(indent: Spacing.s16, endIndent: Spacing.s16),
                 ListTile(key: const Key('open_settings'), leading: const Icon(Icons.settings_outlined), title: const Text('Pengaturan'), subtitle: const Text('Mata uang, zona waktu, biometric'), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/settings')),
               ]),
             ),
-            const SizedBox(height: 24),
-            OutlinedButton(onPressed: auth.logout, child: const Text('Keluar')),
+            const SizedBox(height: Spacing.sectionGap),
+            PrimaryButton(label: 'Keluar', icon: Icons.logout, variant: ButtonVariant.secondary, onPressed: auth.logout),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Lingkaran level + bar XP menuju level berikutnya.
+class _LevelCard extends StatelessWidget {
+  const _LevelCard({required this.level, required this.xp});
+  final int level, xp;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final c = context.colors;
+    final inLevel = xp % xpPerLevel;
+    return SurfaceCard(
+      child: Row(
+        children: [
+          ExcludeSemantics(
+            child: DecoratedBox(
+              decoration: BoxDecoration(color: c.primaryContainer, shape: BoxShape.circle, border: Border.all(color: c.primary, width: 3)),
+              child: SizedBox(
+                width: 72,
+                height: 72,
+                child: Center(child: Text('$level', key: const Key('level_circle'), style: theme.textTheme.displaySmall?.copyWith(color: c.onPrimaryContainer))),
+              ),
+            ),
+          ),
+          const SizedBox(width: Spacing.s16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Level $level', style: theme.textTheme.titleMedium),
+                Text('$xp XP', style: theme.textTheme.bodyMedium),
+                const SizedBox(height: Spacing.s8),
+                Semantics(
+                  label: '$inLevel dari $xpPerLevel XP menuju level ${level + 1}',
+                  excludeSemantics: true,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(Radii.full),
+                    child: LinearProgressIndicator(
+                      key: const Key('xp_bar'),
+                      value: inLevel / xpPerLevel,
+                      minHeight: 8,
+                      backgroundColor: c.surfaceVariant,
+                      color: c.primary,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: Spacing.s4),
+                Text('$inLevel / $xpPerLevel XP menuju level ${level + 1}', style: theme.textTheme.bodySmall?.copyWith(color: c.muted)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Grid lencana: yang sudah diraih berwarna, yang belum abu-abu dengan gembok.
+class _BadgeGrid extends StatelessWidget {
+  const _BadgeGrid({required this.earned});
+  final List<String> earned;
+
+  @override
+  Widget build(BuildContext context) {
+    final all = [...knownBadges, for (final b in earned) if (!knownBadges.contains(b)) b];
+    return LayoutBuilder(builder: (context, box) {
+      const cols = 3;
+      final w = (box.maxWidth - Spacing.s12 * (cols - 1)) / cols;
+      return Wrap(
+        spacing: Spacing.s12,
+        runSpacing: Spacing.s12,
+        children: [for (final b in all) SizedBox(width: w, child: _BadgeTile(code: b, earned: earned.contains(b)))],
+      );
+    });
+  }
+}
+
+class _BadgeTile extends StatelessWidget {
+  const _BadgeTile({required this.code, required this.earned});
+  final String code;
+  final bool earned;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    final label = badgeLabel(code);
+    return Semantics(
+      label: '$label, ${earned ? 'sudah diraih' : 'terkunci'}',
+      excludeSemantics: true,
+      child: SurfaceCard(
+        key: Key('badge_$code'),
+        padding: const EdgeInsets.symmetric(vertical: Spacing.s12, horizontal: Spacing.s8),
+        child: Column(
+          children: [
+            Stack(alignment: Alignment.bottomRight, children: [
+              DecoratedBox(
+                decoration: BoxDecoration(color: earned ? c.accent : c.surfaceVariant, shape: BoxShape.circle),
+                child: SizedBox(width: 48, height: 48, child: Icon(Icons.military_tech, size: 28, color: earned ? c.onAccent : c.muted)),
+              ),
+              if (!earned) Icon(Icons.lock, size: 16, color: c.muted),
+            ]),
+            const SizedBox(height: Spacing.s8),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: earned ? c.onBackground : c.muted),
+            ),
           ],
         ),
       ),

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:code2ticket/core/api/api_client.dart';
 import 'package:code2ticket/core/api/authed_api.dart';
+import 'package:code2ticket/core/widgets/widgets.dart' show PrimaryButton;
 import 'package:code2ticket/features/auth/auth_controller.dart';
 import 'package:code2ticket/features/feedback/feedback_controller.dart';
 import 'package:code2ticket/features/feedback/feedback_screen.dart';
@@ -127,7 +128,7 @@ void main() {
       await fill(tester, 'saran', 'kesan');
       await tester.tap(find.byKey(const Key('send_feedback')));
       await tester.pump();
-      expect(tester.widget<FilledButton>(find.byKey(const Key('send_feedback'))).onPressed, isNull);
+      expect(tester.widget<PrimaryButton>(find.byKey(const Key('send_feedback'))).onPressed, isNull);
       await tester.tap(find.byKey(const Key('send_feedback')), warnIfMissed: false);
       await tester.pump();
       gate.complete({'ok': true});
@@ -165,8 +166,12 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('history_error')), findsOneWidget);
       fail = false;
+      await tester.scrollUntilVisible(find.text('Coba lagi'), 200, scrollable: find.byType(Scrollable).first);
+      await tester.ensureVisible(find.text('Coba lagi'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Coba lagi'));
       await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(find.byKey(const Key('feedback_7')), 200, scrollable: find.byType(Scrollable).first);
       expect(find.byKey(const Key('feedback_7')), findsOneWidget);
     });
 

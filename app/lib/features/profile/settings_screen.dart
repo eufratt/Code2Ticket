@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/currency/currency.dart';
+import '../../core/theme/app_tokens.dart';
+import '../../core/widgets/widgets.dart';
 import '../../core/settings/settings_controller.dart';
 import '../../core/time/zones.dart';
 import '../auth/auth_controller.dart';
@@ -46,46 +48,55 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final s = context.watch<SettingsController>();
-    final theme = Theme.of(context);
     final now = DateTime.now();
     return Scaffold(
       appBar: AppBar(title: const Text('Pengaturan')),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(Spacing.screen, 0, Spacing.screen, Spacing.s24),
         children: [
-          Text('Mata uang default', style: theme.textTheme.titleSmall),
-          RadioGroup<String>(
-            groupValue: s.currency,
-            onChanged: (v) => v == null ? null : s.setCurrency(v),
-            child: Column(children: [
-              for (final c in supportedCurrencies)
-                RadioListTile<String>(key: Key('currency_$c'), value: c, title: Text(currencyName(c))),
-            ]),
+          const SectionHeader('Mata uang default'),
+          SurfaceCard(
+            padding: const EdgeInsets.symmetric(vertical: Spacing.s4),
+            child: RadioGroup<String>(
+              groupValue: s.currency,
+              onChanged: (v) => v == null ? null : s.setCurrency(v),
+              child: Column(children: [
+                for (final c in supportedCurrencies)
+                  RadioListTile<String>(key: Key('currency_$c'), value: c, title: Text(currencyName(c))),
+              ]),
+            ),
           ),
-          const Divider(),
-          Text('Zona waktu default', style: theme.textTheme.titleSmall),
-          RadioGroup<AppZone>(
-            groupValue: s.zone,
-            onChanged: (v) => v == null ? null : s.setZone(v),
-            child: Column(children: [
-              for (final z in AppZone.values)
-                RadioListTile<AppZone>(
-                  key: Key('zone_${z.name}'),
-                  value: z,
-                  title: Text('${z.title} (${zoneAbbreviation(now, z)})'),
-                  subtitle: Text(z.ianaName),
-                ),
-            ]),
+          const SizedBox(height: Spacing.sectionGap),
+          const SectionHeader('Zona waktu default'),
+          SurfaceCard(
+            padding: const EdgeInsets.symmetric(vertical: Spacing.s4),
+            child: RadioGroup<AppZone>(
+              groupValue: s.zone,
+              onChanged: (v) => v == null ? null : s.setZone(v),
+              child: Column(children: [
+                for (final z in AppZone.values)
+                  RadioListTile<AppZone>(
+                    key: Key('zone_${z.name}'),
+                    value: z,
+                    title: Text('${z.title} (${zoneAbbreviation(now, z)})'),
+                    subtitle: Text(z.ianaName),
+                  ),
+              ]),
+            ),
           ),
-          const Divider(),
-          SwitchListTile(
-            secondary: const Icon(Icons.fingerprint),
-            title: const Text('Kunci biometric'),
-            subtitle: _canCheckBiometrics
-                ? const Text('Minta verifikasi biometric saat membuka aplikasi')
-                : const Text('Perangkat tidak mendukung biometric'),
-            value: _biometricEnabled,
-            onChanged: (_loading || !_canCheckBiometrics) ? null : _onToggle,
+          const SizedBox(height: Spacing.sectionGap),
+          const SectionHeader('Keamanan'),
+          SurfaceCard(
+            padding: const EdgeInsets.symmetric(vertical: Spacing.s4),
+            child: SwitchListTile(
+              secondary: const Icon(Icons.fingerprint),
+              title: const Text('Kunci biometric'),
+              subtitle: _canCheckBiometrics
+                  ? const Text('Minta verifikasi biometric saat membuka aplikasi')
+                  : const Text('Perangkat tidak mendukung biometric'),
+              value: _biometricEnabled,
+              onChanged: (_loading || !_canCheckBiometrics) ? null : _onToggle,
+            ),
           ),
         ],
       ),
