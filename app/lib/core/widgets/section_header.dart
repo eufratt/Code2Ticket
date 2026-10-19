@@ -4,10 +4,11 @@ import '../theme/app_tokens.dart';
 
 /// Judul bagian (subtitle) + aksi opsional di kanan ("Lihat semua").
 class SectionHeader extends StatelessWidget {
-  const SectionHeader(this.title, {super.key, this.actionLabel, this.onAction, this.padding = EdgeInsets.zero});
+  const SectionHeader(this.title, {super.key, this.actionLabel, this.onAction, this.actionKey, this.padding = EdgeInsets.zero});
   final String title;
   final String? actionLabel;
   final VoidCallback? onAction;
+  final Key? actionKey;
   final EdgeInsetsGeometry padding;
 
   @override
@@ -21,7 +22,7 @@ class SectionHeader extends StatelessWidget {
             Expanded(
               child: Semantics(header: true, child: Text(title, style: Theme.of(context).textTheme.titleMedium)),
             ),
-            if (actionLabel != null && onAction != null) TextButton(onPressed: onAction, child: Text(actionLabel!)),
+            if (actionLabel != null && onAction != null) TextButton(key: actionKey, onPressed: onAction, child: Text(actionLabel!)),
           ],
         ),
       ),

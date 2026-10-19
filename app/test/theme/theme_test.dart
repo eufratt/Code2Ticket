@@ -45,7 +45,7 @@ void main() {
     });
   }
 
-  test('kedua tema membawa token dan mengikuti kecerahan', () {
+  testWidgets('kedua tema membawa token dan mengikuti kecerahan', (tester) async {
     final l = AppTheme.light(), d = AppTheme.dark();
     expect(l.brightness, Brightness.light);
     expect(d.brightness, Brightness.dark);

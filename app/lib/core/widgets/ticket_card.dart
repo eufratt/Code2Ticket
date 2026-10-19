@@ -22,6 +22,7 @@ class TicketCard extends StatelessWidget {
     this.prizeText,
     this.subtitle,
     this.onTap,
+    this.numberKey = const Key('ticket_card_number'),
   });
 
   final String title;
@@ -33,6 +34,9 @@ class TicketCard extends StatelessWidget {
   final String? prizeText;
   final String? subtitle;
   final VoidCallback? onTap;
+
+  /// Kunci untuk teks nomor tiket (tes dan layar yang perlu menunjuk nomornya).
+  final Key numberKey;
 
   @override
   Widget build(BuildContext context) {
@@ -85,7 +89,7 @@ class TicketCard extends StatelessWidget {
             Text('Nomor tiket', style: theme.textTheme.bodySmall?.copyWith(color: c.muted)),
             Text(
               ticketNumber,
-              key: const Key('ticket_card_number'),
+              key: numberKey,
               style: AppTypography.tabular(theme.textTheme.displaySmall!),
             ),
           ],

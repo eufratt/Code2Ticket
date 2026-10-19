@@ -7,15 +7,19 @@ import 'waking_up_notice.dart';
 
 /// Keadaan kosong: ikon besar (64), judul, penjelasan satu kalimat, satu aksi opsional.
 class EmptyState extends StatelessWidget {
-  const EmptyState({super.key, required this.icon, required this.title, this.message, this.actionLabel, this.onAction});
+  const EmptyState({super.key, required this.icon, required this.title, this.message, this.actionLabel, this.onAction, this.compact = false});
   final IconData icon;
   final String title;
   final String? message;
   final String? actionLabel;
   final VoidCallback? onAction;
 
+  /// Tanpa pemusatan dan gulir sendiri, untuk dipasang di dalam ListView.
+  final bool compact;
+
   @override
   Widget build(BuildContext context) => _StateLayout(
+        compact: compact,
         icon: icon,
         title: title,
         message: message,
@@ -27,13 +31,15 @@ class EmptyState extends StatelessWidget {
 
 /// Keadaan galat: pesan jelas + "Coba lagi". Bila server sedang bangun (> 5 detik) ditambah keterangannya.
 class ErrorState extends StatelessWidget {
-  const ErrorState({super.key, required this.message, required this.onRetry, this.title = 'Gagal memuat'});
+  const ErrorState({super.key, required this.message, required this.onRetry, this.title = 'Gagal memuat', this.compact = false});
   final String message;
   final String title;
   final VoidCallback onRetry;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) => _StateLayout(
+        compact: compact,
         icon: Icons.cloud_off,
         title: title,
         message: message,
@@ -49,6 +55,7 @@ class _StateLayout extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.iconColor,
+    required this.compact,
     this.message,
     this.actionLabel,
     this.onAction,
@@ -60,15 +67,13 @@ class _StateLayout extends StatelessWidget {
   final String? actionLabel;
   final VoidCallback? onAction;
   final Color iconColor;
+  final bool compact;
   final Widget? footer;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(Spacing.s24),
-        child: Column(
+    final column = Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ExcludeSemantics(child: Icon(icon, size: 64, color: iconColor)),
@@ -84,8 +89,8 @@ class _StateLayout extends StatelessWidget {
             ],
             ?footer,
           ],
-        ),
-      ),
-    );
+        );
+    if (compact) return Padding(padding: const EdgeInsets.all(Spacing.s16), child: column);
+    return Center(child: SingleChildScrollView(padding: const EdgeInsets.all(Spacing.s24), child: column));
   }
 }

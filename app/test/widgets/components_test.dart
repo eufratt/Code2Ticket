@@ -1,4 +1,3 @@
-import 'dart:async';
 
 import 'package:code2ticket/core/api/api_client.dart';
 import 'package:code2ticket/core/session/session_store.dart';
@@ -7,7 +6,6 @@ import 'package:code2ticket/core/theme/app_theme.dart';
 import 'package:code2ticket/core/widgets/widgets.dart';
 import 'package:code2ticket/features/auth/auth_controller.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 

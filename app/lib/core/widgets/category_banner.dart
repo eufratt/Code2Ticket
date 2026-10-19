@@ -63,29 +63,37 @@ class _Gradient extends StatelessWidget {
   const _Gradient({required this.style});
   final CategoryStyle style;
 
+  // Tanpa LayoutBuilder: banner berada di dalam IntrinsicHeight (carousel Home) yang tidak mendukungnya.
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(builder: (context, box) {
-      final h = box.hasBoundedHeight ? box.maxHeight : 120.0;
-      return Stack(
-        key: Key('banner_gradient_${style.key}'),
-        fit: StackFit.expand,
-        children: [
-          DecoratedBox(decoration: BoxDecoration(gradient: style.gradient)),
-          // Lapisan gelap 20% supaya ikon putih terbaca di atas warna terang (mis. biru muda travel).
-          const DecoratedBox(decoration: BoxDecoration(color: Color(0x33000000))),
-          Positioned(
-            right: -h * 0.15,
-            top: -h * 0.25,
-            child: Container(
-              width: h * 0.9,
-              height: h * 0.9,
-              decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0x1FFFFFFF)),
-            ),
+    return Stack(
+      key: Key('banner_gradient_${style.key}'),
+      fit: StackFit.expand,
+      children: [
+        DecoratedBox(decoration: BoxDecoration(gradient: style.gradient)),
+        // Lapisan gelap 20% supaya ikon putih terbaca di atas warna terang (mis. biru muda travel).
+        const DecoratedBox(decoration: BoxDecoration(color: Color(0x33000000))),
+        const CustomPaint(painter: _BubblePainter()),
+        Center(
+          child: FractionallySizedBox(
+            heightFactor: 0.42,
+            child: FittedBox(child: Icon(style.icon, size: 96, color: Colors.white)),
           ),
-          Center(child: Icon(style.icon, size: (h * 0.42).clamp(32.0, 96.0), color: Colors.white)),
-        ],
-      );
-    });
+        ),
+      ],
+    );
   }
+}
+
+/// Lingkaran dekoratif samar di pojok kanan atas.
+class _BubblePainter extends CustomPainter {
+  const _BubblePainter();
+  @override
+  void paint(Canvas canvas, Size size) {
+    final r = size.height * 0.45;
+    canvas.drawCircle(Offset(size.width - r * 0.6, r * 0.2), r, Paint()..color = const Color(0x1FFFFFFF));
+  }
+
+  @override
+  bool shouldRepaint(_BubblePainter old) => false;
 }

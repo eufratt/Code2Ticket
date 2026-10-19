@@ -11,12 +11,15 @@ enum SkeletonShape { card, ticket, row }
 /// Pengganti spinner penuh layar untuk daftar: blok abu dengan kilau halus (denyut warna).
 /// Kilau berhenti bila pengguna meminta animasi dikurangi.
 class SkeletonLoader extends StatefulWidget {
-  const SkeletonLoader({super.key, this.count = 3, this.shape = SkeletonShape.card, this.showWakingNotice = true});
+  const SkeletonLoader({super.key, this.count = 3, this.shape = SkeletonShape.card, this.showWakingNotice = true, this.shrinkWrap = false});
   final int count;
   final SkeletonShape shape;
 
   /// Tampilkan "Server sedang bangun..." di bawah bila server lambat (> 5 detik).
   final bool showWakingNotice;
+
+  /// true = tinggi mengikuti isi (dipakai di dalam daftar yang bisa digulir); false = mengisi layar tanpa menggulir.
+  final bool shrinkWrap;
 
   @override
   State<SkeletonLoader> createState() => _SkeletonLoaderState();
@@ -41,6 +44,13 @@ class _SkeletonLoaderState extends State<SkeletonLoader> with SingleTickerProvid
     super.dispose();
   }
 
+  Widget _wrap(Widget child) {
+    const padding = EdgeInsets.fromLTRB(Spacing.screen, Spacing.s8, Spacing.screen, Spacing.s16);
+    return widget.shrinkWrap
+        ? Padding(padding: padding, child: child)
+        : SingleChildScrollView(physics: const NeverScrollableScrollPhysics(), padding: padding, child: child);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Semantics(
@@ -49,10 +59,8 @@ class _SkeletonLoaderState extends State<SkeletonLoader> with SingleTickerProvid
       child: ExcludeSemantics(
         child: _SkeletonPulse(
           notifier: _anim,
-          child: SingleChildScrollView(
-            physics: const NeverScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(Spacing.screen, Spacing.s8, Spacing.screen, Spacing.s16),
-            child: Column(
+          child: _wrap(
+            Column(
               children: [
                 for (var i = 0; i < widget.count; i++) ...[
                   if (i > 0) const SizedBox(height: Spacing.cardGap),
