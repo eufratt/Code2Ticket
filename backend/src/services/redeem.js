@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { withTx } from '../db.js';
 import { distanceKm } from '../lib/geo.js';
 import { fail, ok, parseInput } from '../lib/util.js';
+import { effectiveStatus } from '../lib/sql.js';
 import { awardBadges, notify } from './users.js';
 
 const MAX_FAILS = 5;
@@ -106,7 +107,7 @@ export async function redeemCode(pool, user, body) {
 export async function getMyTickets(pool, user) {
   const r = await pool.query(
     `select t.id, t.ticket_number, t.giveaway_id, g.title as giveaway_title, g.prize_name,
-            g.category, g.end_at, g.draw_at, g.status as giveaway_status, t.created_at,
+            g.category, g.end_at, g.draw_at, ${effectiveStatus('g')} as giveaway_status, t.created_at,
             case when g.status = 'drawn' then (case when w.id is not null then 'winner' else 'not_selected' end)
                  when now() >= g.end_at then 'waiting_for_draw'
                  else 'eligible' end as result,

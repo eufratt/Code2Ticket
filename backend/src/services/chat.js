@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { cpLen, fail, ok, parseInput } from '../lib/util.js';
+import { effectiveStatus } from '../lib/sql.js';
 import { getCategoryAffinity, logActivity } from './features.js';
 
 // Asisten AI: RAG sederhana (konteks giveaway aktif dari DB, tanpa function calling) lalu satu panggilan
@@ -118,8 +119,8 @@ export function buildMessages(message, history, context) {
 
 // ---------------------------------------------------------------- layanan
 const SELECT_ACTIVE = `select id, title, description, organizer, category, prize_name, prize_value_usd, latitude, longitude, address,
-       radius_km, start_at, end_at, draw_at, winner_count, ticket_counter as ticket_count, status
-  from giveaways where status <> 'drawn' and now() >= start_at and now() < end_at
+       radius_km, start_at, end_at, draw_at, winner_count, ticket_counter as ticket_count, ${effectiveStatus('g')} as status
+  from giveaways g where status <> 'drawn' and now() >= start_at and now() < end_at
  order by draw_at, id limit 100`;
 
 const toSummary = (g) => ({

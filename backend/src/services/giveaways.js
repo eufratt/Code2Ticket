@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { fail, ok, parseInput, pgTrim } from '../lib/util.js';
 import { maskName } from '../lib/geo.js';
 import { ownerKey } from '../lib/chain.js';
+import { effectiveStatus } from '../lib/sql.js';
 
 const blank = (v) => (v === '' || v == null ? undefined : v);
 const num = z.preprocess(blank, z.coerce.number().finite().optional());
@@ -29,7 +30,7 @@ export async function searchGiveaways(pool, query) {
     `with base as (
        select g.id, g.title, g.description, g.organizer, g.category, g.prize_name, g.prize_value_usd,
               g.latitude, g.longitude, g.address, g.radius_km, g.start_at, g.end_at, g.draw_at,
-              g.winner_count, g.ticket_counter as ticket_count, g.status,
+              g.winner_count, g.ticket_counter as ticket_count, ${effectiveStatus('g')} as status,
               case when $5::float8 is not null and $6::float8 is not null and g.latitude is not null
                    then round((2 * 6371.0 * asin(sqrt(least(1.0,
                           power(sin(radians(g.latitude - $5::float8) / 2), 2)
@@ -71,9 +72,9 @@ export async function searchGiveaways(pool, query) {
 export async function getGiveaway(pool, id) {
   const r = await pool.query(
     `select id, title, description, organizer, category, prize_name, prize_value_usd, latitude, longitude, address,
-            radius_km, start_at, end_at, draw_at, winner_count, ticket_counter as ticket_count, status,
+            radius_km, start_at, end_at, draw_at, winner_count, ticket_counter as ticket_count, ${effectiveStatus('g')} as status,
             null::numeric as distance_km
-       from giveaways where id = $1`,
+       from giveaways g where id = $1`,
     [id],
   );
   return r.rows[0] ?? null;
