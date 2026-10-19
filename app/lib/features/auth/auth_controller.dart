@@ -180,6 +180,12 @@ class AuthController extends ChangeNotifier {
     await _clear();
   }
 
+  /// Memperbarui data pengguna yang sedang login (mis. setelah ubah nama / ganti foto).
+  void updateUser(AppUser u) {
+    user = u;
+    notifyListeners();
+  }
+
   /// Dipanggil bila request bertoken melempar InvalidSessionException.
   Future<void> handleInvalidSession() => _clear();
 

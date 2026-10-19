@@ -72,6 +72,15 @@ class ApiClient {
   }) =>
       _send('POST', path, body: body, token: token, retry: retry);
 
+  /// Unggah biner (mis. foto profil JPEG). Tidak pernah diulang otomatis.
+  Future<Map<String, dynamic>> putBytes(
+    String path,
+    List<int> bytes, {
+    required String contentType,
+    String? token,
+  }) =>
+      _send('PUT', path, bytes: bytes, contentType: contentType, token: token, retry: false);
+
   Future<Map<String, dynamic>> patch(
     String path, {
     dynamic body,
@@ -85,6 +94,8 @@ class ApiClient {
     dynamic body,
     String? token,
     bool retry = true,
+    List<int>? bytes,
+    String? contentType,
   }) async {
     final uri = _buildUri(path);
     final isGet = method == 'GET';
@@ -104,7 +115,10 @@ class ApiClient {
           if (token != null && token.isNotEmpty) {
             req.headers['Authorization'] = 'Bearer $token';
           }
-          if (body != null) {
+          if (bytes != null) {
+            req.headers['Content-Type'] = contentType ?? 'application/octet-stream';
+            req.bodyBytes = bytes;
+          } else if (body != null) {
             req.headers['Content-Type'] = 'application/json';
             req.body = jsonEncode(body);
           }

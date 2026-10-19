@@ -14,6 +14,12 @@ class AuthedApi {
   Future<Map<String, dynamic>> post(String path, {dynamic body, bool retry = true}) =>
       _run((t) => _api.post(path, body: body, token: t, retry: retry));
 
+  Future<Map<String, dynamic>> putBytes(String path, List<int> bytes, {required String contentType}) =>
+      _run((t) => _api.putBytes(path, bytes, contentType: contentType, token: t));
+
+  Future<Map<String, dynamic>> patch(String path, {dynamic body}) =>
+      _run((t) => _api.patch(path, body: body, token: t));
+
   Future<Map<String, dynamic>> _run(Future<Map<String, dynamic>> Function(String token) call) async {
     final token = _auth.token;
     if (token == null) throw InvalidSessionException();

@@ -8,11 +8,13 @@ class AppUser {
     required this.role,
     required this.xp,
     required this.level,
+    this.badges = const [],
   });
 
   final String id, username, email, fullName, role;
   final String? photoUrl;
   final int xp, level;
+  final List<String> badges;
   bool get isAdmin => role == 'admin';
 
   factory AppUser.fromJson(Map<String, dynamic> j) => AppUser(
@@ -24,6 +26,7 @@ class AppUser {
         role: j['role'] as String,
         xp: (j['xp'] as num?)?.toInt() ?? 0,
         level: (j['level'] as num?)?.toInt() ?? 1,
+        badges: [for (final b in (j['badges'] is List ? j['badges'] as List : const [])) if (b is String) b],
       );
 }
 
