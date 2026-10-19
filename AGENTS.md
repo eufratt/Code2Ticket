@@ -39,6 +39,10 @@ Login/session dibuat sendiri (bukan Firebase/Supabase Auth). Scheduler draw: nod
 - Jangan ubah password_hasher.dart, tes hash, kontrak hash/draw, atau skema database tanpa persetujuan eksplisit; bila menemukan bug di backend, laporkan.
 - Bila ragu pada keputusan yang tidak bisa dibalik atau PRD dan kode bertentangan, berhenti dan tanya.
 
+## UI
+Semua tampilan mengikuti DESIGN.md (token, komponen bersama di app\lib\core\widgets, tema di app\lib\core\theme). Jangan membuat gaya baru per layar; perbarui DESIGN.md bila pola berubah.
+Sebelum commit layar UI, centang daftar periksa di bagian 9 DESIGN.md.
+
 ## Status milestone
 Selesai: M1 database; M2 auth + biometric + SQLite dasar; M3 navigasi 5 tab (FAB Input Code melayang), Home, Detail Giveaway, Input Code, My Tickets;
 perbaikan navbar; M4 Discover (cari + riwayat, filter, peta OSM, Terdekat/LBS, lokasi manual Nominatim, cache offline, GET /giveaways/:id);
