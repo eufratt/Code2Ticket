@@ -180,6 +180,7 @@ void main() {
       final router = GoRouter(routes: [
         GoRoute(path: '/', builder: (_, _) => const NotificationsScreen()),
         GoRoute(path: '/giveaway/:id', builder: (_, s) => Scaffold(body: Text('detail ${s.pathParameters['id']}'))),
+        GoRoute(path: '/giveaway/:id/result', builder: (_, s) => Scaffold(body: Text('hasil ${s.pathParameters['id']}'))),
       ]);
       await tester.pumpWidget(MultiProvider(
         providers: [
@@ -219,12 +220,20 @@ void main() {
       expect(find.text('Belum dibaca'), findsNWidgets(2));
     });
 
-    testWidgets('ketuk notifikasi dengan giveaway_id: ditandai dibaca lalu membuka Detail Giveaway', (tester) async {
+    testWidgets('ketuk notifikasi winner / draw_result: ditandai dibaca lalu membuka layar Hasil Draw', (tester) async {
       await pumpScreen(tester);
       await tester.tap(find.byKey(const Key('notification_3')));
       await tester.pumpAndSettle();
       expect(api.calls.last.body, {'ids': [3]});
-      expect(find.text('detail g1'), findsOneWidget);
+      expect(find.text('hasil g1'), findsOneWidget);
+    });
+
+    testWidgets('ketuk notifikasi jenis lain dengan giveaway_id: membuka Detail Giveaway', (tester) async {
+      handler = (m, p, b) async => {'ok': true, 'data': [notif(7, type: 'reminder', gid: 'g2', title: 'Draw sebentar lagi')]};
+      await pumpScreen(tester);
+      await tester.tap(find.byKey(const Key('notification_7')));
+      await tester.pumpAndSettle();
+      expect(find.text('detail g2'), findsOneWidget);
     });
 
     testWidgets('ketuk notifikasi tanpa giveaway_id: tetap di daftar', (tester) async {

@@ -1,3 +1,10 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:code2ticket/core/db/rate_cache.dart' show SettingsStore;
+import 'package:code2ticket/core/verify/chain_verifier.dart';
+import 'package:code2ticket/features/draw/draw_result_screen.dart';
+import 'package:code2ticket/features/draw/draw_verify_screen.dart';
 import 'package:code2ticket/core/api/authed_api.dart';
 import 'package:code2ticket/core/location/location_service.dart';
 import 'package:code2ticket/features/admin/admin_controller.dart';
@@ -131,7 +138,9 @@ class SampleAuth extends FakeAuth {
 class SampleEnv {
   SampleEnv() {
     api = FakeApi((m, p, b) async {
-      if (p.startsWith('/giveaways/')) return sampleGiveaways().first;
+      if (p.endsWith('/winners')) return {'ok': true, 'drawn': true, 'winners': [for (var i = 0; i < drawWinners.length; i++) {'rank': i + 1, 'ticket_number': drawWinners[i], 'name': 'pe***${i + 1}'}]};
+      if (p.endsWith('/verification')) return {'ok': true, ...drawVerification};
+      if (p.startsWith('/giveaways/')) return {...sampleGiveaways().first, 'status': giveawayStatus};
       if (p.startsWith('/giveaways')) return {'ok': true, 'data': sampleGiveaways()};
       if (p.startsWith('/tickets')) return {'ok': true, 'data': List.of(tickets)};
       if (p.startsWith('/admin/giveaways/')) {
@@ -161,6 +170,14 @@ class SampleEnv {
     auth = SampleAuth(api)..user = sampleUser();
     authed = AuthedApi(api, auth);
   }
+  /// Status giveaway yang dijawab GET /giveaways/:id (tes boleh mengubahnya sebelum layar dibuka).
+  String giveawayStatus = 'active';
+
+  /// Penanda "hasil sudah dilihat" dan data hasil draw (diambil dari vektor acuan Python).
+  final settings = MemorySettings();
+  late final Map<String, dynamic> drawVerification = jsonDecode(jsonEncode((jsonDecode(File('test/fixtures/m1_vectors.json').readAsStringSync())['scenarios'] as List).first['data'])) as Map<String, dynamic>;
+  late final List<int> drawWinners = verifyData(VerificationData.tryParse(drawVerification)!).winningTickets;
+
   late final FakeApi api;
   late final SampleAuth auth;
   late final AuthedApi authed;
@@ -175,6 +192,7 @@ class SampleEnv {
         providers: [
           ChangeNotifierProvider<AuthController>.value(value: auth),
           Provider<AuthedApi>.value(value: authed),
+          Provider<SettingsStore>.value(value: settings),
           Provider<LocationService>.value(value: LocationService(FakeGateway())),
           ...displayProviders(),
           ChangeNotifierProvider(create: (_) => GiveawaysController(authed, auth, MemoryCacheStore(), retryInterval: null)),
@@ -187,6 +205,8 @@ class SampleEnv {
         child: child,
       );
 }
+
+Future<VerificationReport?> _syncVerify(({Map<String, dynamic> raw, List<int>? announced}) a) async => verifyRaw(a);
 
 /// Menggulir layar pertama sampai habis dan memastikan tidak ada galat tata letak.
 Future<void> _scrollThrough(WidgetTester tester) async {
@@ -211,6 +231,7 @@ void main() {
     'Kelola Giveaway': (() => AdminGiveawayScreen(giveawayId: 'g1', initial: Giveaway.tryParse(sampleGiveaways().first)), 'Generate Code'),
     'Generate Code': (() => const GenerateCodesScreen(giveawayId: 'g1'), 'Buat kode'),
     'Daftar Kode': (() => const CodesListScreen(giveawayId: 'g1'), 'ABCD-EFGH-JKLM'),
+    'Cek Keaslian': (() => DrawVerifyScreen(giveawayId: 'g1', runner: _syncVerify), 'Seed dikunci sebelum tiket terbit'),
     'Profil': (() => const ProfileScreen(), 'Level 3'),
     'Login': (() => const LoginScreen(), 'Belum punya akun? Daftar'),
     'Daftar': (() => const RegisterScreen(), 'Sudah punya akun? Masuk'),
@@ -242,6 +263,41 @@ void main() {
           await tester.pumpWidget(const SizedBox()); // hentikan timer (hitung mundur)
         });
       }
+
+      // Layar goyang beranimasi tanpa henti, jadi tidak memakai pumpAndSettle.
+      Future<void> frames(WidgetTester tester) async {
+        for (var i = 0; i < 15; i++) {
+          await tester.pump(const Duration(milliseconds: 100));
+        }
+      }
+
+      testWidgets('Hasil Draw: layar goyang', (tester) async {
+        await setViewport(tester, width: v.width, textScale: v.scale, brightness: v.brightness);
+        final env = SampleEnv();
+        await tester.pumpWidget(env.app(DrawResultScreen(giveawayId: 'g1', runner: _syncVerify, shakes: () => const Stream<void>.empty())));
+        await frames(tester);
+        expect(find.text('Goyangkan untuk melihat hasil'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+        await _scrollThrough(tester);
+        await tester.tap(find.byKey(const Key('reveal_button')));
+        await frames(tester);
+        expect(find.text('Daftar pemenang'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+        await _scrollThrough(tester);
+        await tester.pumpWidget(const SizedBox());
+      });
+
+      testWidgets('Hasil Draw: hasil (sudah dilihat)', (tester) async {
+        await setViewport(tester, width: v.width, textScale: v.scale, brightness: v.brightness);
+        final env = SampleEnv();
+        env.settings.values['u1|draw_seen:g1'] = '1';
+        await tester.pumpWidget(env.app(DrawResultScreen(giveawayId: 'g1', runner: _syncVerify, shakes: () => const Stream<void>.empty())));
+        await frames(tester);
+        expect(find.text('Daftar pemenang'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+        await _scrollThrough(tester);
+        await tester.pumpWidget(const SizedBox());
+      });
 
       testWidgets('Generate Code: hasil (peringatan, kode, salin)', (tester) async {
         await setViewport(tester, width: v.width, textScale: v.scale, brightness: v.brightness);
