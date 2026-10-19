@@ -6,6 +6,9 @@ import { effectiveStatus } from '../lib/sql.js';
 import { awardBadges, notify } from './users.js';
 
 const MAX_FAILS = 5;
+// Hanya tebakan kode yang dihitung ke batas: format salah, kode tak dikenal, atau kode yang sudah dipakai ORANG LAIN.
+// Alasan sah (belum mulai, berakhir, di luar area, batas tiket, kode sendiri) tetap dicatat tetapi tidak menghitung.
+const GUESS_REASONS = ['invalid_format', 'code_not_found', 'code_used'];
 
 const redeemSchema = z.object({
   // Bukan string / terlalu panjang diperlakukan seperti kode kosong: invalid_format dan tercatat sebagai kegagalan.
@@ -22,8 +25,9 @@ export async function redeemCode(pool, user, body) {
   const { code, lat, lng } = p.data;
 
   return withTx(pool, async (c) => {
-    const failCode = async (reason) => {
-      await c.query('insert into code_attempts(user_id, success, reason) values ($1, false, $2)', [user.id, reason]);
+    // [stored] = alasan di code_attempts bila berbeda dari kode galat untuk klien.
+    const failCode = async (reason, stored = reason) => {
+      await c.query('insert into code_attempts(user_id, success, reason) values ($1, false, $2)', [user.id, stored]);
       return fail(reason);
     };
 
@@ -31,8 +35,8 @@ export async function redeemCode(pool, user, body) {
     const recent = (
       await c.query(
         `select count(*)::int as n from code_attempts
-          where user_id = $1 and not success and attempted_at > now() - interval '10 minutes'`,
-        [user.id],
+          where user_id = $1 and not success and reason = any($2) and attempted_at > now() - interval '10 minutes'`,
+        [user.id, GUESS_REASONS],
       )
     ).rows[0].n;
     if (recent >= MAX_FAILS) {
@@ -40,9 +44,9 @@ export async function redeemCode(pool, user, body) {
         await c.query(
           `select greatest(1, ceil(extract(epoch from (attempted_at + interval '10 minutes' - now())))::int) as retry
              from code_attempts
-            where user_id = $1 and not success and attempted_at > now() - interval '10 minutes'
+            where user_id = $1 and not success and reason = any($2) and attempted_at > now() - interval '10 minutes'
             order by attempted_at desc offset 4 limit 1`,
-          [user.id],
+          [user.id, GUESS_REASONS],
         )
       ).rows[0];
       return fail('rate_limited', { retry_after_seconds: r.retry });
@@ -64,7 +68,7 @@ export async function redeemCode(pool, user, body) {
       )
     ).rows[0];
 
-    if (cd.is_used) return failCode('code_used');
+    if (cd.is_used) return cd.used_by === user.id ? failCode('code_used', 'code_used_self') : failCode('code_used');
     if (g.status === 'drawn' || g.ended) return failCode('giveaway_ended');
     if (g.not_started) return failCode('giveaway_not_started');
     const hasCommit = (await c.query("select 1 from draw_chain where giveaway_id = $1 and block_type = 'commit'", [g.id])).rowCount > 0;

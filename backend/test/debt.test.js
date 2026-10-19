@@ -93,3 +93,51 @@ describe('2. seed_mismatch pada draw terjadwal tidak diulang tiap menit', () => 
     expect(await runDueDraws(real.pool)).toBe(0);
   });
 });
+
+describe('3. kegagalan sah tidak dihitung ke batas 5 kegagalan redeem', () => {
+  let carl;
+  const lock = () => count("select count(*)::int n from code_attempts a join users u on u.id=a.user_id where u.username='carl01' and not a.success and a.reason in ('invalid_format','code_not_found','code_used')");
+
+  beforeAll(async () => {
+    await register(api, 'carl01', 'carl@example.com', 'Passw0rd!1', 'Carl');
+    carl = (await login(api, 'carl01', 'Passw0rd!1')).token;
+  });
+
+  it('alasan sah berulang (> 5x) tidak mengunci; kode benar sesudahnya tetap diterima', async () => {
+    const limit1 = (await mkGiveaway(api, adm, { title: 'Satu tiket', maxTickets: 1 })).giveaway_id;
+    const c1 = await genCodes(api, adm, limit1, 3);
+    const geo = (await mkGiveaway(api, adm, { title: 'Geo', lat: -6.2, lng: 106.8 })).giveaway_id;
+    const cg = await genCodes(api, adm, geo, 1, [-6.2, 106.8, 5]);
+    const future = (await mkGiveaway(api, adm, { title: 'Belum mulai' })).giveaway_id;
+    const cf = await genCodes(api, adm, future, 1);
+    await real.su.query('update giveaways set start_at=$2, end_at=$3, draw_at=$4 where id=$1', [future, iso(HOUR), iso(2 * HOUR), iso(3 * HOUR)]);
+    const over = (await mkGiveaway(api, adm, { title: 'Berakhir' })).giveaway_id;
+    const co = await genCodes(api, adm, over, 1);
+    await real.su.query('update giveaways set start_at=$2, end_at=$3, draw_at=$4 where id=$1', [over, iso(-3 * HOUR), iso(-2 * HOUR), iso(-HOUR)]);
+
+    expect((await redeem(api, carl, c1[0])).ok).toBe(true);
+    const expected = [
+      [c1[1], 'ticket_limit'], [c1[0], 'code_used'], [cg[0], 'location_required'], [cg[0], 'out_of_area', -6.9175, 107.6191],
+      [cf[0], 'giveaway_not_started'], [co[0], 'giveaway_ended'],
+    ];
+    for (let round = 0; round < 2; round++) {
+      for (const [code, err, lat, lng] of expected) expect((await redeem(api, carl, code, lat, lng)).error).toBe(err); // kode ke klien tidak berubah
+    }
+    expect(await lock()).toBe(0);
+    const fresh = (await mkGiveaway(api, adm, { title: 'Giveaway lain' })).giveaway_id;
+    expect((await redeem(api, carl, (await genCodes(api, adm, fresh, 1))[0])).ok).toBe(true);
+  });
+
+  it('tebakan salah tetap dihitung: kegagalan ke-6 -> rate_limited, walau kode benar', async () => {
+    for (let i = 0; i < 3; i++) expect((await redeem(api, carl, `ZZZZ-ZZZZ-ZZZ${i}`)).error).toBe('code_not_found');
+    expect((await redeem(api, carl, 'bukan kode')).error).toBe('invalid_format');
+    const alicesGw = (await mkGiveaway(api, adm, { title: 'Milik alice' })).giveaway_id;
+    const [ac, spare] = await genCodes(api, adm, alicesGw, 2);
+    expect((await redeem(api, alice, ac)).ok).toBe(true);
+    expect((await redeem(api, carl, ac)).error).toBe('code_used'); // kode orang lain = tebakan, dihitung (kegagalan ke-5)
+    expect(await lock()).toBe(5);
+    const r = await redeem(api, carl, spare);
+    expect(r.error).toBe('rate_limited');
+    expect(r.retry_after_seconds).toBeGreaterThan(0);
+  });
+});
