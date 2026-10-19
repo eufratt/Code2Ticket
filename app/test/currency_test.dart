@@ -4,6 +4,7 @@ import 'package:code2ticket/core/db/local_db.dart';
 import 'package:code2ticket/core/db/rate_cache.dart';
 import 'package:code2ticket/core/settings/settings_controller.dart';
 import 'package:code2ticket/core/time/zones.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -99,7 +100,11 @@ void main() {
     var status = 200;
     var body = realBody;
 
-    RatesController make({Duration ttl = const Duration(hours: 1), Duration retryGap = const Duration(minutes: 1)}) {
+    RatesController make({
+      Duration ttl = const Duration(hours: 1),
+      Duration retryGap = const Duration(minutes: 1),
+      List<Duration> retryDelays = const [Duration.zero, Duration.zero],
+    }) {
       cache = MemoryRates();
       return RatesController(
         cache,
@@ -111,6 +116,7 @@ void main() {
         }),
         ttl: ttl,
         retryGap: retryGap,
+        retryDelays: retryDelays,
         clock: () => now,
       );
     }
@@ -199,15 +205,106 @@ void main() {
       }
     });
 
-    test('gagal: tidak menghantam server, coba lagi paling cepat tiap 1 menit', () async {
-      status = 0;
-      final c = make();
+    test('(a) gagal pertama lalu berhasil pada retry -> kurs tersimpan ke cache', () async {
+      final localCache = MemoryRates();
+      var callCount = 0;
+      final c = RatesController(
+        localCache,
+        client: MockClient((_) async {
+          callCount++;
+          if (callCount == 1) throw http.ClientException('koneksi awal gagal');
+          return http.Response(realBody, 200);
+        }),
+        retryDelays: const [Duration.zero, Duration.zero],
+        clock: () => now,
+      );
       await c.ensureFresh();
+      expect(callCount, 2);
+      expect(c.hasRates, isTrue);
+      expect(c.offline, isFalse);
+      expect(c.rates.perUsd['IDR'], 17989);
+      expect(c.lastError, isNull);
+      expect(localCache.rows.map((r) => r.target).toSet(), {'EUR', 'IDR', 'JPY'});
+    });
+
+    test('(b) tanpa kurs, panggilan kedua dalam <60 dtk tetap mencoba', () async {
+      status = 0;
+      final c = make(retryDelays: const []);
       await c.ensureFresh();
       expect(calls, 1);
-      now = now.add(const Duration(seconds: 61));
+      expect(c.hasRates, isFalse);
+
+      // Panggilan kedua hanya berselang 10 detik (< 60 dtk): tetap mencoba memanggil server
+      now = now.add(const Duration(seconds: 10));
       await c.ensureFresh();
       expect(calls, 2);
+    });
+
+    test('(c) dengan kurs, throttle tetap berlaku (kecuali force)', () async {
+      final c = make(retryDelays: const []);
+      await c.ensureFresh(); // berhasil, hasRates == true
+      expect(calls, 1);
+      expect(c.hasRates, isTrue);
+
+      status = 0; // bila terpanggil lagi, gagal
+      now = now.add(const Duration(seconds: 10)); // < 60 detik
+      await c.ensureFresh(); // throttle berlaku karena hasRates == true
+      expect(calls, 1); // tidak ada panggilan baru
+      expect(c.hasRates, isTrue);
+
+      // Bila force: true, throttle diabaikan
+      await c.ensureFresh(force: true);
+      expect(calls, 2); // dipanggil karena force: true
+    });
+
+    test('(d) tidak ada permintaan ganda bersamaan (termasuk saat force)', () async {
+      final c = make(retryDelays: const []);
+      await Future.wait([c.ensureFresh(), c.ensureFresh(), c.ensureFresh()]);
+      expect(calls, 1);
+
+      now = now.add(const Duration(hours: 2));
+      await Future.wait([c.ensureFresh(force: true), c.ensureFresh(force: true)]);
+      expect(calls, 2);
+    });
+
+    test('(e) lastError terisi saat gagal dan hilang saat sukses', () async {
+      status = 0;
+      final c = make(retryDelays: const []);
+      await c.ensureFresh();
+      expect(c.hasRates, isFalse);
+      expect(c.lastError, isNotNull);
+      expect(c.lastError, contains('putus'));
+
+      status = 200;
+      await c.ensureFresh(force: true);
+      expect(c.hasRates, isTrue);
+      expect(c.lastError, isNull);
+    });
+
+    test('lifecycle resumed memuat ulang kurs bila belum ada kurs atau cache kedaluwarsa', () async {
+      status = 0;
+      final c = make(retryDelays: const []);
+      await c.ensureFresh();
+      expect(calls, 1);
+      expect(c.hasRates, isFalse);
+
+      // Server kembali online, aplikasi resumed -> memuat ulang karena belum ada kurs
+      status = 200;
+      c.handleAppLifecycleState(AppLifecycleState.resumed);
+      await pumpEventQueue();
+      expect(calls, 2);
+      expect(c.hasRates, isTrue);
+
+      // Masih fresh -> resumed tidak memanggil server
+      c.handleAppLifecycleState(AppLifecycleState.resumed);
+      await pumpEventQueue();
+      expect(calls, 2);
+
+      // Kedaluwarsa (> 1 jam) -> resumed memanggil server
+      now = now.add(const Duration(hours: 2));
+      c.handleAppLifecycleState(AppLifecycleState.resumed);
+      await pumpEventQueue();
+      expect(calls, 3);
     });
 
     test('online kembali setelah offline: kurs diperbarui dan label offline hilang', () async {

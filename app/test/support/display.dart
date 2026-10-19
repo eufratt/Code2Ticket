@@ -56,6 +56,7 @@ List<SingleChildWidget> displayProviders({SettingsController? settings, RatesCon
   initTimeZones();
   return [
     ChangeNotifierProvider<SettingsController>.value(value: settings ?? SettingsController(MemorySettings())),
-    ChangeNotifierProvider<RatesController>.value(value: rates ?? RatesController(MemoryRates(), client: offlineClient())),
+    ChangeNotifierProvider<RatesController>.value(
+        value: rates ?? RatesController(MemoryRates(), client: offlineClient(), retryDelays: const [])),
   ];
 }

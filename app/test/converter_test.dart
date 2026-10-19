@@ -29,6 +29,7 @@ void main() {
     final r = RatesController(
       MemoryRates(),
       client: MockClient((_) async => online ? http.Response(realBody, 200) : throw http.ClientException('offline')),
+      retryDelays: const [],
     );
     await r.ensureFresh();
     return r;

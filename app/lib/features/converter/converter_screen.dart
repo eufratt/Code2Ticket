@@ -42,7 +42,8 @@ class _CurrencyConverterState extends State<CurrencyConverter> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(context.read<RatesController>().ensureFresh);
+    final rates = context.read<RatesController>();
+    Future.microtask(() => rates.ensureFresh(force: true));
   }
 
   @override

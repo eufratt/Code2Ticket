@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
 
 import '../db/rate_cache.dart';
@@ -16,6 +17,7 @@ class RatesController extends ChangeNotifier {
     http.Client? client,
     this.ttl = const Duration(hours: 1),
     this.retryGap = const Duration(minutes: 1),
+    this.retryDelays = const [Duration(seconds: 2), Duration(seconds: 5)],
     DateTime Function()? clock,
   })  : _http = client ?? http.Client(),
         _clock = clock ?? DateTime.now;
@@ -25,6 +27,7 @@ class RatesController extends ChangeNotifier {
   final RateCache _cache;
   final http.Client _http;
   final Duration ttl, retryGap;
+  final List<Duration> retryDelays;
   final DateTime Function() _clock;
 
   RateSet rates = const RateSet(perUsd: {});
@@ -35,38 +38,92 @@ class RatesController extends ChangeNotifier {
   /// true bila kurs yang dipakai berasal dari cache karena pengambilan terbaru gagal.
   bool offline = false;
   bool loading = false;
+
+  /// Pesan galat terakhir bila pengambilan gagal (null bila berhasil).
+  String? lastError;
+
   DateTime? _lastAttempt;
   Future<void>? _inflight;
+  bool _disposed = false;
 
   bool get hasRates => rates.perUsd.isNotEmpty;
 
-  /// Memuat cache lalu menyegarkan dari server bila sudah lewat [ttl]. Tidak pernah melempar.
-  Future<void> ensureFresh() => _inflight ??= _ensureFresh().whenComplete(() => _inflight = null);
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
 
-  Future<void> _ensureFresh() async {
+  @override
+  void notifyListeners() {
+    if (!_disposed) {
+      super.notifyListeners();
+    }
+  }
+
+  /// Memuat cache lalu menyegarkan dari server bila sudah lewat [ttl] atau belum ada kurs.
+  /// [force] mengabaikan throttle [retryGap] dan [ttl], tetapi tetap menjaga agar tidak ada dua permintaan bersamaan.
+  Future<void> ensureFresh({bool force = false}) =>
+      _inflight ??= _ensureFresh(force: force).whenComplete(() => _inflight = null);
+
+  /// Menangani perubahan lifecycle aplikasi (muat ulang bila resumed).
+  void handleAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      ensureFresh();
+    }
+  }
+
+  Future<void> _ensureFresh({bool force = false}) async {
+    if (loading) return;
     if (!hasRates) await _loadCache();
     final now = _clock();
-    final fresh = fetchedAt != null && now.difference(fetchedAt!) < ttl;
-    if (fresh) return;
-    // Gagal sebelumnya: jangan menghantam server tiap layar dibuka.
-    if (_lastAttempt != null && now.difference(_lastAttempt!) < retryGap) return;
+    if (!force) {
+      final fresh = fetchedAt != null && now.difference(fetchedAt!) < ttl;
+      if (fresh) return;
+      // Gagal sebelumnya: hanya throttle bila SUDAH ada kurs di memori.
+      if (hasRates && _lastAttempt != null && now.difference(_lastAttempt!) < retryGap) {
+        return;
+      }
+    }
     _lastAttempt = now;
     loading = true;
     notifyListeners();
+
     try {
-      final res = await _http.get(url).timeout(const Duration(seconds: 15));
-      if (res.statusCode != 200) throw Exception('HTTP ${res.statusCode}');
-      final parsed = parseFrankfurter(utf8.decode(res.bodyBytes));
-      if (parsed.isEmpty) throw Exception('format kurs tidak dikenal');
-      final stamp = _clock();
-      final rows = [for (final p in parsed) CachedRate(target: p.target, rate: p.rate, rateDate: p.date, fetchedAt: stamp)];
-      _apply(rows);
-      offline = false;
-      try {
-        await _cache.saveRates('USD', rows);
-      } catch (_) {}
-    } catch (_) {
-      offline = hasRates; // ada cache -> tampilkan dengan label offline; tidak ada -> USD saja
+      int attempt = 0;
+      while (true) {
+        if (_disposed) return;
+        try {
+          final res = await _http.get(url).timeout(const Duration(seconds: 15));
+          if (res.statusCode != 200) throw Exception('HTTP ${res.statusCode}');
+          final parsed = parseFrankfurter(utf8.decode(res.bodyBytes));
+          if (parsed.isEmpty) throw Exception('format kurs tidak dikenal');
+          final stamp = _clock();
+          final rows = [
+            for (final p in parsed)
+              CachedRate(target: p.target, rate: p.rate, rateDate: p.date, fetchedAt: stamp)
+          ];
+          _apply(rows);
+          offline = false;
+          lastError = null;
+          try {
+            await _cache.saveRates('USD', rows);
+          } catch (e) {
+            if (kDebugMode) debugPrint('RatesController cache save error: $e');
+          }
+          break;
+        } catch (e) {
+          lastError = e.toString();
+          if (kDebugMode) debugPrint('RatesController fetch error (attempt $attempt): $e');
+          if (!hasRates && attempt < retryDelays.length) {
+            await Future.delayed(retryDelays[attempt]);
+            attempt++;
+            continue;
+          }
+          offline = hasRates; // ada cache -> tampilkan dengan label offline; tidak ada -> USD saja
+          break;
+        }
+      }
     } finally {
       loading = false;
       notifyListeners();
@@ -80,7 +137,9 @@ class RatesController extends ChangeNotifier {
         _apply(rows);
         notifyListeners();
       }
-    } catch (_) {}
+    } catch (e) {
+      if (kDebugMode) debugPrint('RatesController cache load error: $e');
+    }
   }
 
   void _apply(List<CachedRate> rows) {

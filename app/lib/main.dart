@@ -30,7 +30,7 @@ class Code2TicketApp extends StatefulWidget {
   State<Code2TicketApp> createState() => _Code2TicketAppState();
 }
 
-class _Code2TicketAppState extends State<Code2TicketApp> {
+class _Code2TicketAppState extends State<Code2TicketApp> with WidgetsBindingObserver {
   late final ApiClient _api = ApiClient();
   late final AuthController _auth =
       AuthController(_api, SessionStore())..restore();
@@ -40,6 +40,23 @@ class _Code2TicketAppState extends State<Code2TicketApp> {
   late final SettingsController _settings = SettingsController(LocalDb.instance)..load();
   late final RatesController _rates = RatesController(LocalDb.instance)..ensureFresh();
   late final _router = buildRouter(_auth);
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _rates.handleAppLifecycleState(state);
+  }
 
   @override
   Widget build(BuildContext context) {
