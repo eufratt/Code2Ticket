@@ -192,6 +192,30 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('layar sempit 320 dp + font 1,3x: label "My Tickets" utuh (diperkecil, bukan dipotong "…") dan di dalam tab', (tester) async {
+    tester.view.physicalSize = const Size(320 * 3, 800 * 3);
+    tester.view.devicePixelRatio = 3;
+    tester.platformDispatcher.textScaleFactorTestValue = 1.3;
+    addTearDown(() {
+      tester.view.reset();
+      tester.platformDispatcher.clearAllTestValues();
+    });
+    final api = FakeApi((m, p, b) async => p.startsWith('/giveaways')
+        ? {'ok': true, 'data': [json(giveawayJson)]}
+        : {'ok': true, 'data': [json(ticketJson)]});
+    final auth = _Auth(api);
+    await tester.pumpWidget(_createTestApp(auth: auth, authed: AuthedApi(api, auth)));
+    await tester.pumpAndSettle();
+    const tabWidth = 320 / 5;
+    for (final label in ['Home', 'Discover', 'My Tickets', 'Asisten', 'Profil']) {
+      expect(find.text(label), findsOneWidget, reason: label);
+      final p = tester.renderObject<RenderParagraph>(find.text(label));
+      expect(p.didExceedMaxLines, isFalse, reason: '$label terpotong');
+      expect(tester.getSize(find.ancestor(of: find.text(label), matching: find.byType(FittedBox)).first).width, lessThanOrEqualTo(tabWidth), reason: '$label melebihi tab');
+    }
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('font sistem 1,3x di 360 dp: label tab tidak terpotong, FAB tetap 8-12 dp di atas bar, tanpa overflow', (tester) async {
     tester.view.physicalSize = const Size(360 * 3, 800 * 3);
     tester.view.devicePixelRatio = 3;
