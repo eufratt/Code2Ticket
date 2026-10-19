@@ -1,6 +1,7 @@
 import 'package:code2ticket/app_router.dart';
 import 'package:code2ticket/core/api/authed_api.dart';
 import 'package:code2ticket/core/location/location_service.dart';
+import 'package:code2ticket/features/assistant/assistant_controller.dart';
 import 'package:code2ticket/features/auth/auth_controller.dart';
 import 'package:code2ticket/features/discover/discover_controller.dart';
 import 'package:code2ticket/features/giveaways/giveaways_controller.dart';
@@ -14,6 +15,7 @@ import 'input_code_test.dart' show FakeApi, FakeAuth, json;
 import 'support/fake_location.dart';
 import 'support/display.dart';
 import 'support/memory_cache.dart';
+import 'support/memory_chat_store.dart';
 import 'models_test.dart' show giveawayJson, ticketJson;
 
 class _Auth extends FakeAuth {
@@ -33,6 +35,7 @@ Widget _createTestApp({required _Auth auth, required AuthedApi authed}) {
       ChangeNotifierProvider(create: (_) => GiveawaysController(authed, auth, MemoryCacheStore(), retryInterval: null)),
       ChangeNotifierProvider(create: (_) => TicketsController(authed, auth, MemoryCacheStore(), retryInterval: null)),
       ChangeNotifierProvider(create: (_) => DiscoverController(authed, auth, MemoryCacheStore(), LocationService(FakeGateway()), retryInterval: null)),
+      ChangeNotifierProvider(create: (_) => AssistantController(authed, auth, MemoryChatStore())),
     ],
     child: MaterialApp.router(routerConfig: buildRouter(auth)),
   );
@@ -83,7 +86,9 @@ void main() {
 
     await tester.tap(find.text('Asisten'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('Segera hadir'), findsOneWidget);
+    expect(find.byKey(const Key('welcome')), findsOneWidget);
+    expect(find.byKey(const Key('chat_field')), findsOneWidget);
+    expect(fabFinder, findsNothing, reason: 'FAB disembunyikan di tab Asisten agar tidak menutupi kolom input');
 
     await tester.tap(find.text('Profil'));
     await tester.pumpAndSettle();

@@ -18,6 +18,8 @@ import 'package:code2ticket/features/admin/admin_giveaways_screen.dart';
 import 'package:code2ticket/features/admin/codes_list_screen.dart';
 import 'package:code2ticket/features/admin/create_giveaway_screen.dart';
 import 'package:code2ticket/features/admin/generate_codes_screen.dart';
+import 'package:code2ticket/features/assistant/assistant_controller.dart';
+import 'package:code2ticket/features/assistant/assistant_screen.dart';
 import 'package:code2ticket/features/auth/auth_controller.dart';
 import 'package:code2ticket/features/auth/auth_models.dart';
 import 'package:code2ticket/features/auth/biometric_lock_screen.dart';
@@ -46,6 +48,7 @@ import '../input_code_test.dart' show FakeApi, FakeAuth;
 import '../support/display.dart';
 import '../support/fake_location.dart';
 import '../support/memory_cache.dart';
+import '../support/memory_chat_store.dart';
 import '../support/ui.dart';
 
 /// Tata letak tanpa overflow (DESIGN.md daftar periksa 9): 360 dp, 428 dp, font sistem 1,3x, terang dan gelap.
@@ -224,6 +227,7 @@ class SampleEnv {
           ChangeNotifierProvider(create: (_) => AdminController(authed, auth)),
           ChangeNotifierProvider(create: (_) => GameController(authed, auth)),
           ChangeNotifierProvider(create: (_) => AffinityController(authed, auth)),
+          ChangeNotifierProvider(create: (_) => AssistantController(authed, auth, MemoryChatStore())),
           ChangeNotifierProvider(
               create: (_) => DiscoverController(authed, auth, MemoryCacheStore(), LocationService(FakeGateway()), retryInterval: null)),
         ],
@@ -256,6 +260,7 @@ void main() {
     'Kelola Giveaway': (() => AdminGiveawayScreen(giveawayId: 'g1', initial: Giveaway.tryParse(sampleGiveaways().first)), 'Generate Code'),
     'Generate Code': (() => const GenerateCodesScreen(giveawayId: 'g1'), 'Buat kode'),
     'Daftar Kode': (() => const CodesListScreen(giveawayId: 'g1'), 'ABCD-EFGH-JKLM'),
+    'Asisten': (() => const AssistantScreen(), 'Ada giveaway gaming apa?'),
     'Game Maze': (() => const GameHubScreen(), 'Pilih tingkat'),
     'Papan Peringkat': (() => const LeaderboardScreen(), 'Skor total 7 hari terakhir'),
     'Maze (siap)': (() => MazePlayScreen(levelIndex: 2, seed: 1, tilt: () => const Stream.empty()), 'Siap?'),
