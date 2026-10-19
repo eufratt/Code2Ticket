@@ -50,7 +50,7 @@ class TicketCard extends StatelessWidget {
         ExcludeSemantics(
           child: DecoratedBox(
             decoration: BoxDecoration(gradient: style.gradient, borderRadius: Radii.buttonAll),
-            child: SizedBox(width: 44, height: 44, child: Icon(style.icon, color: Colors.white, size: 24)),
+            child: SizedBox(width: 44, height: 44, child: Icon(style.icon, color: Overlays.onGradient, size: 24)),
           ),
         ),
         const SizedBox(width: Spacing.s12),
@@ -103,6 +103,7 @@ class TicketCard extends StatelessWidget {
         button: onTap != null,
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _Part(top: true, onTap: onTap, child: top),
             _Part(top: false, onTap: onTap, child: bottom),

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/geocoding/geocoder.dart';
+import '../../core/theme/app_tokens.dart';
+import '../../core/widgets/inline_message.dart';
 
 /// Dialog lokasi manual: cari nama tempat (Nominatim) lalu pilih satu hasil. Pencarian hanya saat tombol
 /// Cari / Enter ditekan (bukan tiap ketikan), minimal 3 huruf.
@@ -77,11 +79,11 @@ class _ManualLocationDialogState extends State<_ManualLocationDialog> {
               ),
               onSubmitted: (_) => _search(),
             ),
-            if (_busy) const Padding(padding: EdgeInsets.only(top: 12), child: LinearProgressIndicator()),
+            if (_busy) const Padding(padding: EdgeInsets.only(top: Spacing.s12), child: LinearProgressIndicator()),
             if (_error != null)
               Padding(
-                padding: const EdgeInsets.only(top: 12),
-                child: Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                padding: const EdgeInsets.only(top: Spacing.s12),
+                child: InlineMessage(_error!),
               ),
             if (_results != null && _results!.isNotEmpty)
               Flexible(
@@ -98,7 +100,7 @@ class _ManualLocationDialogState extends State<_ManualLocationDialog> {
                   ],
                 ),
               ),
-            const SizedBox(height: 8),
+            const SizedBox(height: Spacing.s8),
             Text('Hasil pencarian: © OpenStreetMap contributors', style: Theme.of(context).textTheme.bodySmall),
           ],
         ),

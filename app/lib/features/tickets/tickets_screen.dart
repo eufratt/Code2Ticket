@@ -123,20 +123,22 @@ class _FilterBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       height: kMinTap + Spacing.s8,
-      child: ListView(
+      child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: Spacing.screen, vertical: Spacing.s4),
-        children: [
-          for (final f in TicketFilter.values) ...[
-            if (f != TicketFilter.all) const SizedBox(width: Spacing.s8),
-            ChoiceChip(
-              key: Key('ticket_filter_${f.name}'),
-              label: Text(f.label),
-              selected: f == selected,
-              onSelected: (_) => onSelected(f),
-            ),
+        child: Row(
+          children: [
+            for (final f in TicketFilter.values) ...[
+              if (f != TicketFilter.all) const SizedBox(width: Spacing.s8),
+              ChoiceChip(
+                key: Key('ticket_filter_${f.name}'),
+                label: Text(f.label),
+                selected: f == selected,
+                onSelected: (_) => onSelected(f),
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

@@ -20,6 +20,23 @@ abstract final class Radii {
   static const sheetTop = BorderRadius.vertical(top: Radius.circular(sheet));
 }
 
+/// Lapisan di atas gambar/gradien (sama di kedua tema): ikon putih di atas gradien kategori, lapisan gelap agar terbaca.
+abstract final class Overlays {
+  static const onGradient = Color(0xFFFFFFFF);
+
+  /// Lapisan gelap 20% di atas gradien kategori: ikon putih terbaca juga di atas warna terang (mis. biru muda travel).
+  static const dim = Color(0x33000000);
+
+  /// Lapisan gelap di bawah gambar banner supaya yang ditaruh di atasnya terbaca.
+  static const imageScrimTop = Color(0x00000000), imageScrimBottom = Color(0x66000000);
+
+  /// Lingkaran dekoratif samar pada banner.
+  static const bubble = Color(0x1FFFFFFF);
+
+  /// Bayangan ikon penanda peta di atas peta terang.
+  static const markerShadow = Color(0x66000000);
+}
+
 /// Target sentuh minimum (dp).
 const double kMinTap = 48;
 

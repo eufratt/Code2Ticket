@@ -42,7 +42,7 @@ class CategoryBanner extends StatelessWidget {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [Color(0x00000000), Color(0x66000000)],
+                  colors: [Overlays.imageScrimTop, Overlays.imageScrimBottom],
                 ),
               ),
             ),
@@ -72,12 +72,12 @@ class _Gradient extends StatelessWidget {
       children: [
         DecoratedBox(decoration: BoxDecoration(gradient: style.gradient)),
         // Lapisan gelap 20% supaya ikon putih terbaca di atas warna terang (mis. biru muda travel).
-        const DecoratedBox(decoration: BoxDecoration(color: Color(0x33000000))),
+        const DecoratedBox(decoration: BoxDecoration(color: Overlays.dim)),
         const CustomPaint(painter: _BubblePainter()),
         Center(
           child: FractionallySizedBox(
             heightFactor: 0.42,
-            child: FittedBox(child: Icon(style.icon, size: 96, color: Colors.white)),
+            child: FittedBox(child: Icon(style.icon, size: 96, color: Overlays.onGradient)),
           ),
         ),
       ],
@@ -91,7 +91,7 @@ class _BubblePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final r = size.height * 0.45;
-    canvas.drawCircle(Offset(size.width - r * 0.6, r * 0.2), r, Paint()..color = const Color(0x1FFFFFFF));
+    canvas.drawCircle(Offset(size.width - r * 0.6, r * 0.2), r, Paint()..color = Overlays.bubble);
   }
 
   @override

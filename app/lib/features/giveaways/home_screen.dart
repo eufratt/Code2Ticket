@@ -169,7 +169,7 @@ class _Header extends StatelessWidget {
             label: 'Buka profil',
             child: InkResponse(
               onTap: () => context.go('/profile'),
-              radius: 28,
+              radius: kMinTap / 2 + 4,
               child: Padding(padding: const EdgeInsets.all(Spacing.s4), child: UserAvatar(user: user, radius: 20)),
             ),
           ),
@@ -256,8 +256,10 @@ class _SearchBar extends StatelessWidget {
                   Icon(Icons.search, color: c.mutedOnVariant),
                   const SizedBox(width: Spacing.s12),
                   Expanded(
-                    child: Text('Cari giveaway, hadiah, atau penyelenggara',
-                        maxLines: 1, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: c.mutedOnVariant)),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: Spacing.s12),
+                      child: Text('Cari giveaway, hadiah, atau penyelenggara', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: c.mutedOnVariant)),
+                    ),
                   ),
                 ]),
               ),

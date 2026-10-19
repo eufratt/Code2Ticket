@@ -68,15 +68,17 @@ class AppShell extends StatelessWidget {
                     child: Icon(selected ? d.$2 : d.$1, size: 24, color: selected ? c.onPrimaryContainer : color),
                   ),
                   const SizedBox(height: 2),
-                  // Label bar dibatasi 1,15x: lima tab selebar 72 dp tidak muat lebih besar; isi layar tetap memakai skala penuh.
+                  // Label bar dibatasi 1,15x dan, bila masih lebih lebar dari tab 72 dp, diperkecil seperlunya (bukan dipotong).
                   MediaQuery.withClampedTextScaling(
                     maxScaleFactor: 1.15,
-                    child: Text(
-                      d.$3,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style: labelStyle.copyWith(color: color, fontWeight: selected ? FontWeight.w700 : FontWeight.w500),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        d.$3,
+                        maxLines: 1,
+                        textAlign: TextAlign.center,
+                        style: labelStyle.copyWith(color: color, fontWeight: selected ? FontWeight.w700 : FontWeight.w500),
+                      ),
                     ),
                   ),
                 ],

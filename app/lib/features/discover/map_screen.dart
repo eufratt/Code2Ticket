@@ -107,7 +107,7 @@ class _MapScreenState extends State<MapScreen> {
                                   Icons.location_on,
                                   size: 44,
                                   color: g.id == _selectedId ? context.colors.accent : context.colors.primary,
-                                  shadows: const [Shadow(color: Color(0x66000000), blurRadius: 4)],
+                                  shadows: const [Shadow(color: Overlays.markerShadow, blurRadius: 4)],
                                 ),
                               ),
                             ),
@@ -210,7 +210,7 @@ class OsmAttribution extends StatelessWidget {
         child: Text(
           '© OpenStreetMap contributors',
           key: const Key('osm_attribution'),
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: 11, color: context.colors.onBackground),
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: context.colors.onBackground),
         ),
       );
 }

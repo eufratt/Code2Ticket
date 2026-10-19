@@ -22,7 +22,7 @@ class BrandHeader extends StatelessWidget {
               borderRadius: const BorderRadius.all(Radius.circular(20)),
               boxShadow: AppShadows.fab(context.colors),
             ),
-            child: const SizedBox(width: 72, height: 72, child: Icon(Icons.confirmation_number, color: Colors.white, size: 36)),
+            child: const SizedBox(width: 72, height: 72, child: Icon(Icons.confirmation_number, color: Overlays.onGradient, size: 36)),
           ),
         ),
         const SizedBox(height: Spacing.s16),

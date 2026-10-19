@@ -260,6 +260,7 @@ class _BadgeTile extends StatelessWidget {
     final c = context.colors;
     final label = badgeLabel(code);
     return Semantics(
+      container: true,
       label: '$label, ${earned ? 'sudah diraih' : 'terkunci'}',
       excludeSemantics: true,
       child: SurfaceCard(
