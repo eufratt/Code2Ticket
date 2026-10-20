@@ -46,6 +46,11 @@ Paket: flutter_local_notifications (+ timezone yang sudah ada) dan workmanager (
 - Pulih: `revalidate()` (resume di main.dart; respons sukses dari AuthedApi saat offline; AuthedApi menulis -> revalidate dulu). 200 -> online + `backOnline` (Tickets/Giveaways/Discover reload); 401 -> keluar dengan pembersihan; galat jaringan -> tetap offline. `ApiClient.getOnce` = cek sesi tanpa jeda ulang soket.
 - Aksi tulis (POST/PUT/PATCH lewat AuthedApi) saat offline -> OfflineRequiredException "Butuh koneksi internet." tanpa mengirim; admin tetap butuh online. SessionStore.readToken menelan galat secure storage (null). clearUserData(userId: null) menghapus semua baris pencarian dan chat; _clear memakai id dari profil tersimpan bila user belum terisi.
 
+## Keamanan (audit)
+- Foto profil: klien membangun gambar baru dari piksel (tanpa EXIF/GPS), server membuang segmen APP1 (photos.js, stripJpegMetadata). PATCH /me hanya menerima photo_url milik sendiri (`/users/<id>/photo[?v=n]`). AndroidManifest: allowBackup=false.
+- Redeem dan skor game: kunci `users ... for no key update` per pengguna di awal transaksi (urutan pengguna -> kode -> giveaway; BUKAN for update: bentrok dengan FK insert notifikasi saat draw). /game/scores: `invalid_score` bila tak cocok tingkat labirin (MAZE_LEVELS di features.js harus mengikuti MazeLevel di maze.dart), maks. 60/jam.
+- Asisten: env baru `AI_DAILY_LIMIT_GLOBAL` (bawaan 300, per hari UTC, memori proses) selain AI_DAILY_LIMIT_PER_USER.
+
 ## Kontrak yang tidak boleh diubah diam-diam
 - Password: klien menghitung PBKDF2-HMAC-SHA256 (10.000 iterasi, 32 byte, salt 32 hex dipakai sebagai TEKS UTF-8, hasil hex huruf kecil);
   server menyimpan bcrypt(hash klien). Lihat app\lib\core\crypto\password_hasher.dart dan tesnya.

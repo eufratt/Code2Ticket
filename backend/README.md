@@ -81,6 +81,7 @@ Env (tanpa nilai bawaan untuk rahasia; lihat `.env.example`):
 | `OPENAI_API_KEY` | Kunci OpenAI. Kosong = fitur mati. Jangan commit; isi di env Render. |
 | `OPENAI_MODEL` | Nama model, WAJIB diatur. Kosong -> `ai_not_configured`. |
 | `AI_DAILY_LIMIT_PER_USER` | Kuota pesan per pengguna per hari Asia/Jakarta (bawaan 30). |
+| `AI_DAILY_LIMIT_GLOBAL` | Kuota pesan SEMUA pengguna per hari UTC (bawaan 300), jawaban `global_limit`. Dihitung di memori proses: hilang saat restart, tidak dibagi antar instance, jadi hanya pagar biaya kasar. |
 | `AI_RATE_PER_MINUTE` | Batas pesan per pengguna per menit (bawaan 8). |
 | `OPENAI_TIMEOUT_MS` | Timeout panggilan OpenAI (bawaan 20000). |
 
@@ -123,16 +124,16 @@ Token dikirim lewat `Authorization: Bearer <token>`.
 | `POST /auth/logout` | token (tidak divalidasi) | `rpc_logout` |
 | `GET /auth/me` | session | `rpc_validate_session` |
 | `PATCH /me` | session | `rpc_update_profile` |
-| `PUT /me/photo` (badan JPEG biner, `Content-Type: image/jpeg`, maks. 150 KB; 413 bila lebih besar) | session | (baru) |
+| `PUT /me/photo` (badan JPEG biner, `Content-Type: image/jpeg`, maks. 150 KB; 413 bila lebih besar; segmen APP1 (EXIF/GPS, XMP) dibuang sebelum disimpan, struktur JPEG rusak -> `invalid_input`) | session | (baru) |
 | `GET /users/:id/photo` (publik, `Cache-Control` + `ETag`; 404 bila tidak ada) | - | (baru) |
-| `GET /giveaways` (`q,category,min_value,max_value,lat,lng,radius_km,deadline_days,status,sort,limit,offset`) | - | `rpc_search_giveaways` |
+| `GET /giveaways` (`q,category,min_value,max_value,lat,lng,radius_km,deadline_days,status,sort,limit,offset`; `offset` maks. 10000 dan `deadline_days` maks. 3650, nilai lebih besar dijepit) | - | `rpc_search_giveaways` |
 | `GET /giveaways/:id` (404 `not_found` bila tidak ada) | - | (baru, tanpa padanan RPC) |
 | `GET /giveaways/:id/winners`, `/giveaways/:id/verification` | - | `rpc_get_winners`, `rpc_get_verification_data` |
 | `POST /codes/redeem` (`code,lat,lng`) | session | `rpc_redeem_code` |
 | `GET /tickets` | session | `rpc_get_my_tickets` |
 | `POST /activity` (`type,giveaway_id,category`) | session | `rpc_log_activity` |
 | `GET /me/affinity` | session | `rpc_get_category_affinity` |
-| `POST /game/scores` (`stars,seconds_left,cleared,duration_sec`), `GET /game/leaderboard?limit=` | session | `rpc_submit_game_score`, `rpc_get_leaderboard` |
+| `POST /game/scores` (`stars,seconds_left,cleared,duration_sec`; hasil yang tidak cocok dengan tingkat labirin mana pun -> `invalid_score`; maks. 60 kiriman per pengguna per jam -> `too_many_requests`), `GET /game/leaderboard?limit=` | session | `rpc_submit_game_score`, `rpc_get_leaderboard` |
 | `GET /notifications?after_id=&limit=`, `POST /notifications/read` (`ids`) | session | `rpc_get_notifications`, `rpc_mark_notifications_read` |
 | `POST /chat` (`message` 1-500 karakter, `history` maks. 6 giliran terakhir dipakai: `{role: user|assistant, content <= 1000}`) | session | (baru) |
 | `POST /feedback` (`suggestion,impression`), `GET /feedback` | session | `rpc_submit_feedback`, `rpc_get_my_feedback` |

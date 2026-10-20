@@ -25,9 +25,12 @@ const chatSchema = z.object({
 // ---------------------------------------------------------------- batas pemakaian (memori proses)
 // Satu instance server: hitungan hilang saat restart dan tidak dibagi antar instance. Cukup untuk menahan biaya
 // pada deployment tunggal (Render free); tanpa perubahan skema.
+// Batas GLOBAL (perDayGlobal, env AI_DAILY_LIMIT_GLOBAL) juga di memori proses dan per hari UTC: hilang saat restart dan
+// tidak dibagi antar instance, jadi hanya pagar biaya kasar per proses, bukan kuota yang tepat.
 export class UsageLimiter {
-  constructor({ perMinute, perDay, now = Date.now }) {
-    Object.assign(this, { perMinute, perDay, now });
+  constructor({ perMinute, perDay, perDayGlobal = Infinity, now = Date.now }) {
+    Object.assign(this, { perMinute, perDay, perDayGlobal, now });
+    this.global = { key: '', count: 0 };
     this.minute = new Map(); // userId -> [timestamp ms]
     this.day = new Map(); // userId -> {key, count}
   }
@@ -49,6 +52,10 @@ export class UsageLimiter {
     const d = this.day.get(userId);
     const used = d && d.key === key ? d.count : 0;
     if (used >= this.perDay) return { error: 'daily_limit' };
+    const gkey = new Date(t).toISOString().slice(0, 10); // hari UTC
+    if (this.global.key !== gkey) this.global = { key: gkey, count: 0 };
+    if (this.global.count >= this.perDayGlobal) return { error: 'global_limit' };
+    this.global.count += 1;
     recent.push(t);
     this.minute.set(userId, recent);
     this.day.set(userId, { key, count: used + 1 });
@@ -131,7 +138,7 @@ const toSummary = (g) => ({
 });
 
 export function createChatService({ pool, config, fetchImpl = globalThis.fetch, log = () => {}, now = Date.now }) {
-  const limiter = new UsageLimiter({ perMinute: config.AI_RATE_PER_MINUTE ?? 8, perDay: config.AI_DAILY_LIMIT_PER_USER ?? 30, now });
+  const limiter = new UsageLimiter({ perMinute: config.AI_RATE_PER_MINUTE ?? 8, perDay: config.AI_DAILY_LIMIT_PER_USER ?? 30, perDayGlobal: config.AI_DAILY_LIMIT_GLOBAL ?? 300, now });
   const timeoutMs = config.OPENAI_TIMEOUT_MS ?? 20_000;
 
   // Panggilan upstream. Hanya status dan jenis galat yang dicatat: tidak ada pesan galat (bisa memuat potongan kunci),

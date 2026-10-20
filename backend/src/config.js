@@ -19,6 +19,7 @@ const schema = z.object({
   OPENAI_API_KEY: z.string().default(''),
   OPENAI_MODEL: z.string().default(''),
   AI_DAILY_LIMIT_PER_USER: z.coerce.number().int().min(1).default(30),
+  AI_DAILY_LIMIT_GLOBAL: z.coerce.number().int().min(1).default(300), // semua pengguna, per hari UTC, di memori proses
   AI_RATE_PER_MINUTE: z.coerce.number().int().min(1).default(8),
   OPENAI_TIMEOUT_MS: z.coerce.number().int().min(1000).max(60000).default(20000),
 });

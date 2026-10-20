@@ -131,6 +131,7 @@ class AssistantController extends ChangeNotifier {
             ? 'Terlalu banyak pesan dalam waktu singkat. Coba lagi dalam ${retryAfter.toInt()} detik.'
             : 'Terlalu banyak pesan dalam waktu singkat. Tunggu sebentar lalu coba lagi.',
         'daily_limit' => 'Batas pesan harian ke Asisten sudah tercapai. Coba lagi besok.',
+        'global_limit' => 'Asisten sedang ramai hari ini dan batasnya tercapai. Coba lagi besok.',
         'ai_not_configured' => 'Asisten belum diaktifkan di server. Coba lagi nanti.',
         'invalid_input' => 'Pesan tidak valid. Tulis 1 sampai $chatMaxLength karakter.',
         _ => 'Terjadi kesalahan. Coba lagi.',

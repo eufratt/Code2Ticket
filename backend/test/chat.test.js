@@ -236,6 +236,16 @@ describe('POST /chat', () => {
     expect(ai.calls).toHaveLength(2);
   });
 
+  it('batas harian GLOBAL: pengguna berbeda berbagi satu kuota -> global_limit', async () => {
+    fresh();
+    const app = appWith({ AI_DAILY_LIMIT_GLOBAL: 2 });
+    expect((await chat(app, tok, { message: 'satu' })).body.ok).toBe(true);
+    expect((await chat(app, tok2, { message: 'dua' })).body.ok).toBe(true);
+    const r = await chat(app, tok, { message: 'tiga' });
+    expect([r.body.ok, r.body.error]).toEqual([false, 'global_limit']);
+    expect(ai.calls).toHaveLength(2);
+  });
+
   it('aktivitas "chat" tercatat tanpa isi pesan', async () => {
     fresh();
     await chat(appWith(), tok, { message: 'catat aktivitasku saja' });
