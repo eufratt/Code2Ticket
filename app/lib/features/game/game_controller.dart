@@ -40,6 +40,7 @@ class GameOutcome {
 
 String gameErrorMessage(String? code) => switch (code) {
       'invalid_input' => 'Skor ditolak server: data permainan tidak valid.',
+      'invalid_score' => 'Skor ditolak server: hasil permainan tidak wajar.',
       'too_many_requests' => 'Terlalu banyak permintaan. Tunggu sebentar lalu kirim ulang.',
       _ => 'Gagal mengirim skor ($code).',
     };

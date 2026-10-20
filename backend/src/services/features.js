@@ -100,16 +100,35 @@ const scoreSchema = z.object({
   duration_sec: z.int().min(0).max(600),
 });
 
+// Tingkat labirin di app (app\libeatures\game\maze.dart, MazeLevel): bintang dan batas waktu detik.
+// Mudah 5/60, Sedang 8/55, Sulit 12/50. Hasil yang tidak cocok dengan satu pun tingkat = tidak masuk akal.
+const MAZE_LEVELS = [{ stars: 5, seconds: 60 }, { stars: 8, seconds: 55 }, { stars: 12, seconds: 50 }];
+const DURATION_SLACK = 2; // pembulatan elapsed/timeLeft di klien
+const MAX_SCORES_PER_HOUR = 60;
+
+// Bintang <= jumlah item tingkat, sisa waktu + lama main <= batas waktu tingkat, dan lama main tidak mustahil singkat.
+export function plausibleScore({ stars, seconds_left, duration_sec, cleared }) {
+  const minDuration = cleared || stars > 0 ? Math.max(3, stars) : 0;
+  if (duration_sec < minDuration) return false;
+  return MAZE_LEVELS.some((l) => stars <= l.stars && seconds_left <= l.seconds && duration_sec + seconds_left <= l.seconds + DURATION_SLACK);
+}
+
 export async function submitGameScore(pool, user, body) {
   const p = parseInput(scoreSchema, body);
   if (p.error) return fail('invalid_input');
   const { stars, seconds_left, duration_sec } = p.data;
   const cleared = p.data.cleared ?? false;
+  if (!plausibleScore({ stars, seconds_left, duration_sec, cleared })) return fail('invalid_score');
   const left = cleared ? seconds_left : 0;
   const xpRaw = stars * 10 + left;
   const score = stars * 100 + left * 10;
 
   return withTx(pool, async (c) => {
+    await c.query('select 1 from users where id = $1 for no key update', [user.id]); // serialisasi hitungan per pengguna
+    const lastHour = (
+      await c.query("select count(*)::int as n from game_scores where user_id = $1 and created_at > now() - interval '1 hour'", [user.id])
+    ).rows[0].n;
+    if (lastHour >= MAX_SCORES_PER_HOUR) return fail('too_many_requests');
     const today = (
       await c.query(
         `select coalesce(sum(xp_earned), 0)::int as n from game_scores

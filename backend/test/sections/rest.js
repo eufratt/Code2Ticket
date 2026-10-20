@@ -98,7 +98,7 @@ export function featureSection(ctx) {
   describe('10. Game, feedback, profil, aktivitas', () => {
     const score = (stars, left, cleared, dur) => api.post('/game/scores', { token: s.aliceTok, body: { stars, seconds_left: left, cleared, duration_sec: dur } });
     it('skor game: XP = bintang*10 + sisa waktu', async () => {
-      const r = await score(5, 30, true, 40);
+      const r = await score(5, 30, true, 28);
       expect(r.ok).toBe(true);
       expect(r.xp_earned).toBe(80);
       expect(r.user.xp).toBe(80);
@@ -106,7 +106,7 @@ export function featureSection(ctx) {
       expect(r.user.badges).toContain('first_maze_clear');
     });
     it('batas XP harian 200', async () => {
-      const r = await score(30, 60, true, 20);
+      const r = await score(12, 25, true, 20);
       expect(r.xp_earned).toBe(120);
       expect(r.daily_xp_total).toBe(200);
       expect(r.daily_cap_reached).toBe(true);
@@ -117,7 +117,7 @@ export function featureSection(ctx) {
       expect(r.user.xp).toBe(200);
     });
     it('sisa waktu tidak dihitung bila tidak clear', async () => {
-      const r = await score(1, 50, false, 20);
+      const r = await score(1, 20, false, 30);
       expect(r.score).toBe(100);
     });
     it('input game tidak valid ditolak', async () => {
@@ -155,17 +155,20 @@ export function featureSection(ctx) {
       expect(Object.keys(r[0]).sort()).toEqual(['created_at', 'id', 'impression', 'suggestion']);
     });
     it('update profil', async () => {
-      const r = await api.patch('/me', { token: s.aliceTok, body: { full_name: 'Alice Baru', photo_url: 'https://example.com/a.jpg' } });
+      const id = (await api.get('/auth/me', { token: s.aliceTok })).user.id;
+      const own = `/users/${id}/photo?v=1`;
+      expect((await api.patch('/me', { token: s.aliceTok, body: { photo_url: 'https://example.com/a.jpg' } })).field).toBe('photo_url');
+      const r = await api.patch('/me', { token: s.aliceTok, body: { full_name: 'Alice Baru', photo_url: own } });
       expect(r.ok).toBe(true);
       expect(r.user.full_name).toBe('Alice Baru');
-      expect(r.user.photo_url.endsWith('a.jpg')).toBe(true);
+      expect(r.user.photo_url).toBe(own);
     });
     it('update profil: nama kosong / foto terlalu panjang ditolak; foto tidak terhapus bila tidak dikirim', async () => {
       expect((await api.patch('/me', { token: s.aliceTok, body: { full_name: '   ' } })).field).toBe('full_name');
       expect((await api.patch('/me', { token: s.aliceTok, body: { photo_url: 'x'.repeat(501) } })).field).toBe('photo_url');
       const r = await api.patch('/me', { token: s.aliceTok, body: {} });
       expect(r.user.full_name).toBe('Alice Baru');
-      expect(r.user.photo_url.endsWith('a.jpg')).toBe(true);
+      expect(r.user.photo_url).toMatch(/^\/users\/.+\/photo\?v=1$/);
     });
     it('log aktivitas valid', async () => {
       expect((await api.post('/activity', { token: s.aliceTok, body: { type: 'view_giveaway', giveaway_id: s.gid1, category: 'tech' } })).ok).toBe(true);
