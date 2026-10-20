@@ -189,7 +189,7 @@ void main() {
       expect(find.text('0/5 level selesai'), findsOneWidget);
       await tester.tap(find.byKey(const Key('choose_codehunt')));
       await tester.pumpAndSettle();
-      expect(find.widgetWithText(AppBar, 'Code Hunt'), findsOneWidget);
+      expect(find.widgetWithText(AppBar, 'Buru Kode'), findsOneWidget);
       expect(find.byKey(const Key('level_0')), findsOneWidget);
       expect(find.byKey(const Key('open_chain')), findsNothing);
       await tapKey(tester, const Key('open_leaderboard'));
@@ -207,7 +207,7 @@ void main() {
       settings.values['u1|codehunt_best'] = const CodeHuntRecord().merge(1, 820).encode();
       await pump(tester, () => const GameChooserScreen());
       expect(find.text('2/5 level selesai'), findsOneWidget);
-      expect(find.text('Rekor 820 · level Sedang selesai'), findsOneWidget);
+      expect(find.text('Rekor 820 · tingkat Sedang selesai'), findsOneWidget);
       await tester.tap(find.byKey(const Key('choose_chain')));
       await tester.pumpAndSettle();
       for (final l in ChainLevel.all) {

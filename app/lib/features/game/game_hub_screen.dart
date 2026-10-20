@@ -16,7 +16,7 @@ class GameHubScreen extends StatelessWidget {
     final theme = Theme.of(context);
     final c = context.colors;
     return Scaffold(
-      appBar: AppBar(title: const Text('Code Hunt')),
+      appBar: AppBar(title: const Text('Buru Kode')),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(Spacing.screen, Spacing.s4, Spacing.screen, Spacing.s24),
         children: [

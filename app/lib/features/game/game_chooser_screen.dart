@@ -48,7 +48,7 @@ class _GameChooserScreenState extends State<GameChooserScreen> {
   Widget build(BuildContext context) {
     final done = _chain.best.keys.where((l) => l >= 1 && l <= ChainLevel.all.length).length;
     final total = ChainLevel.all.length;
-    final recordText = _record.isEmpty ? 'Belum ada rekor' : 'Rekor ${_record.bestScore} · level ${MazeLevel.all[_record.bestLevel.clamp(0, MazeLevel.all.length - 1)].name} selesai';
+    final recordText = _record.isEmpty ? 'Belum ada rekor' : 'Rekor ${_record.bestScore} · tingkat ${MazeLevel.all[_record.bestLevel.clamp(0, MazeLevel.all.length - 1)].name} selesai';
     return Scaffold(
       appBar: AppBar(title: const Text('Pilih game')),
       body: ListView(
@@ -57,13 +57,13 @@ class _GameChooserScreenState extends State<GameChooserScreen> {
           _GameCard(
             key: const Key('choose_codehunt'),
             icon: Icons.explore_outlined,
-            title: 'Code Hunt',
+            title: 'Buru Kode',
             description: 'Miringkan ponsel, kumpulkan segmen kode, dan antar chip kode ke Mesin Undian sebelum waktu habis.',
             chips: [
               const StatusChip.custom(label: 'Sensor: gyroscope + accelerometer', tone: StatusTone.info, icon: Icons.screen_rotation),
               StatusChip.custom(label: recordText, tone: _record.isEmpty ? StatusTone.neutral : StatusTone.success, icon: Icons.emoji_events_outlined),
             ],
-            semantic: 'Code Hunt. Miringkan ponsel, kumpulkan segmen kode, dan antar chip kode ke Mesin Undian. Sensor gyroscope dan accelerometer. $recordText.',
+            semantic: 'Buru Kode. Miringkan ponsel, kumpulkan segmen kode, dan antar chip kode ke Mesin Undian. Sensor gyroscope dan accelerometer. $recordText.',
             onTap: () => _open('/game/codehunt'),
           ),
           const SizedBox(height: Spacing.s16),
@@ -83,7 +83,7 @@ class _GameChooserScreenState extends State<GameChooserScreen> {
           Center(
             child: PrimaryButton(
               key: const Key('chooser_leaderboard'),
-              label: 'Papan peringkat Code Hunt',
+              label: 'Papan peringkat Buru Kode',
               icon: Icons.leaderboard_outlined,
               variant: ButtonVariant.text,
               expand: false,

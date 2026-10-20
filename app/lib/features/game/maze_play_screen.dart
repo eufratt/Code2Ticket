@@ -165,7 +165,7 @@ class _MazePlayScreenState extends State<MazePlayScreen> with SingleTickerProvid
     if (status == GameStatus.ready) _target = practiceTargetOf(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text('Code Hunt ${_level.name}'),
+        title: Text('Buru Kode ${_level.name}'),
         actions: [
           IconButton(
             key: const Key('maze_pause'),

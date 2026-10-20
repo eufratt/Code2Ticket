@@ -38,7 +38,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 ? ListView(children: const [
                     SizedBox(
                       height: 420,
-                      child: EmptyState(icon: Icons.leaderboard_outlined, title: 'Belum ada skor', message: 'Mainkan Code Hunt untuk jadi yang pertama di papan peringkat minggu ini.'),
+                      child: EmptyState(icon: Icons.leaderboard_outlined, title: 'Belum ada skor', message: 'Mainkan Buru Kode untuk jadi yang pertama di papan peringkat minggu ini.'),
                     ),
                   ])
                 : ListView(
@@ -50,7 +50,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                       if (me != null && !c.entries.any((e) => e.username == me))
                         const Padding(
                           padding: EdgeInsets.only(bottom: Spacing.s12),
-                          child: InlineMessage('Kamu belum masuk daftar minggu ini. Mainkan Code Hunt untuk naik ke papan peringkat.', tone: StatusTone.info),
+                          child: InlineMessage('Kamu belum masuk daftar minggu ini. Mainkan Buru Kode untuk naik ke papan peringkat.', tone: StatusTone.info),
                         ),
                       for (final e in c.entries)
                         Padding(padding: const EdgeInsets.only(bottom: Spacing.s8), child: _Row(entry: e, isMe: e.username == me)),
