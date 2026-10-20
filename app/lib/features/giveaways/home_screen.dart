@@ -336,13 +336,12 @@ const _featureMenu = [
   ('map', Icons.map_outlined, 'Peta', '/map'),
 ];
 
-/// Grid "Menu fitur": 4 kolom bila tiap kotak cukup lebar untuk label (memperhitungkan skala font), selain itu 2 kolom.
+/// Grid "Menu fitur": 3 kolom per baris.
 class _FeatureMenu extends StatelessWidget {
   const _FeatureMenu();
 
   @override
   Widget build(BuildContext context) {
-    final scale = MediaQuery.textScalerOf(context).scale(12) / 12;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -350,7 +349,7 @@ class _FeatureMenu extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: Spacing.screen),
           child: LayoutBuilder(builder: (context, box) {
-            final cols = (box.maxWidth - Spacing.s8 * 3) / 4 >= 72 * scale ? 4 : 2;
+            const cols = 3;
             return Column(children: [
               for (var start = 0; start < _featureMenu.length; start += cols)
                 Padding(
