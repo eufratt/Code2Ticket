@@ -16,6 +16,8 @@ import 'features/draw/draw_result_screen.dart';
 import 'features/draw/draw_verify_screen.dart';
 import 'features/discover/map_screen.dart';
 import 'features/feedback/feedback_screen.dart';
+import 'features/game/chain_levels_screen.dart';
+import 'features/game/chain_play_screen.dart';
 import 'features/game/game_hub_screen.dart';
 import 'features/game/leaderboard_screen.dart';
 import 'features/game/maze_play_screen.dart';
@@ -67,6 +69,8 @@ GoRouter buildRouter(AuthController auth) => GoRouter(
         GoRoute(path: '/settings', builder: (_, _) => const SettingsScreen()),
         GoRoute(path: '/notifications', builder: (_, _) => const NotificationsScreen()),
         GoRoute(path: '/game', builder: (_, _) => const GameHubScreen()),
+        GoRoute(path: '/game/chain', builder: (_, _) => const ChainLevelsScreen()),
+        GoRoute(path: '/game/chain/play', builder: (_, state) => ChainPlayScreen(levelNumber: state.extra is int ? state.extra as int : 1)),
         GoRoute(path: '/game/play', builder: (_, state) => MazePlayScreen(levelIndex: state.extra is int ? state.extra as int : 0)),
         GoRoute(path: '/leaderboard', builder: (_, _) => const LeaderboardScreen()),
         GoRoute(path: '/admin', builder: (_, _) => const AdminGiveawaysScreen()),

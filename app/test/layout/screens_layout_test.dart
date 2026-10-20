@@ -5,6 +5,8 @@ import 'dart:math';
 import 'package:code2ticket/core/db/rate_cache.dart' show SettingsStore;
 import 'package:code2ticket/core/verify/chain_verifier.dart';
 import 'package:code2ticket/features/draw/draw_result_screen.dart';
+import 'package:code2ticket/features/game/chain_levels_screen.dart';
+import 'package:code2ticket/features/game/chain_play_screen.dart';
 import 'package:code2ticket/features/game/game_controller.dart';
 import 'package:code2ticket/features/game/game_hub_screen.dart';
 import 'package:code2ticket/features/game/leaderboard_screen.dart';
@@ -263,8 +265,11 @@ void main() {
     'Generate Code': (() => const GenerateCodesScreen(giveawayId: 'g1'), 'Buat kode'),
     'Daftar Kode': (() => const CodesListScreen(giveawayId: 'g1'), 'ABCD-EFGH-JKLM'),
     'Asisten': (() => const AssistantScreen(), 'Ada giveaway gaming apa?'),
-    'Code Hunt': (() => const GameHubScreen(), 'Pilih tingkat'),
+    'Game (hub)': (() => const GameHubScreen(), 'Pilih tingkat'),
     'Papan Peringkat': (() => const LeaderboardScreen(), 'Skor total 7 hari terakhir'),
+    'Rakit Rantai (level)': (() => const ChainLevelsScreen(), 'Pilih level'),
+    'Rakit Rantai (susun)': (() => const ChainPlayScreen(levelNumber: 3), 'Langkah: 0'),
+    'Rakit Rantai (periksa)': (() => const ChainPlayScreen(levelNumber: 5), 'Percobaan: 0'),
     'Maze (siap)': (() => MazePlayScreen(levelIndex: 2, seed: 1, tilt: () => const Stream.empty()), 'Siap?'),
     'Cek Keaslian': (() => DrawVerifyScreen(giveawayId: 'g1', runner: _syncVerify), 'Seed dikunci sebelum tiket terbit'),
     'Profil': (() => const ProfileScreen(), 'Level 3'),
