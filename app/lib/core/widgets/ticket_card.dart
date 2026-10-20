@@ -21,6 +21,7 @@ class TicketCard extends StatelessWidget {
     required this.status,
     this.prizeText,
     this.subtitle,
+    this.statusWidget,
     this.onTap,
     this.numberKey = const Key('ticket_card_number'),
   });
@@ -33,6 +34,9 @@ class TicketCard extends StatelessWidget {
   final AppStatus status;
   final String? prizeText;
   final String? subtitle;
+
+  /// Pengganti chip status untuk tiket yang bukan tiket asli (mis. tiket latihan Code Hunt).
+  final Widget? statusWidget;
   final VoidCallback? onTap;
 
   /// Kunci untuk teks nomor tiket (tes dan layar yang perlu menunjuk nomornya).
@@ -94,7 +98,7 @@ class TicketCard extends StatelessWidget {
             ),
           ],
         ),
-        StatusChip(status),
+        statusWidget ?? StatusChip(status),
       ],
     );
 

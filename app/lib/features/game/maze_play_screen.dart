@@ -9,14 +9,19 @@ import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/widgets.dart';
+import '../auth/auth_controller.dart';
+import '../profile/profile_screen.dart' show badgeLabel;
+import 'code_hunt.dart';
+import 'code_hunt_widgets.dart';
 import 'game_controller.dart';
 import 'maze.dart';
 import 'maze_game.dart';
 import 'tilt.dart';
 import 'tilt_filter.dart';
 
-/// Layar permainan: HUD (waktu, bintang, jeda), labirin (CustomPainter, digerakkan Ticker), tombol panah sebagai kontrol
-/// alternatif (aksesibilitas, emulator), dan hasil (waktu, bintang, skor). Logika ada di [MazeGame] dan [TiltFilter]
+/// Layar permainan Code Hunt: HUD (waktu, segmen kode, kode rakitan, jeda), labirin (CustomPainter, digerakkan Ticker), tombol panah
+/// sebagai kontrol alternatif (aksesibilitas, emulator), dan hasil (waktu, segmen, skor, Tiket Latihan). Narasi: chip kode (bola)
+/// mengumpulkan segmen kode (bintang) lalu masuk Mesin Undian (pintu keluar); skor dan kontrak server tidak berubah. Logika ada di [MazeGame] dan [TiltFilter]
 /// (gyroscope + accelerometer, parameter di tilt_filter.dart); layar hanya menyajikan.
 /// Tidak ada animasi dekoratif, jadi "kurangi animasi" sistem tidak mengubah apa pun selain tidak adanya efek tambahan.
 class MazePlayScreen extends StatefulWidget {
@@ -42,6 +47,10 @@ class _MazePlayScreenState extends State<MazePlayScreen> with SingleTickerProvid
   Duration _last = Duration.zero;
   GameOutcome? _outcome;
   bool _submitted = false;
+  late int _seed;
+  late List<String> _segments;
+  List<String> _badgesBefore = const [];
+  PracticeTarget? _target;
 
   MazeLevel get _level => MazeLevel.all[widget.levelIndex.clamp(0, MazeLevel.all.length - 1)];
 
@@ -81,8 +90,10 @@ class _MazePlayScreenState extends State<MazePlayScreen> with SingleTickerProvid
   }
 
   void _newGame() {
-    final rnd = Random(widget.seed ?? DateTime.now().microsecondsSinceEpoch);
+    _seed = widget.seed ?? DateTime.now().microsecondsSinceEpoch;
+    final rnd = Random(_seed);
     _game = MazeGame(_level, Maze.generate(_level.cols, _level.rows, rnd, stars: _level.stars));
+    _segments = practiceSegments(levelCodeSeed(_seed, widget.levelIndex), _game.maze.stars.length);
     _outcome = null;
     _submitted = false;
     _last = Duration.zero;
@@ -139,6 +150,7 @@ class _MazePlayScreenState extends State<MazePlayScreen> with SingleTickerProvid
   void _calibrate() => _tilt.calibrate();
 
   void _begin() {
+    _badgesBefore = context.read<AuthController?>()?.user?.badges ?? const [];
     _calibrate();
     _update(_game.start);
   }
@@ -148,9 +160,10 @@ class _MazePlayScreenState extends State<MazePlayScreen> with SingleTickerProvid
   @override
   Widget build(BuildContext context) {
     final status = _game.status;
+    if (status == GameStatus.ready) _target = practiceTargetOf(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text('Maze ${_level.name}'),
+        title: Text('Code Hunt ${_level.name}'),
         actions: [
           IconButton(
             key: const Key('maze_pause'),
@@ -169,10 +182,10 @@ class _MazePlayScreenState extends State<MazePlayScreen> with SingleTickerProvid
               padding: const EdgeInsets.fromLTRB(Spacing.screen, Spacing.s4, Spacing.screen, Spacing.s16),
               child: Column(
                 children: [
-                  ValueListenableBuilder<int>(valueListenable: _frame, builder: (_, _, _) => _Hud(game: _game)),
+                  ValueListenableBuilder<int>(valueListenable: _frame, builder: (_, _, _) => _Hud(game: _game, segments: _segments)),
                   const SizedBox(height: Spacing.s8),
                   Semantics(
-                    label: 'Labirin ${_level.cols} kali ${_level.rows}. Bintang ${_game.starsCollected} dari ${_game.maze.stars.length}. Gunakan tombol panah atau miringkan ponsel.',
+                    label: 'Labirin ${_level.cols} kali ${_level.rows}. Segmen kode ${_game.starsCollected} dari ${_game.maze.stars.length}. Antar chip kode ke Mesin Undian. Gunakan tombol panah atau miringkan ponsel.',
                     child: SizedBox(
                       key: const Key('maze_board'),
                       width: side,
@@ -183,15 +196,13 @@ class _MazePlayScreenState extends State<MazePlayScreen> with SingleTickerProvid
                   const SizedBox(height: Spacing.s12),
                   _DPad(onMove: _nudge, enabled: status == GameStatus.playing),
                   const SizedBox(height: Spacing.s8),
-                  Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    Flexible(
-                      child: Text(
-                        _tilt.gyroActive ? 'Sensor: gyroscope + accelerometer' : 'Sensor: accelerometer',
-                        key: const Key('maze_sensor'),
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: context.colors.muted),
-                      ),
+                  // Wrap: pada 320 dp / font 1,3x label dan tombol turun ke baris berikutnya, tidak meluap.
+                  Wrap(alignment: WrapAlignment.center, crossAxisAlignment: WrapCrossAlignment.center, spacing: Spacing.s8, children: [
+                    Text(
+                      _tilt.gyroActive ? 'Sensor: gyroscope + accelerometer' : 'Sensor: accelerometer',
+                      key: const Key('maze_sensor'),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(color: context.colors.muted),
                     ),
-                    const SizedBox(width: Spacing.s8),
                     PrimaryButton(
                       key: const Key('maze_calibrate'),
                       label: 'Kalibrasi ulang',
@@ -222,7 +233,8 @@ class _MazePlayScreenState extends State<MazePlayScreen> with SingleTickerProvid
         return _Panel(
           icon: Icons.sports_esports_outlined,
           title: 'Siap?',
-          message: 'Bawa bola ke pintu keluar secepatnya dan ambil bintang di jalan. Waktu: ${_level.seconds} detik.',
+          message: 'Antar chip kode ke Mesin Undian secepatnya dan kumpulkan ${_game.maze.stars.length} segmen kode di jalan. Waktu: ${_level.seconds} detik.',
+          details: PracticeTargetLine(target: _target, center: true),
           actions: [PrimaryButton(key: const Key('maze_start'), label: 'Mulai', icon: Icons.play_arrow, onPressed: _begin)],
         );
       case GameStatus.paused:
@@ -238,6 +250,10 @@ class _MazePlayScreenState extends State<MazePlayScreen> with SingleTickerProvid
       case GameStatus.cleared || GameStatus.timeUp:
         return _ResultPanel(
           game: _game,
+          segments: _segments,
+          ticketNumber: practiceTicketNumber(levelCodeSeed(_seed, widget.levelIndex)),
+          target: _target,
+          newBadges: [for (final b in context.read<AuthController?>()?.user?.badges ?? const <String>[]) if (!_badgesBefore.contains(b)) b],
           outcome: _outcome,
           submitting: context.watch<GameController>().submitting,
           onRetry: _submit,
@@ -250,8 +266,9 @@ class _MazePlayScreenState extends State<MazePlayScreen> with SingleTickerProvid
 }
 
 class _Hud extends StatelessWidget {
-  const _Hud({required this.game});
+  const _Hud({required this.game, required this.segments});
   final MazeGame game;
+  final List<String> segments;
 
   @override
   Widget build(BuildContext context) {
@@ -259,30 +276,41 @@ class _Hud extends StatelessWidget {
     final c = context.colors;
     final low = game.timeLeft <= 10 && game.status != GameStatus.ready;
     final secs = game.timeLeft.ceil();
-    return Row(
-      children: [
-        Expanded(
-          child: Semantics(
-            label: 'Sisa waktu $secs detik',
+    final total = game.maze.stars.length;
+    return Column(children: [
+      Row(
+        children: [
+          Expanded(
+            child: Semantics(
+              label: 'Sisa waktu $secs detik',
+              excludeSemantics: true,
+              child: Row(children: [
+                Icon(low ? Icons.timer : Icons.timer_outlined, color: low ? c.error : c.muted),
+                const SizedBox(width: Spacing.s4),
+                Flexible(child: Text('$secs dtk', key: const Key('maze_time'), style: theme.textTheme.titleMedium?.copyWith(color: low ? c.error : null, fontFeatures: const [FontFeature.tabularFigures()]))),
+              ]),
+            ),
+          ),
+          Semantics(
+            label: 'Segmen kode ${game.starsCollected} dari $total',
             excludeSemantics: true,
-            child: Row(children: [
-              Icon(low ? Icons.timer : Icons.timer_outlined, color: low ? c.error : c.muted),
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              Icon(Icons.vpn_key_outlined, color: c.accent),
               const SizedBox(width: Spacing.s4),
-              Flexible(child: Text('$secs dtk', key: const Key('maze_time'), style: theme.textTheme.titleMedium?.copyWith(color: low ? c.error : null, fontFeatures: const [FontFeature.tabularFigures()]))),
+              Text('${game.starsCollected}/$total', key: const Key('maze_stars'), style: theme.textTheme.titleMedium),
             ]),
           ),
-        ),
-        Semantics(
-          label: 'Bintang ${game.starsCollected} dari ${game.maze.stars.length}',
-          excludeSemantics: true,
-          child: Row(mainAxisSize: MainAxisSize.min, children: [
-            Icon(Icons.star, color: c.accent),
-            const SizedBox(width: Spacing.s4),
-            Text('${game.starsCollected}/${game.maze.stars.length}', key: const Key('maze_stars'), style: theme.textTheme.titleMedium),
-          ]),
-        ),
-      ],
-    );
+        ],
+      ),
+      const SizedBox(height: Spacing.s8),
+      Container(
+        key: const Key('maze_code'),
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: Spacing.s12, vertical: Spacing.s8),
+        decoration: BoxDecoration(color: c.surfaceVariant, borderRadius: Radii.buttonAll),
+        child: CodeDisplay(segments: segments, filled: game.starsCollected, align: CrossAxisAlignment.center),
+      ),
+    ]);
   }
 }
 
@@ -332,10 +360,11 @@ class _Overlay extends StatelessWidget {
 }
 
 class _Panel extends StatelessWidget {
-  const _Panel({required this.icon, required this.title, required this.message, required this.actions});
+  const _Panel({required this.icon, required this.title, required this.message, required this.actions, this.details});
   final IconData icon;
   final String title, message;
   final List<Widget> actions;
+  final Widget? details;
 
   @override
   Widget build(BuildContext context) {
@@ -348,6 +377,7 @@ class _Panel extends StatelessWidget {
         Semantics(header: true, liveRegion: true, child: Text(title, textAlign: TextAlign.center, style: theme.textTheme.titleLarge)),
         const SizedBox(height: Spacing.s8),
         Text(message, textAlign: TextAlign.center, style: theme.textTheme.bodyMedium),
+        if (details != null) Padding(padding: const EdgeInsets.only(top: Spacing.s12), child: details),
         const SizedBox(height: Spacing.s16),
         for (final a in actions) Padding(padding: const EdgeInsets.only(top: Spacing.s8), child: a),
       ]),
@@ -356,8 +386,22 @@ class _Panel extends StatelessWidget {
 }
 
 class _ResultPanel extends StatelessWidget {
-  const _ResultPanel({required this.game, required this.outcome, required this.submitting, required this.onRetry, required this.onAgain});
+  const _ResultPanel({
+    required this.game,
+    required this.segments,
+    required this.ticketNumber,
+    required this.target,
+    required this.newBadges,
+    required this.outcome,
+    required this.submitting,
+    required this.onRetry,
+    required this.onAgain,
+  });
   final MazeGame game;
+  final List<String> segments;
+  final String ticketNumber;
+  final PracticeTarget? target;
+  final List<String> newBadges;
   final GameOutcome? outcome;
   final bool submitting;
   final VoidCallback onRetry, onAgain;
@@ -368,25 +412,42 @@ class _ResultPanel extends StatelessWidget {
     final c = context.colors;
     final s = game.score;
     final cleared = s.cleared;
-    final total = game.maze.stars.length;
+    final total = segments.length;
     final data = outcome?.data;
     return SurfaceCard(
       key: const Key('maze_result'),
       raised: true,
       child: Column(mainAxisSize: MainAxisSize.min, children: [
-        ExcludeSemantics(child: Icon(cleared ? Icons.emoji_events : Icons.timer_off_outlined, size: 48, color: cleared ? c.accent : c.muted)),
+        ExcludeSemantics(child: Icon(cleared ? Icons.confirmation_number : Icons.timer_off_outlined, size: 48, color: cleared ? c.accent : c.muted)),
         const SizedBox(height: Spacing.s8),
-        Semantics(header: true, liveRegion: true, child: Text(cleared ? 'Labirin selesai!' : 'Waktu habis', textAlign: TextAlign.center, style: theme.textTheme.titleLarge)),
+        Semantics(header: true, liveRegion: true, child: Text(cleared ? 'Tiket Latihan terbit!' : 'Waktu habis', textAlign: TextAlign.center, style: theme.textTheme.titleLarge)),
         const SizedBox(height: Spacing.s12),
-        // Bintang (ikon terisi/kosong + teks "x dari y": bukan hanya warna).
-        Semantics(
-          label: '$total bintang tersedia, ${s.stars} terkumpul',
-          excludeSemantics: true,
-          child: Wrap(alignment: WrapAlignment.center, children: [
-            for (var i = 0; i < total; i++) Icon(i < s.stars ? Icons.star : Icons.star_border, color: c.accent, size: 24),
-          ]),
-        ),
-        Text('${s.stars} dari $total bintang', style: theme.textTheme.bodyMedium),
+        if (cleared) ...[
+          PracticeTicket(segments: segments, number: ticketNumber, target: target),
+          const SizedBox(height: Spacing.s8),
+          const InlineMessage(practiceDisclaimer, tone: StatusTone.info),
+          if (data != null)
+            Padding(
+              padding: const EdgeInsets.only(top: Spacing.s8),
+              child: Wrap(alignment: WrapAlignment.center, spacing: Spacing.s8, runSpacing: Spacing.s8, children: [
+                StatusChip.custom(label: '+${data.xpEarned} XP', tone: StatusTone.success, icon: Icons.bolt),
+                for (final b in newBadges) StatusChip.custom(label: 'Lencana: ${badgeLabel(b)}', tone: StatusTone.success, icon: Icons.military_tech),
+              ]),
+            ),
+        ] else ...[
+          // Waktu habis: tampilkan segmen yang sempat terkumpul (slot sisanya kosong).
+          Container(
+            key: const Key('maze_result_code'),
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: Spacing.s12, vertical: Spacing.s8),
+            decoration: BoxDecoration(color: c.surfaceVariant, borderRadius: Radii.buttonAll),
+            child: CodeDisplay(segments: segments, filled: s.stars, align: CrossAxisAlignment.center),
+          ),
+          const SizedBox(height: Spacing.s8),
+          Text('Kode belum lengkap, jadi Mesin Undian belum menerbitkan Tiket Latihan.', textAlign: TextAlign.center, style: theme.textTheme.bodyMedium),
+        ],
+        const SizedBox(height: Spacing.s8),
+        Text('${s.stars} dari $total segmen kode', style: theme.textTheme.bodyMedium),
         const SizedBox(height: Spacing.s12),
         _Row(label: 'Waktu', value: '${s.durationSec} detik'),
         if (cleared) _Row(label: 'Sisa waktu', value: '${s.secondsLeft} detik'),
@@ -449,24 +510,29 @@ class _MazePainter extends CustomPainter {
     final m = game.maze;
     final cell = size.width / m.cols;
     canvas.drawRRect(RRect.fromRectAndRadius(Offset.zero & size, const Radius.circular(Radii.input)), Paint()..color = colors.surfaceVariant);
-    // Pintu keluar: cincin ganda (bentuk, bukan hanya warna) di sel keluar; mulai: titik kecil.
+    // Mesin Undian (titik akhir): cincin + ikon tiket (bentuk, bukan hanya warna); mulai: titik kecil.
     Offset center(Cell c) => Offset((c.$1 + 0.5) * cell, (c.$2 + 0.5) * cell);
     final exitPaint = Paint()..color = colors.statusSuccess.fg..style = PaintingStyle.stroke..strokeWidth = cell * 0.08;
-    canvas.drawCircle(center(m.exit), cell * 0.36, exitPaint);
-    canvas.drawCircle(center(m.exit), cell * 0.20, exitPaint);
+    canvas.drawCircle(center(m.exit), cell * 0.40, exitPaint);
+    const icon = Icons.confirmation_number_outlined;
+    final ticket = TextPainter(
+      text: TextSpan(
+        text: String.fromCharCode(icon.codePoint),
+        style: TextStyle(fontFamily: icon.fontFamily, package: icon.fontPackage, fontSize: cell * 0.5, color: colors.statusSuccess.fg),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    ticket.paint(canvas, center(m.exit) - Offset(ticket.width / 2, ticket.height / 2));
     canvas.drawCircle(center(m.start), cell * 0.08, Paint()..color = colors.muted);
-    // Bintang yang belum diambil.
-    final starPaint = Paint()..color = colors.accent;
+    // Segmen kode yang belum diambil: label membulat dengan empat titik (4 karakter).
+    final tagPaint = Paint()..color = colors.accent;
+    final dotPaint = Paint()..color = colors.onBackground;
     for (final (_, c) in game.remainingStars) {
       final o = center(c);
-      final path = Path();
-      for (var i = 0; i < 10; i++) {
-        final r = (i.isEven ? 0.26 : 0.11) * cell;
-        final a = -pi / 2 + i * pi / 5;
-        final p = Offset(o.dx + r * cos(a), o.dy + r * sin(a));
-        i == 0 ? path.moveTo(p.dx, p.dy) : path.lineTo(p.dx, p.dy);
+      canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromCenter(center: o, width: cell * 0.62, height: cell * 0.36), Radius.circular(cell * 0.08)), tagPaint);
+      for (var i = 0; i < 4; i++) {
+        canvas.drawCircle(Offset(o.dx + (i - 1.5) * cell * 0.12, o.dy), cell * 0.035, dotPaint);
       }
-      canvas.drawPath(path..close(), starPaint);
     }
     // Dinding (garis tebal membulat).
     final wall = Paint()
@@ -482,10 +548,12 @@ class _MazePainter extends CustomPainter {
         if (c == m.cols - 1 && !m.canMove(c, r, Dir.e)) canvas.drawLine(Offset(x + cell, y), Offset(x + cell, y + cell), wall);
       }
     }
-    // Bola.
+    // Chip kode (pemain): lingkaran fisika yang sama, dengan persegi chip di dalamnya.
     final b = Offset(game.x * cell, game.y * cell);
-    canvas.drawCircle(b, MazeGame.ballRadius * cell, Paint()..color = colors.primary);
-    canvas.drawCircle(b, MazeGame.ballRadius * cell, Paint()..color = colors.onPrimary..style = PaintingStyle.stroke..strokeWidth = 2);
+    final r = MazeGame.ballRadius * cell;
+    canvas.drawCircle(b, r, Paint()..color = colors.primary);
+    canvas.drawCircle(b, r, Paint()..color = colors.onPrimary..style = PaintingStyle.stroke..strokeWidth = 2);
+    canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromCenter(center: b, width: r * 0.9, height: r * 0.9), Radius.circular(r * 0.15)), Paint()..color = colors.onPrimary..style = PaintingStyle.stroke..strokeWidth = 1.5);
   }
 
   @override

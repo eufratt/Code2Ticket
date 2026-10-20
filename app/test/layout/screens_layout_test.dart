@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:code2ticket/core/db/rate_cache.dart' show SettingsStore;
 import 'package:code2ticket/core/verify/chain_verifier.dart';
@@ -7,6 +8,7 @@ import 'package:code2ticket/features/draw/draw_result_screen.dart';
 import 'package:code2ticket/features/game/game_controller.dart';
 import 'package:code2ticket/features/game/game_hub_screen.dart';
 import 'package:code2ticket/features/game/leaderboard_screen.dart';
+import 'package:code2ticket/features/game/maze.dart';
 import 'package:code2ticket/features/game/maze_play_screen.dart';
 import 'package:code2ticket/features/giveaways/affinity_controller.dart';
 import 'package:code2ticket/features/draw/draw_verify_screen.dart';
@@ -261,7 +263,7 @@ void main() {
     'Generate Code': (() => const GenerateCodesScreen(giveawayId: 'g1'), 'Buat kode'),
     'Daftar Kode': (() => const CodesListScreen(giveawayId: 'g1'), 'ABCD-EFGH-JKLM'),
     'Asisten': (() => const AssistantScreen(), 'Ada giveaway gaming apa?'),
-    'Game Maze': (() => const GameHubScreen(), 'Pilih tingkat'),
+    'Code Hunt': (() => const GameHubScreen(), 'Pilih tingkat'),
     'Papan Peringkat': (() => const LeaderboardScreen(), 'Skor total 7 hari terakhir'),
     'Maze (siap)': (() => MazePlayScreen(levelIndex: 2, seed: 1, tilt: () => const Stream.empty()), 'Siap?'),
     'Cek Keaslian': (() => DrawVerifyScreen(giveawayId: 'g1', runner: _syncVerify), 'Seed dikunci sebelum tiket terbit'),
@@ -344,6 +346,27 @@ void main() {
         }
         await tester.pumpAndSettle();
         expect(find.text('Waktu habis'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+        await _scrollThrough(tester);
+        await tester.pumpWidget(const SizedBox());
+      });
+
+      testWidgets('Maze: Tiket Latihan setelah selesai di tingkat sulit (12 segmen)', (tester) async {
+        await setViewport(tester, width: v.width, textScale: v.scale, brightness: v.brightness);
+        final env = SampleEnv();
+        await tester.pumpWidget(env.app(MazePlayScreen(levelIndex: 2, seed: 1, tilt: () => const Stream.empty())));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('maze_start')));
+        await tester.pump();
+        final path = Maze.generate(10, 10, Random(1), stars: 12).solve()!;
+        for (var i = 1; i < path.length; i++) {
+          final d = Dir.values.firstWhere((d) => path[i - 1].$1 + d.dx == path[i].$1 && path[i - 1].$2 + d.dy == path[i].$2);
+          await tester.tap(find.byKey(Key('dpad_${d.name}')));
+          await tester.pump();
+        }
+        await tester.pumpAndSettle();
+        expect(find.byKey(const Key('practice_ticket')), findsOneWidget);
+        expect(find.text('Tiket latihan: tidak memengaruhi peluang menang'), findsOneWidget);
         expect(tester.takeException(), isNull);
         await _scrollThrough(tester);
         await tester.pumpWidget(const SizedBox());

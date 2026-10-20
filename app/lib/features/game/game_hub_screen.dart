@@ -4,9 +4,10 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/widgets.dart';
+import 'code_hunt_widgets.dart';
 import 'maze.dart';
 
-/// Pintu Game Maze: pilih tingkat, cara main, dan papan peringkat. Layar penuh, tanpa tab/FAB (DESIGN.md, Game).
+/// Pintu Code Hunt (labirin bertema kode -> tiket -> draw): pilih tingkat, cara main, dan papan peringkat. Layar penuh, tanpa tab/FAB (DESIGN.md, Game).
 class GameHubScreen extends StatelessWidget {
   const GameHubScreen({super.key});
 
@@ -15,7 +16,7 @@ class GameHubScreen extends StatelessWidget {
     final theme = Theme.of(context);
     final c = context.colors;
     return Scaffold(
-      appBar: AppBar(title: const Text('Game Maze')),
+      appBar: AppBar(title: const Text('Code Hunt')),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(Spacing.screen, Spacing.s4, Spacing.screen, Spacing.s24),
         children: [
@@ -28,14 +29,15 @@ class GameHubScreen extends StatelessWidget {
                 const SizedBox(width: Spacing.s12),
                 Expanded(
                   child: Text(
-                    'Miringkan ponsel untuk menggulirkan bola ke pintu keluar dan kumpulkan bintang sebelum waktu habis. '
-                    'Tidak bisa memiringkan? Pakai tombol panah di layar.',
+                    'Miringkan ponsel untuk menggulirkan chip kode, kumpulkan segmen kode, lalu antar ke Mesin Undian '
+                    'sebelum waktu habis. Kode yang lengkap menjadi Tiket Latihan. Tidak bisa memiringkan? Pakai tombol panah di layar.',
                     style: theme.textTheme.bodyMedium?.copyWith(color: c.onPrimaryContainer),
                   ),
                 ),
               ],
             ),
           ),
+          Padding(padding: const EdgeInsets.only(top: Spacing.s12), child: PracticeTargetLine(target: practiceTargetOf(context, listen: true))),
           const SectionHeader('Pilih tingkat', padding: EdgeInsets.only(top: Spacing.s16)),
           for (var i = 0; i < MazeLevel.all.length; i++)
             Padding(
@@ -43,7 +45,7 @@ class GameHubScreen extends StatelessWidget {
               child: SurfaceCard(
                 key: Key('level_$i'),
                 onTap: () => context.push('/game/play', extra: i),
-                semanticLabel: 'Tingkat ${MazeLevel.all[i].name}, ${MazeLevel.all[i].cols} kali ${MazeLevel.all[i].rows}, ${MazeLevel.all[i].stars} bintang, ${MazeLevel.all[i].seconds} detik',
+                semanticLabel: 'Tingkat ${MazeLevel.all[i].name}, ${MazeLevel.all[i].cols} kali ${MazeLevel.all[i].rows}, ${MazeLevel.all[i].stars} segmen kode, ${MazeLevel.all[i].seconds} detik',
                 child: Row(
                   children: [
                     Expanded(
@@ -53,7 +55,7 @@ class GameHubScreen extends StatelessWidget {
                           Text(MazeLevel.all[i].name, style: theme.textTheme.titleMedium),
                           const SizedBox(height: Spacing.s4),
                           Text(
-                            '${MazeLevel.all[i].cols}×${MazeLevel.all[i].rows} · ${MazeLevel.all[i].stars} bintang · ${MazeLevel.all[i].seconds} detik',
+                            '${MazeLevel.all[i].cols}×${MazeLevel.all[i].rows} · ${MazeLevel.all[i].stars} segmen · ${MazeLevel.all[i].seconds} detik',
                             style: theme.textTheme.bodySmall?.copyWith(color: c.muted),
                           ),
                         ],

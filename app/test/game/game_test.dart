@@ -230,9 +230,9 @@ void main() {
       await tester.pump();
       await solveWithDpad(tester, mazeOf(5, MazeLevel.easy));
       await tester.pumpAndSettle();
-      expect(find.text('Labirin selesai!'), findsOneWidget);
+      expect(find.text('Tiket Latihan terbit!'), findsOneWidget);
       expect(find.text('Waktu'), findsOneWidget);
-      expect(find.textContaining('dari 5 bintang'), findsOneWidget);
+      expect(find.textContaining('dari 5 segmen kode'), findsOneWidget);
       expect(find.byKey(const Key('maze_score')), findsOneWidget);
       final post = api.calls.singleWhere((c) => c.method == 'POST');
       expect(post.path, '/game/scores');
@@ -256,6 +256,7 @@ void main() {
       expect(find.text('Tidak ada koneksi internet.'), findsOneWidget);
       expect(api.posts('/game/scores'), 1);
       handler = (m, p, b) async => okScore();
+      await tester.ensureVisible(find.byKey(const Key('maze_retry_submit')));
       await tester.tap(find.byKey(const Key('maze_retry_submit')));
       await tester.pumpAndSettle();
       expect(api.posts('/game/scores'), 2);
@@ -374,7 +375,7 @@ void main() {
       await tester.pump();
       await solveWithDpad(tester, mazeOf(5, MazeLevel.easy));
       await tester.pumpAndSettle();
-      expect(find.text('Labirin selesai!'), findsOneWidget);
+      expect(find.text('Tiket Latihan terbit!'), findsOneWidget);
     });
 
     testWidgets('sensor galat: layar tetap berfungsi', (tester) async {

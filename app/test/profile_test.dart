@@ -224,7 +224,7 @@ void main() {
       await tester.scrollUntilVisible(find.text('Pengaturan'), 200, scrollable: find.byType(Scrollable).first);
       expect(find.text('Pengaturan'), findsOneWidget);
       // Dipindah ke bottom navigation / menu fitur Home: tidak ganda di Profil.
-      for (final t in ['Konverter', 'Saran & Kesan', 'Game Maze', 'Keluar']) {
+      for (final t in ['Konverter', 'Saran & Kesan', 'Code Hunt', 'Keluar']) {
         expect(find.text(t), findsNothing, reason: t);
       }
     });

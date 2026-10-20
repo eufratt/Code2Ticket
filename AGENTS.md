@@ -20,6 +20,7 @@ Login/session dibuat sendiri (bukan Firebase/Supabase Auth). Scheduler draw: nod
   flutter run --dart-define=API_BASE_URL=https://code2ticket.onrender.com
 - Backend (di backend\): npm ci ; npm test (butuh Postgres uji dan Python 3, lihat backend\README.md) ; npm run demo-seed (env ADMIN_USERNAME/ADMIN_PASSWORD/API_BASE_URL)
 - Kontrol Maze: logika kemiringan murni di app\lib\features\game\tilt_filter.dart (parameter tiltTau/zona mati/gain/batas didokumentasikan di sana, tesnya app\test\game\tilt_filter_test.dart); adaptor sensor_plus di tilt.dart. Jangan menaruh logika filter di layar.
+- Code Hunt (Maze bertema kode -> tiket -> draw): narasi murni tampilan. Logika kode latihan/target ada di app\lib\features\game\code_hunt.dart (tes app\test\game\code_hunt_test.dart), widget di code_hunt_widgets.dart. Tiket latihan BUKAN tiket asli: jangan dikirim ke server, jangan disimpan, kode latihan tidak boleh bisa lolos sebagai kode redeem. Payload POST /game/scores tidak boleh berubah.
 - Android: android\gradle.properties berisi kotlin.incremental=false (proyek di drive D:, pub cache di C:); jangan dihapus.
 
 ## Navigasi

@@ -331,7 +331,7 @@ const _featureMenu = [
   ('discover', Icons.explore_outlined, 'Discover', '/discover'),
   ('tickets', Icons.confirmation_number_outlined, 'My Tickets', '/tickets'),
   ('assistant', Icons.smart_toy_outlined, 'Asisten', '/assistant'),
-  ('game', Icons.sports_esports_outlined, 'Game Maze', '/game'),
+  ('game', Icons.sports_esports_outlined, 'Code Hunt', '/game'),
   ('leaderboard', Icons.leaderboard_outlined, 'Papan Peringkat', '/leaderboard'),
   ('converter', Icons.currency_exchange, 'Konverter', '/converter'),
   ('map', Icons.map_outlined, 'Peta', '/map'),
