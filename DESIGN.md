@@ -48,6 +48,8 @@ Tema gelap harus punya padanan untuk setiap token terang; tidak ada warna yang h
 Tambahan: `mutedOnVariant` = teks sekunder di atas surfaceVariant (kolom input): terang `#475569` (6,9), gelap `#CBD5E1` (7,5), karena `#94A3B8` di atas `#334155` hanya 4,0.
 Latar chip status gelap: sukses `#14532D`/`#BBF7D0`, peringatan `#78350F`/`#FDE68A`, error `#7F1D1D`/`#FECACA`, info `#312E81`/`#C7D2FE`, netral `#334155`/`#CBD5E1` (semua di atas 7:1). Kontras semua pasangan token diperiksa otomatis di `test/theme/theme_test.dart`.
 
+**Pilihan tema**: tiga mode, "Ikuti sistem" (bawaan), "Terang", "Gelap" (`ThemeMode`). Dipilih lewat item "Tema" di Profil (dialog radio, tepat di bawah "Pengaturan"), berlaku langsung, disimpan lokal di `app_settings` kunci `theme_mode` (`SettingsController.themeMode`). Status bar dan nav bar sistem mengikuti tema aktif (`AnnotatedRegion` di `main.dart`; layar ber-AppBar memakai `AppBarTheme.systemOverlayStyle`). Peta memakai tile OSM terang di kedua tema; kartu/kontrol di atasnya tetap memakai token.
+
 ### 3.3 Warna kategori (banner tanpa gambar)
 Gradien dua warna per kategori + ikon: gaming `#4F46E5→#7C3AED` (ikon gamepad), travel `#0EA5E9→#22D3EE` (pesawat), elektronik `#334155→#64748B` (laptop/chip),
 fashion `#DB2777→#F472B6`, makanan `#EA580C→#FB923C`, lainnya `#4F46E5→#818CF8`. Teks putih di atas gradien harus kontras >= 4,5 (pakai lapisan gelap 20% bila perlu).

@@ -28,6 +28,9 @@ Login/session dibuat sendiri (bukan Firebase/Supabase Auth). Scheduler draw: nod
 - applicationId/namespace `com.code2ticket.app` (MainActivity di androidpp\src\main\kotlin\com\code2ticketpp; userAgentPackageName peta harus sama), label "Code2Ticket", versi 1.0.0+1, signing rilis tetap debug. Ikon peluncur/adaptif, splash (indigo #4F46E5), dan ikon notifikasi monokrom `ic_stat_notify` dihasilkan `dart run tool/make_icons.dart` (master di appssetsranding); jangan memakai ikon peluncur untuk notifikasi.
 - Teks UI mengikuti glosarium di DESIGN.md bagian 6 (Berpeluang, Cek Keaslian, Kunci biometrik, Admin/Pengguna). Angka masukan pengguna diurai `parseIdNumber` (coreormat.dart), bukan double.tryParse.
 
+## Tema
+Mode tema (ikuti sistem/terang/gelap) = `SettingsController.themeMode`, disimpan di app_settings `theme_mode` (per perangkat, user_id kosong; nilai tak dikenal -> sistem); `MaterialApp.router` di main.dart memakai nilai itu, dan status/nav bar sistem diatur di sana. Pemilih ada di Profil (item "Tema", key `open_theme`). Warna di widget HARUS lewat `context.colors` / `Theme.of(context).colorScheme`; jangan memakai `Colors.*` atau `Color(0x...)` di luar `core/theme/`. Tes: app	est	heme	heme_mode_test.dart.
+
 ## Navigasi
 Bottom navigation 4 item sama lebar: Home, Profil (ikon = foto profil), Saran & Kesan, Logout; tanpa FAB (kerangka: app\lib\features\shell\app_shell.dart, rute: app\lib\app_router.dart).
 Home, Profil, dan Saran & Kesan adalah 3 cabang StatefulShellRoute; Logout hanya aksi (dialog konfirmasi + alur logout yang sudah ada), tidak pernah menjadi tab terpilih.
