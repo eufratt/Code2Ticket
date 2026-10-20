@@ -254,7 +254,7 @@ void main() {
     'Home': (() => const HomeScreen(), 'Menu fitur'),
     'Detail Giveaway': (() => GiveawayDetailScreen(giveawayId: 'g1', initial: Giveaway.tryParse(sampleGiveaways().first)), 'Input Code'),
     'My Tickets': (() => const TicketsScreen(), '#123456'),
-    'Notifikasi': (() => const NotificationsScreen(), 'Selamat, kamu menang!'),
+    'Notifikasi': (() => const NotificationsScreen(), 'Hasil draw sudah keluar'),
     'Admin': (() => const AdminGiveawaysScreen(), 'Buat giveaway'),
     'Buat Giveaway': (() => const CreateGiveawayScreen(), 'Informasi'),
     'Kelola Giveaway': (() => AdminGiveawayScreen(giveawayId: 'g1', initial: Giveaway.tryParse(sampleGiveaways().first)), 'Generate Code'),

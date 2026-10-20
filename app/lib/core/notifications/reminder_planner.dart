@@ -1,6 +1,7 @@
 import '../../features/notifications/notification_models.dart';
 import '../../features/tickets/ticket_models.dart';
 import '../format.dart';
+import 'draw_spoiler.dart';
 
 /// Logika penjadwalan notifikasi yang murni (tanpa plugin): kapan jadwal dibuat, dibatalkan, dan bagaimana
 /// menghindari duplikat. Plugin hanya mengeksekusi hasilnya (lihat notification_service.dart).
@@ -89,8 +90,8 @@ List<PlannedReminder> planReminders(List<Ticket> tickets, DateTime now, {require
       out.add(PlannedReminder(
         id: reminderId(gid, ReminderKind.atDraw),
         at: drawAt,
-        title: 'Hasil draw',
-        body: 'Draw $name sudah dijalankan. Buka aplikasi untuk melihat hasilnya.',
+        title: neutralDrawTitle,
+        body: neutralDrawBody(name),
         payload: resultPayload(gid),
       ));
     }

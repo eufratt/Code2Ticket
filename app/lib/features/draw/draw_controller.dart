@@ -4,6 +4,7 @@ import '../../core/api/api_client.dart';
 import '../../core/api/authed_api.dart';
 import '../../core/db/rate_cache.dart' show SettingsStore;
 import '../../core/json.dart';
+import '../../core/notifications/draw_spoiler.dart';
 import '../../core/verify/chain_verifier.dart';
 import '../giveaways/giveaways_controller.dart' show LoadState;
 
@@ -85,7 +86,7 @@ class DrawSeenStore {
   final SettingsStore? _store;
   final String _userId;
 
-  String _key(String giveawayId) => 'draw_seen:$giveawayId';
+  String _key(String giveawayId) => drawSeenKey(giveawayId);
 
   Future<bool> isSeen(String giveawayId) async {
     try {

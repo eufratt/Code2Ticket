@@ -2,11 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/db/rate_cache.dart' show SettingsStore;
 import '../../core/display.dart';
+import '../../core/notifications/draw_spoiler.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/widgets.dart';
+import '../auth/auth_controller.dart';
+import '../draw/draw_controller.dart' show DrawSeenStore;
 import '../giveaways/giveaways_controller.dart' show LoadState;
+import '../tickets/tickets_controller.dart';
 import 'notification_models.dart';
 import 'notifications_controller.dart';
 
@@ -19,10 +24,23 @@ class NotificationsScreen extends StatefulWidget {
 }
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
+  /// Giveaway yang hasilnya sudah dibuka; item hasil draw lainnya tampil netral (tanpa spoiler).
+  Set<String> _revealed = const {};
+
   @override
   void initState() {
     super.initState();
-    Future.microtask(context.read<NotificationsController>().load);
+    final c = context.read<NotificationsController>();
+    Future.microtask(() => c.load().then((_) => _loadRevealed()));
+  }
+
+  Future<void> _loadRevealed() async {
+    if (!mounted) return;
+    final store = DrawSeenStore(context.read<SettingsStore?>(), context.read<AuthController?>()?.user?.id ?? '');
+    final items = context.read<NotificationsController>().items;
+    final ids = {for (final n in items) if (isDrawResultType(n.type) && n.giveawayId != null) n.giveawayId!};
+    final seen = <String>{for (final id in ids) if (await store.isSeen(id)) id};
+    if (mounted) setState(() => _revealed = seen);
   }
 
   void _toast(String msg) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
@@ -37,12 +55,17 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final router = GoRouter.of(context);
     final err = await c.markRead(n.id);
     if (err != null && mounted) _toast(err);
-    if (n.giveawayId != null) router.push(n.type == 'winner' || n.type == 'draw_result' ? '/giveaway/${n.giveawayId}/result' : '/giveaway/${n.giveawayId}');
+    if (n.giveawayId != null) {
+      await router.push(isDrawResultType(n.type) ? '/giveaway/${n.giveawayId}/result' : '/giveaway/${n.giveawayId}');
+      await _loadRevealed(); // setelah kembali dari layar hasil, teks asli boleh tampil
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final c = context.watch<NotificationsController>();
+    final tickets = context.watch<TicketsController?>()?.items ?? const [];
+    String titleOf(String? gid) => [for (final t in tickets) if (t.giveawayId == gid) t.giveawayTitle].firstOrNull ?? '';
     return Scaffold(
       appBar: AppBar(title: const Text('Notifikasi')),
       body: switch (c.state) {
@@ -77,7 +100,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         padding: const EdgeInsets.fromLTRB(Spacing.screen, Spacing.s8, Spacing.screen, Spacing.s24),
                         itemCount: c.items.length,
                         separatorBuilder: (_, _) => const SizedBox(height: Spacing.cardGap),
-                        itemBuilder: (_, i) => _NotificationTile(n: c.items[i], onTap: () => _open(c.items[i])),
+                        itemBuilder: (_, i) => _NotificationTile(n: c.items[i], revealed: _revealed.contains(c.items[i].giveawayId), giveawayTitle: titleOf(c.items[i].giveawayId), onTap: () => _open(c.items[i])),
                       ),
               ),
             ),
@@ -88,19 +111,23 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 }
 
 class _NotificationTile extends StatelessWidget {
-  const _NotificationTile({required this.n, required this.onTap});
+  const _NotificationTile({required this.n, required this.revealed, required this.giveawayTitle, required this.onTap});
   final AppNotification n;
+  final bool revealed;
+  final String giveawayTitle;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final c = context.colors;
-    final kind = NotificationKind.of(n.type);
+    final spoiler = isDrawResultType(n.type) && !revealed;
+    final kind = NotificationKind.of(spoiler ? 'draw_result' : n.type); // ikon/label "Menang" juga spoiler
+    final text = drawNotificationText(type: n.type, title: n.title, body: n.body, giveawayTitle: giveawayTitle, revealed: revealed);
     return SurfaceCard(
       key: Key('notification_${n.id}'),
       onTap: onTap,
-      semanticLabel: '${n.isRead ? '' : 'Belum dibaca. '}${kind.label}. ${n.title}. ${n.body}',
+      semanticLabel: '${n.isRead ? '' : 'Belum dibaca. '}${kind.label}. ${text.title}. ${text.body}',
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -118,9 +145,9 @@ class _NotificationTile extends StatelessWidget {
                   if (!n.isRead) const StatusChip.custom(label: 'Belum dibaca', tone: StatusTone.info, icon: Icons.fiber_manual_record),
                 ]),
                 const SizedBox(height: Spacing.s8),
-                Text(n.title, style: theme.textTheme.titleMedium?.copyWith(fontWeight: n.isRead ? FontWeight.w500 : FontWeight.w700)),
-                if (n.body.isNotEmpty)
-                  Padding(padding: const EdgeInsets.only(top: Spacing.s4), child: Text(n.body, style: theme.textTheme.bodyMedium)),
+                Text(text.title, style: theme.textTheme.titleMedium?.copyWith(fontWeight: n.isRead ? FontWeight.w500 : FontWeight.w700)),
+                if (text.body.isNotEmpty)
+                  Padding(padding: const EdgeInsets.only(top: Spacing.s4), child: Text(text.body, style: theme.textTheme.bodyMedium)),
                 if (n.createdAt != null)
                   Padding(
                     padding: const EdgeInsets.only(top: Spacing.s4),

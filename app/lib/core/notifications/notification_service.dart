@@ -7,6 +7,7 @@ import 'package:timezone/timezone.dart' as tz;
 import '../../features/notifications/notification_models.dart';
 import '../../features/tickets/ticket_models.dart';
 import '../db/rate_cache.dart' show SettingsStore;
+import 'draw_spoiler.dart';
 import 'reminder_planner.dart';
 
 /// Saluran notifikasi Android (muncul di pengaturan sistem; teks Indonesia).
@@ -238,7 +239,27 @@ class NotificationService extends ChangeNotifier {
     await _safe(() => _store.setSetting(NotifKeys.lastShown, '${batch.lastShownId}', userId: userId));
     if (!permissionGranted) return;
     for (final n in batch.show) {
-      await _safe(() => _gateway.show(serverNotificationId(n.id), n.title, n.body, payloadForServer(n)));
+      final gid = n.giveawayId;
+      var revealed = false;
+      if (isDrawResultType(n.type) && gid != null) {
+        revealed = await _safe(() => _store.getSetting(drawSeenKey(gid), userId: userId)) == '1';
+        if (!shouldShowDrawResultNotification(giveawayId: gid, revealed: revealed, activeResultGiveawayId: activeResultGiveawayId)) continue;
+      }
+      final title = [for (final t in _tickets) if (t.giveawayId == gid) t.giveawayTitle].firstOrNull ?? '';
+      final text = drawNotificationText(type: n.type, title: n.title, body: n.body, giveawayTitle: title, revealed: revealed);
+      await _safe(() => _gateway.show(serverNotificationId(n.id), text.title, text.body, payloadForServer(n)));
+    }
+  }
+
+  /// Giveaway yang layar hasilnya sedang terbuka (null = tidak ada); notifikasi hasil draw-nya tidak ditampilkan.
+  /// Hanya di memori isolate utama (pemeriksaan latar belakang tidak mengetahuinya).
+  String? activeResultGiveawayId;
+
+  /// Reveal selesai: batalkan notifikasi hasil draw giveaway ini yang masih tampil atau terjadwal.
+  Future<void> onDrawRevealed(String giveawayId, Iterable<int> serverNotificationIds) async {
+    await _safe(() => _gateway.cancel(reminderId(giveawayId, ReminderKind.atDraw)));
+    for (final id in serverNotificationIds) {
+      await _safe(() => _gateway.cancel(serverNotificationId(id)));
     }
   }
 

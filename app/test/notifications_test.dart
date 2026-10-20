@@ -196,9 +196,11 @@ void main() {
       await pumpScreen(tester);
       expect(find.text('Belum dibaca'), findsNWidgets(2));
       expect(find.text('2 belum dibaca'), findsOneWidget);
-      expect(find.text('Menang'), findsOneWidget);
-      expect(find.text('Draw selesai'), findsOneWidget);
-      expect(find.byIcon(Icons.emoji_events), findsWidgets);
+      // hasil draw belum di-reveal: label/ikon/teks netral (tanpa spoiler menang)
+      expect(find.text('Menang'), findsNothing);
+      expect(find.text('Selamat, kamu menang!'), findsOneWidget); // hanya item tiket (helper memakai judul yang sama)
+      expect(find.text('Hasil draw sudah keluar'), findsWidgets);
+      expect(find.text('Draw selesai'), findsWidgets);
       expect(find.byKey(const Key('mark_all_read')), findsOneWidget);
     });
 
@@ -257,7 +259,7 @@ void main() {
       handler = (m, p, b) async => {'ok': true, 'data': [notif(1)]};
       await tester.tap(find.text('Coba lagi'));
       await tester.pumpAndSettle();
-      expect(find.text('Selamat, kamu menang!'), findsOneWidget);
+      expect(find.text('Hasil draw sudah keluar'), findsOneWidget);
     });
 
     testWidgets('tarik untuk menyegarkan memanggil GET lagi', (tester) async {

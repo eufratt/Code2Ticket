@@ -9,11 +9,15 @@ import '../../core/api/authed_api.dart';
 import '../../core/db/rate_cache.dart' show SettingsStore;
 import '../../core/display.dart';
 import '../../core/format.dart';
+import '../../core/notifications/draw_spoiler.dart';
+import '../../core/notifications/notification_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/widgets.dart';
 import '../auth/auth_controller.dart';
 import '../giveaways/giveaways_controller.dart' show LoadState;
+import '../notifications/notification_models.dart';
+import '../notifications/notifications_controller.dart';
 import '../tickets/ticket_models.dart';
 import '../tickets/tickets_controller.dart';
 import 'draw_controller.dart';
@@ -39,16 +43,19 @@ class _DrawResultScreenState extends State<DrawResultScreen> {
   late final DrawController _draw = DrawController(context.read<AuthedApi>(), widget.giveawayId, runner: widget.runner);
   late final DrawSeenStore _seenStore =
       DrawSeenStore(context.read<SettingsStore?>(), context.read<AuthController?>()?.user?.id ?? '');
+  late final NotificationService? _notif = context.read<NotificationService?>();
   bool _ready = false, _seen = false, _revealed = false;
 
   @override
   void initState() {
     super.initState();
+    _notif?.activeResultGiveawayId = widget.giveawayId;
     Future.microtask(_init);
   }
 
   @override
   void dispose() {
+    if (_notif?.activeResultGiveawayId == widget.giveawayId) _notif?.activeResultGiveawayId = null;
     _draw.dispose();
     super.dispose();
   }
@@ -66,7 +73,12 @@ class _DrawResultScreenState extends State<DrawResultScreen> {
   Future<void> _reveal() async {
     if (_revealed) return;
     setState(() => _revealed = true);
+    final ids = [
+      for (final n in context.read<NotificationsController?>()?.items ?? const <AppNotification>[])
+        if (n.giveawayId == widget.giveawayId && isDrawResultType(n.type)) n.id,
+    ];
     await _seenStore.markSeen(widget.giveawayId);
+    await _notif?.onDrawRevealed(widget.giveawayId, ids);
   }
 
   @override

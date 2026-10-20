@@ -61,7 +61,7 @@ void main() {
       expect(plan[0].body, contains('Laptop Gaming'));
       expect(plan[0].payload, 'giveaway/g1');
       expect(plan[1].at, draw);
-      expect(plan[1].body, 'Draw Laptop Gaming sudah dijalankan. Buka aplikasi untuk melihat hasilnya.');
+      expect(plan[1].body, 'Ketuk untuk melihat hasil Laptop Gaming');
       expect(plan[1].payload, 'result/g1');
     });
 
