@@ -13,6 +13,7 @@
     <!-- Agar pengingat terjadwal dipasang ulang setelah HP dihidupkan ulang. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <application
+        android:allowBackup="false"
         android:label="code2ticket"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
