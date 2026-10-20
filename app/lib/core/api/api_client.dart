@@ -26,6 +26,11 @@ class NetworkException implements Exception {
   String toString() => message;
 }
 
+/// Aksi tulis ditolak lebih dulu karena sesi sedang offline (permintaan tidak dikirim).
+class OfflineRequiredException extends NetworkException {
+  OfflineRequiredException() : super('Butuh koneksi internet.');
+}
+
 typedef SlowRequestCallback = void Function(bool isSlow);
 
 /// Klien HTTP untuk API Express Code2Ticket.
@@ -62,8 +67,13 @@ class ApiClient {
   }) =>
       _send('GET', path, body: body, token: token);
 
+  /// GET yang cepat gagal saat koneksi putus (tanpa jeda 3 dtk + 6 dtk); timeout dan 502/503 Render tetap diulang.
+  /// Untuk cek sesi: pengguna offline tidak boleh menunggu di Splash.
+  Future<Map<String, dynamic>> getOnce(String path, {String? token}) =>
+      _send('GET', path, token: token, retry: false);
+
   /// [retry] false: jangan ulangi otomatis saat koneksi putus (mis. input kode,
-  /// agar satu ketukan tidak bisa membuat dua tiket).
+  /// agar satu ketukan tidak bisa membuat dua tiket; atau cek sesi yang harus cepat gagal saat offline).
   Future<Map<String, dynamic>> post(
     String path, {
     dynamic body,

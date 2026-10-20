@@ -35,10 +35,8 @@ Future<void> runBackgroundCheck({
     await svc.showServerNotifications(userId, items);
   } on InvalidSessionException {
     return; // sesi berakhir: biarkan aplikasi yang menanganinya saat dibuka
-  } on ForbiddenException {
-    return;
-  } on NetworkException {
-    return;
+  } catch (_) {
+    return; // offline (NetworkException), 403, atau galat lain: coba lagi pada periode berikutnya
   }
 }
 

@@ -7,7 +7,14 @@ class SessionStore {
   final FlutterSecureStorage _s;
   static const _kToken = 'c2t_token';
 
-  Future<String?> readToken() => _s.read(key: _kToken);
+  /// Galat secure storage (mis. Keystore rusak) diperlakukan sebagai belum masuk.
+  Future<String?> readToken() async {
+    try {
+      return await _s.read(key: _kToken);
+    } catch (_) {
+      return null;
+    }
+  }
   Future<void> saveToken(String token) => _s.write(key: _kToken, value: token);
   Future<void> clear() => _s.delete(key: _kToken);
 }

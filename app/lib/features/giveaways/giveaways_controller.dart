@@ -24,6 +24,7 @@ class GiveawayLookup {
 class GiveawaysController extends ChangeNotifier with OfflineRetry {
   GiveawaysController(this._api, this._auth, this._cache, {this.retryInterval = const Duration(seconds: 20)}) {
     _auth.addListener(_onAuth);
+    _auth.backOnline.add(reloadSilently);
   }
 
   final AuthedApi _api;
@@ -119,6 +120,7 @@ class GiveawaysController extends ChangeNotifier with OfflineRetry {
   @override
   void dispose() {
     _auth.removeListener(_onAuth);
+    _auth.backOnline.remove(reloadSilently);
     super.dispose();
   }
 }

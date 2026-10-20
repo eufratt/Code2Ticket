@@ -32,6 +32,8 @@ String redeemErrorMessage(String code, {int? retryAfterSeconds}) {
   }
 }
 
+const redeemOfflineMessage = 'Butuh koneksi internet untuk menukar kode.';
+
 /// Pesan bila jawaban server tidak diterima (POST tidak diulang otomatis, jadi tiket mungkin sudah terbuat).
 const redeemNetworkMessage =
     'Koneksi bermasalah. Cek menu My Tickets sebelum mencoba lagi, kode mungkin sudah terpakai.';

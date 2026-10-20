@@ -17,6 +17,7 @@ import 'ticket_models.dart';
 class TicketsController extends ChangeNotifier with OfflineRetry {
   TicketsController(this._api, this._auth, this._cache, {this.retryInterval = const Duration(seconds: 20)}) {
     _auth.addListener(_onAuth);
+    _auth.backOnline.add(reloadSilently);
   }
 
   final AuthedApi _api;
@@ -106,6 +107,8 @@ class TicketsController extends ChangeNotifier with OfflineRetry {
       return outcome;
     } on InvalidSessionException {
       return null;
+    } on OfflineRequiredException {
+      return const RedeemOutcome.failure('offline'); // permintaan tidak pernah dikirim
     } on NetworkException {
       return const RedeemOutcome.failure('network');
     } finally {
@@ -129,11 +132,14 @@ class TicketsController extends ChangeNotifier with OfflineRetry {
   @override
   void dispose() {
     _auth.removeListener(_onAuth);
+    _auth.backOnline.remove(reloadSilently);
     super.dispose();
   }
 }
 
 /// Pesan siap tampil untuk hasil gagal.
-String outcomeMessage(RedeemOutcome o) => o.error == 'network'
-    ? redeemNetworkMessage
-    : redeemErrorMessage(o.error ?? 'unknown', retryAfterSeconds: o.retryAfterSeconds);
+String outcomeMessage(RedeemOutcome o) => o.error == 'offline'
+    ? redeemOfflineMessage
+    : o.error == 'network'
+        ? redeemNetworkMessage
+        : redeemErrorMessage(o.error ?? 'unknown', retryAfterSeconds: o.retryAfterSeconds);

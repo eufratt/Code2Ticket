@@ -68,6 +68,7 @@ class _Code2TicketAppState extends State<Code2TicketApp> with WidgetsBindingObse
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     _rates.handleAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) _auth.revalidate(); // sesi offline -> cek ulang ke server
   }
 
   @override

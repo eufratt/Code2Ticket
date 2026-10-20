@@ -81,6 +81,10 @@ class MemoryCacheStore implements CacheStore {
     giveawaysAt = null;
     tickets.clear();
     ticketsAt.clear();
-    if (userId != null) searches.remove(userId);
+    if (userId != null) {
+      searches.remove(userId);
+    } else {
+      searches.clear();
+    }
   }
 }

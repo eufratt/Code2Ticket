@@ -147,7 +147,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               IconButton(key: const Key('edit_name'), tooltip: 'Ubah nama', icon: const Icon(Icons.edit, size: 18), onPressed: _profile.saving ? null : _editName),
             ]),
             Center(child: Text('@${u?.username ?? '-'}', style: theme.textTheme.bodyMedium)),
-            Center(child: Text(u?.email ?? '-', style: theme.textTheme.bodySmall?.copyWith(color: c.muted))),
+            Center(child: Text(u == null || u.email.isEmpty ? '-' : u.email, style: theme.textTheme.bodySmall?.copyWith(color: c.muted))),
             const SizedBox(height: Spacing.s12),
             Center(child: StatusChip.custom(label: u?.role ?? '-', tone: u?.isAdmin == true ? StatusTone.info : StatusTone.neutral, icon: Icons.person_outline)),
             const SizedBox(height: Spacing.s16),

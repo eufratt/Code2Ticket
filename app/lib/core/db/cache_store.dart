@@ -22,6 +22,7 @@ abstract class CacheStore {
   Future<void> deleteSearch(String userId, String query);
   Future<void> clearSearches(String userId);
 
-  /// Saat logout: hapus cache giveaway dan tiket, serta riwayat pencarian [userId] bila diketahui.
+  /// Saat logout: hapus cache giveaway dan tiket, serta riwayat pencarian [userId] bila diketahui
+  /// (null = semua baris riwayat pencarian dan chat ikut dihapus).
   Future<void> clearUserData({String? userId});
 }

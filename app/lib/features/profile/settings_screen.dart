@@ -53,7 +53,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final now = DateTime.now();
     return Scaffold(
       appBar: AppBar(title: const Text('Pengaturan')),
-      body: ListView(
+      body: Column(children: [
+        if (context.watch<AuthController?>()?.offlineSession ?? false) const OfflineBanner(),
+        Expanded(child: ListView(
         padding: const EdgeInsets.fromLTRB(Spacing.screen, 0, Spacing.screen, Spacing.s24),
         children: [
           const SectionHeader('Mata uang default'),
@@ -106,7 +108,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
         ],
-      ),
+      )),
+      ]),
     );
   }
 }

@@ -30,6 +30,7 @@ class DiscoverController extends ChangeNotifier with OfflineRetry {
     this.pageSize = 20,
   }) {
     _auth.addListener(_onAuth);
+    _auth.backOnline.add(reloadSilently);
   }
 
   final AuthedApi _api;
@@ -279,6 +280,7 @@ class DiscoverController extends ChangeNotifier with OfflineRetry {
   void dispose() {
     _debounceTimer?.cancel();
     _auth.removeListener(_onAuth);
+    _auth.backOnline.remove(reloadSilently);
     super.dispose();
   }
 }

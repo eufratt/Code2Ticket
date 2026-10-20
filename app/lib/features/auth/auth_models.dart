@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 class AppUser {
   AppUser({
     required this.id,
@@ -28,6 +30,29 @@ class AppUser {
         level: (j['level'] as num?)?.toInt() ?? 1,
         badges: [for (final b in (j['badges'] is List ? j['badges'] as List : const [])) if (b is String) b],
       );
+}
+
+/// Profil minimal untuk sesi offline: tanpa email, token, atau password.
+extension AppUserProfile on AppUser {
+  String toProfileJson() => jsonEncode({
+        'id': id,
+        'username': username,
+        'full_name': fullName,
+        'role': role,
+        'photo_url': photoUrl,
+        'xp': xp,
+        'level': level,
+      });
+
+  static AppUser? tryParseProfile(String? raw) {
+    if (raw == null) return null;
+    try {
+      final j = jsonDecode(raw) as Map<String, dynamic>;
+      return AppUser.fromJson({...j, 'email': ''});
+    } catch (_) {
+      return null;
+    }
+  }
 }
 
 /// Hasil operasi auth: sukses, atau pesan error siap tampil.

@@ -41,6 +41,11 @@ Paket: flutter_local_notifications (+ timezone yang sudah ada) dan workmanager (
 - Fase B: background_check.dart (WorkManager ~15 menit, butuh jaringan). Isolate latar membaca token dari flutter_secure_storage dan id pengguna aktif dari app_settings `notif_active_user` (bukan token); tidak pernah melempar atau mencatat token.
 - Android: POST_NOTIFICATIONS, RECEIVE_BOOT_COMPLETED, penerima ScheduledNotification(Boot)Receiver di AndroidManifest.xml, dan core library desugaring di android\app\build.gradle.kts. Jangan dihapus.
 
+## Sesi offline (cold start tanpa internet)
+- auth_controller.restore(): HANYA 401 (invalid_session) yang menghapus token dan data pengguna. Galat jaringan/timeout/5xx/respons aneh + token lokal + profil tersimpan (app_settings `last_profile`, user_id kosong: id, username, nama, role, foto, xp, level; tanpa email/token/password, ditulis tiap login//auth/me berhasil dan updateUser) -> `AuthController.offlineSession = true` dengan status tetap signedIn; biometric tetap diminta sebelum konten (_unlock). Tanpa profil -> belum masuk, token tidak dihapus.
+- Pulih: `revalidate()` (resume di main.dart; respons sukses dari AuthedApi saat offline; AuthedApi menulis -> revalidate dulu). 200 -> online + `backOnline` (Tickets/Giveaways/Discover reload); 401 -> keluar dengan pembersihan; galat jaringan -> tetap offline. `ApiClient.getOnce` = cek sesi tanpa jeda ulang soket.
+- Aksi tulis (POST/PUT/PATCH lewat AuthedApi) saat offline -> OfflineRequiredException "Butuh koneksi internet." tanpa mengirim; admin tetap butuh online. SessionStore.readToken menelan galat secure storage (null). clearUserData(userId: null) menghapus semua baris pencarian dan chat; _clear memakai id dari profil tersimpan bila user belum terisi.
+
 ## Kontrak yang tidak boleh diubah diam-diam
 - Password: klien menghitung PBKDF2-HMAC-SHA256 (10.000 iterasi, 32 byte, salt 32 hex dipakai sebagai TEKS UTF-8, hasil hex huruf kecil);
   server menyimpan bcrypt(hash klien). Lihat app\lib\core\crypto\password_hasher.dart dan tesnya.

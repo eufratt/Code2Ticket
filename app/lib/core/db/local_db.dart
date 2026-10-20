@@ -244,6 +244,10 @@ class LocalDb implements CacheStore, RateCache, SettingsStore, ChatStore {
     if (userId != null) {
       await clearSearches(userId);
       await clearChat(userId);
+    } else {
+      // Pengguna lama tidak diketahui: bersihkan semua baris, jangan sisakan data siapa pun.
+      await db.delete('search_history');
+      await db.delete('chat_messages');
     }
   }
 

@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import '../../core/api/api_client.dart';
 import '../../core/crypto/password_hasher.dart';
 import '../../core/db/local_db.dart';
+import '../../core/offline.dart';
 import '../../core/security/biometric_service.dart';
 import '../../core/session/session_store.dart';
 import 'auth_models.dart';
@@ -32,6 +33,17 @@ class AuthController extends ChangeNotifier {
   AppUser? user;
   String? _token;
   String? get token => _token;
+
+  /// Kunci app_settings (user_id kosong) untuk profil terakhir yang valid; tanpa token atau password.
+  static const profileKey = 'last_profile';
+
+  /// true: sesi dibuka dari token + profil lokal karena server tak terjangkau (status tetap signedIn).
+  /// Data berasal dari cache; aksi tulis butuh koneksi. Keluar hanya lewat 401 atau logout.
+  bool offlineSession = false;
+  Future<void>? _revalidating;
+
+  /// Dipanggil sekali saat sesi offline kembali online: controller berdata cache menyegarkan diri.
+  final List<VoidCallback> backOnline = [];
 
   bool _isWakingUp = false;
   bool get isWakingUp => _isWakingUp;
@@ -86,40 +98,69 @@ class AuthController extends ChangeNotifier {
     return false;
   }
 
-  /// Dipanggil saat aplikasi dibuka: validasi token tersimpan ke server.
+  /// Dipanggil saat aplikasi dibuka: validasi token tersimpan ke server. HANYA penolakan server (401)
+  /// yang mengeluarkan pengguna; jaringan mati, timeout, atau 5xx dengan profil tersimpan -> sesi offline.
   Future<void> restore() async {
     final t = await _store.readToken();
     if (t == null) return _setSignedOut();
+    AppUser? me;
     try {
-      final r = await _api.get('/auth/me', token: t);
-      if (r['ok'] == true) {
-        _token = t;
-        user = AppUser.fromJson(r['user'] as Map<String, dynamic>);
+      me = await _fetchMe(t);
+    } on InvalidSessionException {
+      return _clear();
+    } catch (_) {/* galat jaringan: lihat di bawah */}
+    if (me != null) {
+      user = me;
+      offlineSession = false;
+      await _remember(me);
+    } else {
+      final saved = AppUserProfile.tryParseProfile(await bestEffort(() => _db.getSetting(profileKey)));
+      if (saved == null) return _setSignedOut(); // tidak ada profil: minta login ulang, token tidak dihapus
+      user = saved;
+      offlineSession = true;
+    }
+    _token = t;
+    await _unlock();
+  }
 
-        final bioEnabled = await isBiometricEnabled(userId: user!.id);
-        if (bioEnabled) {
-          final passed = await _biometric.authenticate(
-            'Konfirmasi identitas Anda untuk membuka Code2Ticket',
-          );
-          if (passed) {
-            status = AuthStatus.signedIn;
-          } else {
-            status = AuthStatus.biometricRequired;
-          }
-        } else {
-          status = AuthStatus.signedIn;
-        }
-        notifyListeners();
-      } else {
-        await _clear();
+  Future<AppUser?> _fetchMe(String token) async {
+    final r = await _api.getOnce('/auth/me', token: token);
+    return r['ok'] == true ? AppUser.fromJson(r['user'] as Map<String, dynamic>) : null;
+  }
+
+  /// Menerapkan kunci biometric (bila aktif) sebelum konten tampil, juga pada sesi offline.
+  Future<void> _unlock() async {
+    final locked = await isBiometricEnabled(userId: user!.id) &&
+        !await _biometric.authenticate('Konfirmasi identitas Anda untuk membuka Code2Ticket');
+    status = locked ? AuthStatus.biometricRequired : AuthStatus.signedIn;
+    notifyListeners();
+  }
+
+  /// Sesi offline -> validasi ulang /auth/me (aplikasi di-resume, tarik untuk menyegarkan, koneksi kembali).
+  /// 200 -> online dan data disegarkan; 401 -> keluar dengan pembersihan; galat jaringan -> tetap offline.
+  Future<void> revalidate() {
+    if (!offlineSession || _token == null) return Future.value();
+    return _revalidating ??= _revalidate().whenComplete(() => _revalidating = null);
+  }
+
+  Future<void> _revalidate() async {
+    final t = _token;
+    try {
+      final me = await _fetchMe(t!);
+      if (me == null || _token != t) return;
+      user = me;
+      offlineSession = false;
+      await _remember(me);
+      notifyListeners();
+      for (final f in [...backOnline]) {
+        f();
       }
     } on InvalidSessionException {
-      await _clear();
-    } on NetworkException {
-      // Offline: token tidak dihapus. Minta login ulang tanpa menghapus token.
-      _setSignedOut();
-    }
+      if (_token == t) await _clear();
+    } catch (_) {/* masih offline */}
   }
+
+  Future<void> _remember(AppUser u) => bestEffort(() => _db.setSetting(profileKey, u.toProfileJson()));
 
   Future<AuthResult> register({
     required String username,
@@ -162,6 +203,8 @@ class AuthController extends ChangeNotifier {
       _token = r['token'] as String;
       await _store.saveToken(_token!);
       user = AppUser.fromJson(r['user'] as Map<String, dynamic>);
+      offlineSession = false;
+      await _remember(user!);
       status = AuthStatus.signedIn;
       notifyListeners();
       return const AuthResult.ok();
@@ -172,7 +215,7 @@ class AuthController extends ChangeNotifier {
 
   Future<void> logout() async {
     final t = _token;
-    if (t != null) {
+    if (t != null && !offlineSession) {
       try {
         await _api.post('/auth/logout', token: t);
       } catch (_) {/* tetap logout lokal */}
@@ -183,6 +226,7 @@ class AuthController extends ChangeNotifier {
   /// Memperbarui data pengguna yang sedang login (mis. setelah ubah nama / ganti foto).
   void updateUser(AppUser u) {
     user = u;
+    unawaited(_remember(u));
     notifyListeners();
   }
 
@@ -190,17 +234,19 @@ class AuthController extends ChangeNotifier {
   Future<void> handleInvalidSession() => _clear();
 
   Future<void> _clear() async {
-    // Cache giveaway/tiket dan riwayat pencarian milik pengguna ikut dihapus. Gagal menghapus tidak boleh menahan logout.
-    try {
-      await _db.clearUserData(userId: user?.id);
-    } catch (_) {}
-    await _store.clear();
+    // Cache giveaway/tiket, riwayat pencarian dan chat ikut dihapus; sesi kedaluwarsa saat cold start (user belum
+    // terisi) memakai id profil tersimpan, atau menghapus semua baris bila id tidak diketahui. Gagal menghapus tidak menahan logout.
+    final uid = user?.id ?? AppUserProfile.tryParseProfile(await bestEffort(() => _db.getSetting(profileKey)))?.id;
+    await bestEffort(() => _db.clearUserData(userId: uid));
+    await bestEffort(() => _db.setSetting(profileKey, null));
+    await bestEffort(_store.clear);
     _setSignedOut();
   }
 
   void _setSignedOut() {
     _token = null;
     user = null;
+    offlineSession = false;
     status = AuthStatus.signedOut;
     notifyListeners();
   }
