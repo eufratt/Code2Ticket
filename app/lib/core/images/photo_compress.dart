@@ -7,12 +7,15 @@ const maxPhotoBytes = 150 * 1024;
 const maxPhotoSide = 512;
 
 /// Mengecilkan foto ke sisi terpanjang <= [maxSide] px dan menyandikan ulang sebagai JPEG <= [maxBytes]
-/// (kualitas diturunkan bertahap; bila masih besar, ukuran dikecilkan lagi). Orientasi EXIF diterapkan.
+/// (kualitas diturunkan bertahap; bila masih besar, ukuran dikecilkan lagi). Orientasi EXIF diterapkan, lalu semua metadata (EXIF/GPS) dibuang.
 /// Melempar [FormatException] bila bukan gambar yang dapat dibaca. Operasi berat: jalankan di isolate (compute).
 Uint8List compressProfilePhoto(Uint8List input, {int maxSide = maxPhotoSide, int maxBytes = maxPhotoBytes}) {
   final decoded = img.decodeImage(input);
   if (decoded == null) throw const FormatException('Berkas bukan gambar yang dapat dibaca.');
-  var image = img.bakeOrientation(decoded);
+  // Gambar baru dari piksel: EXIF (termasuk GPS) dan profil ICC bawaan berkas tidak ikut terbawa.
+  final oriented = img.bakeOrientation(decoded);
+  var image = img.Image(width: oriented.width, height: oriented.height);
+  img.compositeImage(image, oriented);
   var side = maxSide;
   while (true) {
     final longest = image.width > image.height ? image.width : image.height;
