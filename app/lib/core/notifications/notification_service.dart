@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart' show PlatformException;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 
@@ -165,6 +166,26 @@ class NotificationService extends ChangeNotifier {
   String? _lastShownUser;
   int? _lastShown;
 
+  /// Kode galat terakhir saat menampilkan/menjadwalkan notifikasi (null = terakhir berhasil). Hanya jenis galat,
+  /// tanpa pesan atau muatan, supaya aman dicatat dan ditampilkan di Pengaturan.
+  String? deliveryError;
+
+  static String errorKind(Object e) => e is PlatformException ? e.code : e.runtimeType.toString();
+
+  /// Seperti [_safe], tetapi untuk show/schedule: galat dicatat (debugPrint) dan disimpan di [deliveryError]; tidak pernah dilempar.
+  Future<bool> _deliver(String op, Future<void> Function() f) async {
+    final before = deliveryError;
+    try {
+      await f();
+      deliveryError = null;
+    } catch (e) {
+      deliveryError = errorKind(e);
+      debugPrint('Notifikasi: $op gagal (${deliveryError!})');
+    }
+    if (before != deliveryError) notifyListeners();
+    return deliveryError == null;
+  }
+
   Future<T?> _safe<T>(Future<T> Function() f) async {
     try {
       return await f();
@@ -211,11 +232,10 @@ class NotificationService extends ChangeNotifier {
     await refreshPermission();
   }
 
-  /// Notifikasi tes 1 menit lagi lewat jalur penjadwalan yang sama dengan pengingat asli. false bila izin notifikasi belum ada.
+  /// Notifikasi tes 1 menit lagi lewat jalur penjadwalan yang sama dengan pengingat asli. false bila izin belum ada atau penjadwalan gagal ([deliveryError]).
   Future<bool> scheduleTestNotification() async {
     if (!permissionGranted) return false;
-    await _safe(() => _gateway.schedule(testNotification(_now()), scheduleMode));
-    return true;
+    return _deliver('jadwal tes', () => _gateway.schedule(testNotification(_now()), scheduleMode));
   }
 
   /// true bila izin sudah ada atau baru diberikan. Dialog penjelasan ditampilkan UI SEBELUM memanggil ini.
@@ -257,7 +277,7 @@ class NotificationService extends ChangeNotifier {
       await _safe(() => _gateway.cancel(id));
     }
     for (final r in diff.schedule) {
-      await _safe(() => _gateway.schedule(r, mode));
+      await _deliver('jadwal', () => _gateway.schedule(r, mode));
       final gid = r.drawGiveawayId;
       if (gid != null && _activeUser != null) {
         await _safe(() => _store.setSetting(drawReminderKey(gid), '${r.at.millisecondsSinceEpoch}', userId: _activeUser!));
@@ -271,7 +291,7 @@ class NotificationService extends ChangeNotifier {
   Future<void> onTicketCreated(RedeemedTicket t) async {
     if (!permissionGranted) return;
     final text = ticketCreatedText(t.ticketNumber, t.giveawayTitle);
-    await _safe(() => _gateway.show(ticketCreatedId(t.id), text.title, text.body, giveawayPayload(t.giveawayId)));
+    await _deliver('tampil tiket', () => _gateway.show(ticketCreatedId(t.id), text.title, text.body, giveawayPayload(t.giveawayId)));
   }
 
   /// Menampilkan notifikasi server yang baru (lihat [selectNewServer]); batas terakhir disimpan per pengguna.
@@ -299,7 +319,7 @@ class NotificationService extends ChangeNotifier {
       final title = [for (final t in _tickets) if (t.giveawayId == gid) t.giveawayTitle].firstOrNull ?? '';
       final text = drawNotificationText(type: n.type, title: n.title, body: n.body, giveawayTitle: title, revealed: revealed);
       final id = gid != null && isDrawResultType(n.type) ? drawResultNotificationId(gid) : serverNotificationId(n.id);
-      await _safe(() => _gateway.show(id, text.title, text.body, payloadForServer(n)));
+      await _deliver('tampil server', () => _gateway.show(id, text.title, text.body, payloadForServer(n)));
     }
   }
 

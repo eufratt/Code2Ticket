@@ -146,6 +146,15 @@ class _NotificationSection extends StatelessWidget {
               ? 'Tiket baru, pengingat, dan hasil draw muncul di bilah status.'
               : 'Notifikasi tetap tersedia di pusat notifikasi dalam aplikasi (ikon lonceng di Home).'),
         ),
+        if (granted && service.deliveryError != null) ...[
+          const Divider(indent: Spacing.s16, endIndent: Spacing.s16),
+          ListTile(
+            key: const Key('notif_delivery_error'),
+            leading: const Icon(Icons.error_outline),
+            title: const Text('Notifikasi gagal ditampilkan'),
+            subtitle: Text('Sistem menolak notifikasi (${service.deliveryError}). Notifikasi tetap tersedia di pusat notifikasi dalam aplikasi.'),
+          ),
+        ],
         if (granted) ...[
           const Divider(indent: Spacing.s16, endIndent: Spacing.s16),
           ListTile(
@@ -177,7 +186,7 @@ class _NotificationSection extends StatelessWidget {
               onPressed: () async {
                 final ok = await service.scheduleTestNotification();
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ok ? 'Notifikasi tes dijadwalkan 1 menit lagi. Boleh tutup aplikasi.' : 'Izin notifikasi belum ada.')));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ok ? 'Notifikasi tes dijadwalkan 1 menit lagi. Boleh tutup aplikasi.' : (service.permissionGranted ? 'Notifikasi gagal dijadwalkan (${service.deliveryError}).' : 'Izin notifikasi belum ada.'))));
                 }
               },
             ),

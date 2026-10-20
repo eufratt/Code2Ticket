@@ -43,6 +43,8 @@ Paket: flutter_local_notifications (+ timezone yang sudah ada) dan workmanager (
 - Izin POST_NOTIFICATIONS selalu didahului dialog penjelasan (features\notifications\notification_permission.dart); ditolak = aplikasi tetap jalan lewat pusat notifikasi dalam aplikasi, Pengaturan menampilkan status + tombol ke pengaturan sistem.
 - Ketuk notifikasi (juga saat app tertutup) -> muatan `giveaway/{id}`, `result/{id}`, `notifications` -> rute lewat router yang ada (routeForPayload). Isi notifikasi tidak boleh memuat kode, token, atau data pribadi.
 - Fase B: background_check.dart (WorkManager ~15 menit, butuh jaringan). Isolate latar membaca token dari flutter_secure_storage dan id pengguna aktif dari app_settings `notif_active_user` (bukan token); tidak pernah melempar atau mencatat token.
+- Ikon notifikasi `@drawable/ic_stat_notify` dirujuk lewat NAMA oleh plugin: WAJIB dilindungi appndroidpp\src\mainesaw\keep.xml (tools:keep), kalau tidak shrinkResources menghapusnya di APK rilis dan notifikasi tidak tampil (galat disembunyikan). Ikon baru yang dirujuk kode notifikasi harus ditambah ke keep.xml (dijaga test
+otifications\delivery_error_test.dart). Aturan R8 plugin ada di androidpp\proguard-rules.pro. Galat show()/jadwal dicatat jenisnya saja (NotificationService.deliveryError, ditampilkan di Pengaturan), tidak pernah dilempar.
 - Android: POST_NOTIFICATIONS, RECEIVE_BOOT_COMPLETED, penerima ScheduledNotification(Boot)Receiver di AndroidManifest.xml, dan core library desugaring di android\app\build.gradle.kts. Jangan dihapus.
 
 ## Sesi offline (cold start tanpa internet)

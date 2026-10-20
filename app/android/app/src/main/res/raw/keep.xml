@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ikon dirujuk lewat NAMA string oleh flutter_local_notifications; tanpa ini shrinkResources menghapusnya di rilis
+     dan notifikasi gagal diam-diam. Ikon notifikasi tidak boleh memakai ikon peluncur. -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@drawable/ic_stat_notify"
+    tools:shrinkMode="strict" />
