@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import 'app_router.dart';
@@ -125,17 +126,34 @@ class _Code2TicketAppState extends State<Code2TicketApp> with WidgetsBindingObse
       child: NotificationBridge(
         router: _router,
         poller: _poller,
-        child: MaterialApp.router(
-        title: 'Code2Ticket',
-        theme: AppTheme.light(),
-        darkTheme: AppTheme.dark(),
-        themeMode: ThemeMode.system,
-        // "Kurangi animasi" sistem: pindah layar tanpa transisi.
-        builder: (context, child) => Theme(
-          data: MediaQuery.disableAnimationsOf(context) ? AppTheme.withoutPageTransitions(Theme.of(context)) : Theme.of(context),
-          child: child!,
-        ),
-        routerConfig: _router,
+        child: ListenableBuilder(
+          listenable: _settings,
+          builder: (context, _) => MaterialApp.router(
+            title: 'Code2Ticket',
+            theme: AppTheme.light(),
+            darkTheme: AppTheme.dark(),
+            themeMode: _settings.themeMode,
+            // "Kurangi animasi" sistem: pindah layar tanpa transisi. Status/nav bar sistem mengikuti tema aktif
+            // (AppBar menimpanya sendiri di layar yang punya AppBar).
+            builder: (context, child) {
+              final theme = MediaQuery.disableAnimationsOf(context)
+                  ? AppTheme.withoutPageTransitions(Theme.of(context))
+                  : Theme.of(context);
+              final dark = theme.brightness == Brightness.dark;
+              return Theme(
+                data: theme,
+                child: AnnotatedRegion<SystemUiOverlayStyle>(
+                  value: (dark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark).copyWith(
+                    statusBarColor: Colors.transparent,
+                    systemNavigationBarColor: theme.scaffoldBackgroundColor,
+                    systemNavigationBarIconBrightness: dark ? Brightness.light : Brightness.dark,
+                  ),
+                  child: child!,
+                ),
+              );
+            },
+            routerConfig: _router,
+          ),
         ),
       ),
     );

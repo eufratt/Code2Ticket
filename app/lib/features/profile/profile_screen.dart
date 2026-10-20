@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/api/authed_api.dart';
+import '../../core/settings/settings_controller.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/widgets.dart';
@@ -164,6 +165,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const Divider(indent: Spacing.s16, endIndent: Spacing.s16),
                 ],
                 ListTile(key: const Key('open_settings'), leading: const Icon(Icons.settings_outlined), title: const Text('Pengaturan'), subtitle: const Text('Mata uang, zona waktu, biometric'), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/settings')),
+                if (context.watch<SettingsController?>() case final s?) ...[
+                  const Divider(indent: Spacing.s16, endIndent: Spacing.s16),
+                  ListTile(key: const Key('open_theme'), leading: Icon(_themeOptions[s.themeMode]!.$2), title: const Text('Tema'), subtitle: Text(_themeOptions[s.themeMode]!.$1), trailing: const Icon(Icons.chevron_right), onTap: () => _pickTheme(context, s)),
+                ],
               ]),
             ),
           ],
@@ -172,6 +177,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 }
+
+const _themeOptions = {
+  ThemeMode.system: ('Ikuti sistem', Icons.brightness_auto_outlined),
+  ThemeMode.light: ('Terang', Icons.light_mode_outlined),
+  ThemeMode.dark: ('Gelap', Icons.dark_mode_outlined),
+};
+
+/// Dialog pilihan tema; berlaku langsung dan dialog menutup setelah memilih.
+Future<void> _pickTheme(BuildContext context, SettingsController s) => showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Tema'),
+        contentPadding: const EdgeInsets.symmetric(vertical: Spacing.s8),
+        content: RadioGroup<ThemeMode>(
+          groupValue: s.themeMode,
+          onChanged: (v) {
+            if (v != null) s.setThemeMode(v);
+            Navigator.pop(ctx);
+          },
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            for (final e in _themeOptions.entries)
+              RadioListTile<ThemeMode>(key: Key('theme_${e.key.name}'), value: e.key, secondary: Icon(e.value.$2), title: Text(e.value.$1)),
+          ]),
+        ),
+        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Batal'))],
+      ),
+    );
 
 /// Lingkaran level + bar XP menuju level berikutnya.
 class _LevelCard extends StatelessWidget {
