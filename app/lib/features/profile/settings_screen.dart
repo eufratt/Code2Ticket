@@ -143,6 +143,43 @@ class _NotificationSection extends StatelessWidget {
               ? 'Tiket baru, pengingat, dan hasil draw muncul di bilah status.'
               : 'Notifikasi tetap tersedia di pusat notifikasi dalam aplikasi (ikon lonceng di Home).'),
         ),
+        if (granted) ...[
+          const Divider(indent: Spacing.s16, endIndent: Spacing.s16),
+          ListTile(
+            key: const Key('notif_exact_status'),
+            leading: Icon(service.exactAllowed ? Icons.timer_outlined : Icons.timer_off_outlined),
+            title: Text(service.exactAllowed ? 'Ketepatan pengingat: Tepat waktu' : 'Ketepatan pengingat: Bisa terlambat beberapa menit'),
+            subtitle: Text(service.exactAllowed
+                ? 'Pengingat muncul tepat di waktunya, juga saat aplikasi tertutup.'
+                : 'Izinkan alarm tepat waktu supaya pengingat tidak terlambat.'),
+          ),
+          if (!service.exactAllowed)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(Spacing.s16, 0, Spacing.s16, Spacing.s8),
+              child: PrimaryButton(
+                key: const Key('request_exact_alarm'),
+                label: 'Izinkan alarm tepat waktu',
+                icon: Icons.alarm_on_outlined,
+                variant: ButtonVariant.secondary,
+                onPressed: service.requestExactAlarms,
+              ),
+            ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(Spacing.s16, 0, Spacing.s16, Spacing.s8),
+            child: PrimaryButton(
+              key: const Key('send_test_notification'),
+              label: 'Kirim notifikasi tes (1 menit)',
+              icon: Icons.notification_add_outlined,
+              variant: ButtonVariant.secondary,
+              onPressed: () async {
+                final ok = await service.scheduleTestNotification();
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ok ? 'Notifikasi tes dijadwalkan 1 menit lagi. Boleh tutup aplikasi.' : 'Izin notifikasi belum ada.')));
+                }
+              },
+            ),
+          ),
+        ],
         if (!granted)
           Padding(
             padding: const EdgeInsets.fromLTRB(Spacing.s16, 0, Spacing.s16, Spacing.s8),

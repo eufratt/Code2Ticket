@@ -159,7 +159,7 @@ void main() {
     expect(e.gw.scheduled.values.every((r) => isReminderId(r.id)), isTrue);
 
     // Jadwalkan sesuatu secara langsung lalu logout.
-    await e.gw.schedule(PlannedReminder(id: reminderId('gx', ReminderKind.atDraw), at: DateTime.now().add(const Duration(hours: 2)), title: 't', body: 'b', payload: 'giveaway/gx'));
+    await e.gw.schedule(PlannedReminder(id: reminderId('gx', ReminderKind.atDraw), at: DateTime.now().add(const Duration(hours: 2)), title: 't', body: 'b', payload: 'giveaway/gx'), ScheduleMode.exact);
     expect(e.gw.scheduled, isNotEmpty);
     await e.auth.handleInvalidSession(); // status -> signedOut
     await tester.pumpAndSettle();
@@ -233,7 +233,7 @@ void main() {
       expect(find.text('Izin notifikasi: diizinkan'), findsOneWidget);
       expect(find.byKey(const Key('open_system_notif_settings')), findsNothing);
       expect(tester.widget<SwitchListTile>(find.byKey(const Key('switch_reminders'))).value, isTrue);
-      await e.gw.schedule(PlannedReminder(id: reminderId('gx', ReminderKind.atDraw), at: DateTime.now().add(const Duration(hours: 2)), title: 't', body: 'b', payload: 'giveaway/gx'));
+      await e.gw.schedule(PlannedReminder(id: reminderId('gx', ReminderKind.atDraw), at: DateTime.now().add(const Duration(hours: 2)), title: 't', body: 'b', payload: 'giveaway/gx'), ScheduleMode.exact);
       await tester.tap(find.byKey(const Key('switch_reminders')));
       await tester.pumpAndSettle();
       expect(e.svc.remindersEnabled, isFalse);

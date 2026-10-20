@@ -11,6 +11,23 @@ const Duration reminderLead = Duration(hours: 1);
 
 enum ReminderKind { oneHourBefore, atDraw }
 
+/// Mode jadwal: exact hanya bila sistem mengizinkan alarm exact; selain itu inexact (bisa terlambat beberapa menit, tidak gagal).
+enum ScheduleMode { exact, inexact }
+
+ScheduleMode scheduleModeFor({required bool exactAllowed}) => exactAllowed ? ScheduleMode.exact : ScheduleMode.inexact;
+
+/// Notifikasi tes dari Pengaturan (1 menit lagi). Id di luar rentang pengingat supaya tidak dibatalkan penyelaras jadwal.
+const int testNotificationId = 0x3FFFFFFF;
+const Duration testNotificationDelay = Duration(minutes: 1);
+
+PlannedReminder testNotification(DateTime now) => PlannedReminder(
+      id: testNotificationId,
+      at: now.add(testNotificationDelay),
+      title: 'Notifikasi tes',
+      body: 'Pengingat terjadwal berfungsi.',
+      payload: notificationsPayload,
+    );
+
 /// Id notifikasi deterministik (int32 positif) supaya jadwal yang sama menimpa, bukan menggandakan.
 /// Rentang: [0, 2^29) notifikasi server; [2^29, 2^30) tiket baru; [2^30, 2^31) pengingat (satu pasang per giveaway).
 const int _serverBase = 0, _ticketBase = 0x20000000, _reminderBase = 0x40000000, _mask = 0x1FFFFFFF;

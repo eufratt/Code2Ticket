@@ -34,14 +34,21 @@ abstract class NotificationGateway {
   Future<bool> requestPermission();
   Future<void> openSystemSettings();
   Future<void> show(int id, String title, String body, String payload);
-  Future<void> schedule(PlannedReminder r);
+  /// Alarm exact diizinkan sistem? (Android 12+ bisa dicabut pengguna; di bawahnya selalu true.)
+  Future<bool> canScheduleExact();
+
+  /// Membuka layar izin alarm exact (Android 12-12L tanpa USE_EXACT_ALARM); hasilnya dibaca ulang lewat [canScheduleExact].
+  Future<void> requestExactAlarms();
+
+  /// Menjadwalkan sesuai [mode]; bila exact ditolak sistem, jatuh ke inexact tanpa melempar.
+  Future<void> schedule(PlannedReminder r, ScheduleMode mode);
   Future<List<int>> pendingIds();
   Future<void> cancel(int id);
   Future<void> cancelAll();
 }
 
-/// Gateway nyata (flutter_local_notifications). Jadwal memakai waktu absolut (UTC) dan mode TIDAK exact,
-/// jadi tidak butuh izin alarm exact; ketepatan bisa bergeser beberapa menit saat hemat daya.
+/// Gateway nyata (flutter_local_notifications). Jadwal memakai waktu absolut (UTC); exactAllowWhileIdle bila alarm exact
+/// diizinkan (USE_EXACT_ALARM / SCHEDULE_EXACT_ALARM di manifest), selain itu inexact yang bisa terlambat beberapa menit.
 class PluginNotificationGateway implements NotificationGateway {
   PluginNotificationGateway([FlutterLocalNotificationsPlugin? plugin]) : _p = plugin ?? FlutterLocalNotificationsPlugin();
   final FlutterLocalNotificationsPlugin _p;
@@ -94,15 +101,32 @@ class PluginNotificationGateway implements NotificationGateway {
       _p.show(id: id, title: title, body: body, notificationDetails: _details, payload: payload);
 
   @override
-  Future<void> schedule(PlannedReminder r) => _p.zonedSchedule(
+  Future<bool> canScheduleExact() async => await _android?.canScheduleExactNotifications() ?? false;
+
+  @override
+  Future<void> requestExactAlarms() async {
+    await _android?.requestExactAlarmsPermission();
+  }
+
+  Future<void> _zoned(PlannedReminder r, AndroidScheduleMode mode) => _p.zonedSchedule(
         id: r.id,
         title: r.title,
         body: r.body,
         scheduledDate: tz.TZDateTime.from(r.at, tz.UTC),
         notificationDetails: _details,
-        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        androidScheduleMode: mode,
         payload: r.payload,
       );
+
+  @override
+  Future<void> schedule(PlannedReminder r, ScheduleMode mode) async {
+    if (mode == ScheduleMode.exact) {
+      try {
+        return await _zoned(r, AndroidScheduleMode.exactAllowWhileIdle);
+      } catch (_) {/* izin dicabut di tengah jalan: jatuh ke inexact */}
+    }
+    await _zoned(r, AndroidScheduleMode.inexactAllowWhileIdle);
+  }
 
   @override
   Future<List<int>> pendingIds() async => [for (final r in await _p.pendingNotificationRequests()) r.id];
@@ -129,6 +153,10 @@ class NotificationService extends ChangeNotifier {
 
   /// Izin notifikasi sistem (POST_NOTIFICATIONS di Android 13+).
   bool permissionGranted = false;
+
+  /// Alarm exact diizinkan sistem -> pengingat tepat waktu; false -> inexact (bisa terlambat beberapa menit).
+  bool exactAllowed = false;
+  ScheduleMode get scheduleMode => scheduleModeFor(exactAllowed: exactAllowed);
 
   /// Jadwal terakhir yang diterapkan; tidak diterapkan ulang bila sama (mencegah kerja berulang).
   String? _appliedSignature;
@@ -168,11 +196,26 @@ class NotificationService extends ChangeNotifier {
 
   Future<void> refreshPermission() async {
     final granted = await _safe(_gateway.areEnabled) ?? false;
-    if (granted != permissionGranted) {
+    final exact = await _safe(_gateway.canScheduleExact) ?? false;
+    if (granted != permissionGranted || exact != exactAllowed) {
       permissionGranted = granted;
+      exactAllowed = exact;
       notifyListeners();
-      if (granted) await _apply(force: true);
+      if (granted) await _apply(force: true); // mode berubah -> jadwal dipasang ulang dengan mode baru
     }
+  }
+
+  /// Membuka layar izin alarm exact; status dibaca ulang saat app kembali ke foreground.
+  Future<void> requestExactAlarms() async {
+    await _safe(_gateway.requestExactAlarms);
+    await refreshPermission();
+  }
+
+  /// Notifikasi tes 1 menit lagi lewat jalur penjadwalan yang sama dengan pengingat asli. false bila izin notifikasi belum ada.
+  Future<bool> scheduleTestNotification() async {
+    if (!permissionGranted) return false;
+    await _safe(() => _gateway.schedule(testNotification(_now()), scheduleMode));
+    return true;
   }
 
   /// true bila izin sudah ada atau baru diberikan. Dialog penjelasan ditampilkan UI SEBELUM memanggil ini.
@@ -205,15 +248,16 @@ class NotificationService extends ChangeNotifier {
   Future<void> _apply({bool force = false}) async {
     if (!_ticketsKnown && remindersEnabled) return;
     final desired = permissionGranted ? planReminders(_tickets, _now(), enabled: remindersEnabled) : const <PlannedReminder>[];
-    final sig = [for (final r in desired) '${r.id}@${r.at.millisecondsSinceEpoch}'].join(',');
+    final sig = '${scheduleMode.name}:${[for (final r in desired) '${r.id}@${r.at.millisecondsSinceEpoch}'].join(',')}';
     if (!force && sig == _appliedSignature) return;
     final pending = await _safe(_gateway.pendingIds) ?? const <int>[];
+    final mode = scheduleMode;
     final diff = diffReminders(desired, pending);
     for (final id in diff.cancel) {
       await _safe(() => _gateway.cancel(id));
     }
     for (final r in diff.schedule) {
-      await _safe(() => _gateway.schedule(r));
+      await _safe(() => _gateway.schedule(r, mode));
     }
     _appliedSignature = sig;
   }

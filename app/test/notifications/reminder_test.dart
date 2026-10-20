@@ -39,7 +39,17 @@ class FakeGateway implements NotificationGateway {
   @override
   Future<void> show(int id, String title, String body, String payload) async => shown.add((id, title, body, payload));
   @override
-  Future<void> schedule(PlannedReminder r) async => scheduled[r.id] = r; // id sama menimpa, seperti plugin
+  Future<void> schedule(PlannedReminder r, ScheduleMode mode) async {
+    scheduled[r.id] = r; // id sama menimpa, seperti plugin
+    modes[r.id] = mode;
+  }
+  bool exactOk = true;
+  int exactRequests = 0;
+  final Map<int, ScheduleMode> modes = {};
+  @override
+  Future<bool> canScheduleExact() async => exactOk;
+  @override
+  Future<void> requestExactAlarms() async => exactRequests++;
   @override
   Future<List<int>> pendingIds() async => scheduled.keys.toList();
   @override

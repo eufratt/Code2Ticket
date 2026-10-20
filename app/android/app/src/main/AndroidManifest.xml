@@ -6,7 +6,11 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <!-- Notifikasi sistem (Android 13+ meminta izin saat dijalankan; app menjelaskannya dulu). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-    <!-- Agar pengingat terjadwal dipasang ulang setelah HP dihidupkan ulang. Tanpa izin alarm exact: jadwal tidak-exact. -->
+    <!-- Pengingat tepat waktu (alarm exact). USE_EXACT_ALARM otomatis di Android 13+ (proyek kuliah, bukan Play Store);
+         SCHEDULE_EXACT_ALARM (izin pengguna, lewat tombol di Pengaturan) hanya untuk Android 12-12L. Tanpa izin: jatuh ke inexact. -->
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM"/>
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" android:maxSdkVersion="32"/>
+    <!-- Agar pengingat terjadwal dipasang ulang setelah HP dihidupkan ulang. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <application
         android:label="code2ticket"
