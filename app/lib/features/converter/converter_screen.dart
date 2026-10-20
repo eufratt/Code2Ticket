@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/currency/currency.dart';
+import '../../core/format.dart' show parseIdNumber;
 import '../../core/currency/rates_controller.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_tokens.dart';
@@ -52,7 +53,7 @@ class _CurrencyConverterState extends State<CurrencyConverter> {
     super.dispose();
   }
 
-  double? get _value => double.tryParse(_amount.text.trim().replaceAll(',', '.'));
+  double? get _value => parseIdNumber(_amount.text);
 
   @override
   Widget build(BuildContext context) {
