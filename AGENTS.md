@@ -24,6 +24,10 @@ Login/session dibuat sendiri (bukan Firebase/Supabase Auth). Scheduler draw: nod
 - Rakit Rantai (game kedua, edukasi hash-chain): logika murni + progres di app\lib\features\game\chain_puzzle.dart (generator deterministik per level, checkChain, ChainProgressStore di app_settings `chain_progress` per pengguna), layar chain_levels_screen.dart / chain_play_screen.dart, tes app\test\game\chain_test.dart. Memakai sha256Hex dan genesisHash dari chain_verifier.dart tanpa mengubahnya. Tanpa XP, lencana, skor, atau jaringan; data latihan bukan data draw asli. Mode Periksa: tepat satu sambungan putus (brokenAfter, linkIntact). Rute: /game = pemilih game (game_chooser_screen.dart), /game/codehunt = hub Code Hunt, /game/chain = level Rakit Rantai; rekor lokal Code Hunt di code_hunt_record.dart (app_settings `codehunt_best`, hanya tampilan).
 - Android: android\gradle.properties berisi kotlin.incremental=false (proyek di drive D:, pub cache di C:); jangan dihapus.
 
+## Branding dan istilah
+- applicationId/namespace `com.code2ticket.app` (MainActivity di androidpp\src\main\kotlin\com\code2ticketpp; userAgentPackageName peta harus sama), label "Code2Ticket", versi 1.0.0+1, signing rilis tetap debug. Ikon peluncur/adaptif, splash (indigo #4F46E5), dan ikon notifikasi monokrom `ic_stat_notify` dihasilkan `dart run tool/make_icons.dart` (master di appssetsranding); jangan memakai ikon peluncur untuk notifikasi.
+- Teks UI mengikuti glosarium di DESIGN.md bagian 6 (Berpeluang, Cek Keaslian, Kunci biometrik, Admin/Pengguna). Angka masukan pengguna diurai `parseIdNumber` (coreormat.dart), bukan double.tryParse.
+
 ## Navigasi
 Bottom navigation 4 item sama lebar: Home, Profil (ikon = foto profil), Saran & Kesan, Logout; tanpa FAB (kerangka: app\lib\features\shell\app_shell.dart, rute: app\lib\app_router.dart).
 Home, Profil, dan Saran & Kesan adalah 3 cabang StatefulShellRoute; Logout hanya aksi (dialog konfirmasi + alur logout yang sudah ada), tidak pernah menjadi tab terpilih.

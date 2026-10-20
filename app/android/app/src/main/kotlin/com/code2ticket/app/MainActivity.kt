@@ -1,4 +1,4 @@
-package com.example.code2ticket
+package com.code2ticket.app
 
 import io.flutter.embedding.android.FlutterFragmentActivity
 

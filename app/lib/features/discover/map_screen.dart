@@ -13,7 +13,7 @@ import '../giveaways/giveaways_controller.dart' show LoadState;
 import 'discover_controller.dart';
 
 /// Id paket untuk User-Agent tile OpenStreetMap (kebijakan tile OSM: identifikasi aplikasi).
-const osmUserAgentPackage = 'com.example.code2ticket';
+const osmUserAgentPackage = 'com.code2ticket.app';
 const osmTileUrl = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 
 /// S-MAP: peta OpenStreetMap berisi penanda giveaway dari hasil Discover saat ini (kata kunci, filter,

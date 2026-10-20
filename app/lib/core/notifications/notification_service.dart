@@ -68,7 +68,7 @@ class PluginNotificationGateway implements NotificationGateway {
   @override
   Future<void> init(void Function(String? payload) onTap) async {
     await _p.initialize(
-      settings: const InitializationSettings(android: AndroidInitializationSettings('@mipmap/ic_launcher')),
+      settings: const InitializationSettings(android: AndroidInitializationSettings('@drawable/ic_stat_notify')),
       onDidReceiveNotificationResponse: (r) => onTap(r.payload),
     );
     await _android?.createNotificationChannel(const AndroidNotificationChannel(
