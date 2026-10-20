@@ -10,7 +10,7 @@ import '../../core/theme/app_typography.dart';
 import '../../core/widgets/widgets.dart';
 import '../../core/time/zones.dart';
 
-/// Konverter (dari Profil): tab Mata Uang dan tab Waktu.
+/// Konverter (dari Home > Menu fitur): tab Mata Uang dan tab Waktu.
 class ConverterScreen extends StatelessWidget {
   const ConverterScreen({super.key});
 

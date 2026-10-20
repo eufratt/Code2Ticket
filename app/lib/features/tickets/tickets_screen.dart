@@ -51,7 +51,7 @@ class _TicketsScreenState extends State<TicketsScreen> {
   @override
   void initState() {
     super.initState();
-    // Selalu segarkan saat tab dibuka (hasil draw bisa berubah di server).
+    // Selalu segarkan saat layar dibuka (hasil draw bisa berubah di server).
     Future.microtask(context.read<TicketsController>().load);
   }
 
@@ -81,7 +81,7 @@ class _TicketsScreenState extends State<TicketsScreen> {
                           child: EmptyState(
                             icon: Icons.confirmation_number_outlined,
                             title: 'Belum ada tiket',
-                            message: 'Masukkan kode lewat tombol di tengah untuk mendapat tiket pertamamu.',
+                            message: 'Masukkan kode lewat tombol Input Code di Home untuk mendapat tiket pertamamu.',
                             actionLabel: 'Masukkan kode',
                             onAction: () => context.push('/code'),
                           ),

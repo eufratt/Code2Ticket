@@ -83,7 +83,7 @@ Dukung skala font sistem sampai 1,3x tanpa overflow (pakai `Flexible`/`Wrap`, bu
   | Giveaway | Aktif | sukses |
   | Giveaway | Draw segera / Menunggu draw | peringatan |
   | Giveaway | Selesai | netral |
-  | Tiket | Eligible / Menunggu draw | info / peringatan |
+  | Tiket | Berpeluang / Menunggu draw | info / peringatan |
   | Tiket | Menang | sukses (+ ikon piala) |
   | Tiket | Tidak terpilih | netral |
   | Verifikasi | Terverifikasi | sukses; Tidak cocok | error |
@@ -128,6 +128,12 @@ Dukung skala font sistem sampai 1,3x tanpa overflow (pakai `Flexible`/`Wrap`, bu
 - Bahasa Indonesia, nada ramah dan singkat. Tombol berupa kata kerja ("Masukkan kode", "Lihat tiket"). Pesan error menyebut apa yang terjadi dan apa yang bisa dilakukan.
 - Mata uang: `Rp 21.587.000`, `US$1.200,00`, `€1.068,14`, `¥189.672` (IDR/JPY tanpa desimal). Tanggal: `19 Okt 2026, 03.42 WIB`. Nomor tiket tetap tabular.
 - Jangan menampilkan data teknis mentah (UUID, kode error) ke pengguna; tampilkan di mode detail untuk verifikasi saja.
+- Glosarium (satu istilah per hal, jangan diganti sinonim):
+  - Nama fitur utama tetap: My Tickets, Discover, Input Code (tombol Input Code di Home).
+  - Status tiket: Berpeluang, Menunggu draw, Menang, Tidak terpilih. Peran: Admin, Pengguna.
+  - Cek Keaslian = layar/tombol/judul untuk memeriksa hash-chain undian; "Terverifikasi" hanya chip hasilnya. Kata "verifikasi" tidak dipakai di tombol.
+  - Kunci biometrik = kunci aplikasi dengan sidik jari, wajah, atau PIN perangkat; di layar kunci, jalan keluar bernama "Masuk dengan password" (logout).
+  - Home adalah pusat fitur; layar fitur dibuka dari Home, bukan "tab" atau "tombol di tengah".
 
 ## 7. Aksesibilitas
 - Kontras teks >= 4,5:1 (>= 3:1 untuk teks besar >= 18 dp / tebal >= 14 dp). Periksa di kedua tema.

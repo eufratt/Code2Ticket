@@ -277,7 +277,7 @@ class _Results extends StatelessWidget {
         const SizedBox(height: Spacing.s16),
         PrimaryButton(
           key: const Key('open_verify'),
-          label: 'Cek keaslian',
+          label: 'Cek Keaslian',
           icon: Icons.verified_outlined,
           variant: ButtonVariant.secondary,
           onPressed: () => context.push('/giveaway/${draw.giveawayId}/verify'),

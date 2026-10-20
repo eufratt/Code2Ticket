@@ -60,7 +60,7 @@ class _BiometricLockScreenState extends State<BiometricLockScreen> {
                   const SizedBox(height: Spacing.s32),
                   PrimaryButton(label: 'Coba lagi', icon: Icons.lock_open, loading: _busy, onPressed: _retry),
                   const SizedBox(height: Spacing.s12),
-                  PrimaryButton(label: 'Keluar', variant: ButtonVariant.secondary, onPressed: _busy ? null : auth.logout),
+                  PrimaryButton(label: 'Masuk dengan password', variant: ButtonVariant.secondary, onPressed: _busy ? null : auth.logout),
                 ],
               ),
             ),

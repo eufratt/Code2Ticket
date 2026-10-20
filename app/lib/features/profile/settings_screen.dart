@@ -99,7 +99,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             padding: const EdgeInsets.symmetric(vertical: Spacing.s4),
             child: SwitchListTile(
               secondary: const Icon(Icons.fingerprint),
-              title: const Text('Kunci biometric'),
+              title: const Text('Kunci biometrik (sidik jari, wajah, atau PIN perangkat)'),
               subtitle: _canCheckBiometrics
                   ? const Text('Minta verifikasi biometric saat membuka aplikasi')
                   : const Text('Perangkat tidak mendukung biometric'),

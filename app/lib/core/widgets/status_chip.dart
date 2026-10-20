@@ -13,7 +13,7 @@ enum AppStatus {
   giveawayDrawSoon('Draw segera', StatusTone.warning, Icons.hourglass_top),
   giveawayWaitingDraw('Menunggu draw', StatusTone.warning, Icons.hourglass_top),
   giveawayFinished('Selesai', StatusTone.neutral, Icons.flag_outlined),
-  ticketEligible('Eligible', StatusTone.info, Icons.confirmation_number_outlined),
+  ticketEligible('Berpeluang', StatusTone.info, Icons.confirmation_number_outlined),
   ticketWaiting('Menunggu draw', StatusTone.warning, Icons.hourglass_top),
   ticketWon('Menang', StatusTone.success, Icons.emoji_events),
   ticketNotSelected('Tidak terpilih', StatusTone.neutral, Icons.remove_circle_outline),

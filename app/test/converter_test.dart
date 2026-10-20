@@ -177,8 +177,8 @@ void main() {
       await tester.pumpAndSettle();
       expect(settings.zone, AppZone.london);
       expect(store.values['|display_timezone'], 'london');
-      await tester.scrollUntilVisible(find.text('Kunci biometric'), 200, scrollable: find.byType(Scrollable).first);
-      expect(find.text('Kunci biometric'), findsOneWidget);
+      await tester.scrollUntilVisible(find.text('Kunci biometrik (sidik jari, wajah, atau PIN perangkat)'), 200, scrollable: find.byType(Scrollable).first);
+      expect(find.text('Kunci biometrik (sidik jari, wajah, atau PIN perangkat)'), findsOneWidget);
       expect(find.text('Perangkat tidak mendukung biometric'), findsOneWidget);
     });
   });

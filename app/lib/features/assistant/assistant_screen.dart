@@ -16,7 +16,7 @@ const _quickQuestions = [
   'Bagaimana cara cek keaslian hasil draw?',
 ];
 
-/// Tab Asisten (M7b): gelembung chat kiri (asisten) / kanan (pengguna), saran cepat, kartu giveaway dari jawaban,
+/// Layar Asisten (M7b, dari Home): gelembung chat kiri (asisten) / kanan (pengguna), saran cepat, kartu giveaway dari jawaban,
 /// dan kolom input 500 karakter. Riwayat tersimpan di SQLite per pengguna.
 class AssistantScreen extends StatefulWidget {
   const AssistantScreen({super.key});

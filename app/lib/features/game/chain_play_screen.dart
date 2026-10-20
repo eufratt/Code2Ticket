@@ -9,7 +9,7 @@ import 'chain_levels_screen.dart' show chainStoreOf;
 import 'chain_puzzle.dart';
 
 const chainExplanation =
-    'Inilah yang dilakukan layar Verifikasi pada undian asli: menghitung ulang hash tiap block dan memastikan rantainya bersambung, '
+    'Inilah yang dilakukan layar Cek Keaslian pada undian asli: menghitung ulang hash tiap block dan memastikan rantainya bersambung, '
     'yaitu "prev" tiap block sama dengan hash block sebelumnya.';
 
 const howToArrange = 'Setiap block menyimpan hash block sebelumnya. Urutkan block sampai \'prev\' tiap block sama dengan \'hash\' block di atasnya.';
