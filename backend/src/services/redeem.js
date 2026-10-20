@@ -25,6 +25,10 @@ export async function redeemCode(pool, user, body) {
   const { code, lat, lng } = p.data;
 
   return withTx(pool, async (c) => {
+    // Serialisasi per pengguna: tebakan paralel tidak boleh sama-sama lolos pemeriksaan batas. Urutan kunci: pengguna ->
+    // kode -> giveaway. NO KEY UPDATE (bukan FOR UPDATE) agar tidak bentrok dengan FOR KEY SHARE dari insert notifikasi
+    // (FK ke users) di draw yang memegang kunci giveaway: tidak ada siklus tunggu.
+    await c.query('select 1 from users where id = $1 for no key update', [user.id]);
     // [stored] = alasan di code_attempts bila berbeda dari kode galat untuk klien.
     const failCode = async (reason, stored = reason) => {
       await c.query('insert into code_attempts(user_id, success, reason) values ($1, false, $2)', [user.id, stored]);
