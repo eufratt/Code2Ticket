@@ -1,3 +1,5 @@
+import '../../features/notifications/notification_models.dart';
+
 // Aturan anti-spoiler untuk notifikasi hasil draw (murni, tanpa plugin/UI). Notifikasi dan item pusat notifikasi
 // untuk hasil draw tidak boleh membocorkan menang/tidak sebelum pengguna melakukan reveal (goyang / "Lihat hasil").
 
@@ -27,3 +29,55 @@ String drawSeenKey(String giveawayId) => 'draw_seen:$giveawayId';
 /// Notifikasi sistem hasil draw hanya tampil bila belum di-reveal dan layar hasil giveaway itu tidak sedang terbuka.
 bool shouldShowDrawResultNotification({required String giveawayId, required bool revealed, required String? activeResultGiveawayId}) =>
     !revealed && activeResultGiveawayId != giveawayId;
+
+/// Jenis baris di pusat notifikasi dalam aplikasi.
+enum NotificationRowKind { normal, announcement, result }
+
+/// Satu baris tampilan. [source] tetap satu notifikasi server: hitungan belum dibaca, tandai dibaca, dan rute memakai [source].
+class NotificationRow {
+  const NotificationRow({required this.source, required this.kind, required this.title, required this.body, required this.won, required this.at});
+  final AppNotification source;
+  final NotificationRowKind kind;
+  final String title, body;
+
+  /// Hanya bermakna untuk [NotificationRowKind.result]: true = menang, false = tidak terpilih.
+  final bool won;
+  final DateTime? at;
+}
+
+const String resultWonTitle = 'Selamat, kamu menang!';
+const String resultLostTitle = 'Kamu belum terpilih';
+const String resultLostBody = 'Terima kasih sudah ikut. Kamu tetap bisa memeriksa keaslian hasilnya.';
+
+/// Daftar notifikasi server -> baris tampilan (lokal, tanpa mengubah server).
+/// - hasil draw belum di-reveal: 1 baris netral;
+/// - sudah di-reveal ([revealed] memuat giveaway-nya): baris hasil (teks asli) tepat di atas baris netral dari notifikasi yang sama;
+/// - jenis lain: 1 baris apa adanya. Urutan notifikasi asli dipertahankan.
+List<NotificationRow> notificationRows(
+  List<AppNotification> items,
+  Set<String> revealed, {
+  String Function(String? giveawayId)? titleOf,
+}) {
+  final rows = <NotificationRow>[];
+  for (final n in items) {
+    if (!isDrawResultType(n.type)) {
+      rows.add(NotificationRow(source: n, kind: NotificationRowKind.normal, title: n.title, body: n.body, won: false, at: n.createdAt));
+      continue;
+    }
+    final gTitle = titleOf?.call(n.giveawayId) ?? '';
+    final seen = n.giveawayId != null && revealed.contains(n.giveawayId);
+    if (seen) {
+      final won = n.type == 'winner';
+      rows.add(NotificationRow(
+        source: n,
+        kind: NotificationRowKind.result,
+        title: won ? (n.title.isEmpty ? resultWonTitle : n.title) : resultLostTitle,
+        body: won ? n.body : resultLostBody,
+        won: won,
+        at: n.createdAt,
+      ));
+    }
+    rows.add(NotificationRow(source: n, kind: NotificationRowKind.announcement, title: neutralDrawTitle, body: neutralDrawBody(gTitle), won: false, at: n.createdAt));
+  }
+  return rows;
+}

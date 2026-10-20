@@ -66,6 +66,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final c = context.watch<NotificationsController>();
     final tickets = context.watch<TicketsController?>()?.items ?? const [];
     String titleOf(String? gid) => [for (final t in tickets) if (t.giveawayId == gid) t.giveawayTitle].firstOrNull ?? '';
+    final rows = notificationRows(c.items, _revealed, titleOf: titleOf);
     return Scaffold(
       appBar: AppBar(title: const Text('Notifikasi')),
       body: switch (c.state) {
@@ -98,9 +99,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     : ListView.separated(
                         physics: const AlwaysScrollableScrollPhysics(),
                         padding: const EdgeInsets.fromLTRB(Spacing.screen, Spacing.s8, Spacing.screen, Spacing.s24),
-                        itemCount: c.items.length,
+                        itemCount: rows.length,
                         separatorBuilder: (_, _) => const SizedBox(height: Spacing.cardGap),
-                        itemBuilder: (_, i) => _NotificationTile(n: c.items[i], revealed: _revealed.contains(c.items[i].giveawayId), giveawayTitle: titleOf(c.items[i].giveawayId), onTap: () => _open(c.items[i])),
+                        itemBuilder: (_, i) => _NotificationTile(row: rows[i], onTap: () => _open(rows[i].source)),
                       ),
               ),
             ),
@@ -111,21 +112,26 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 }
 
 class _NotificationTile extends StatelessWidget {
-  const _NotificationTile({required this.n, required this.revealed, required this.giveawayTitle, required this.onTap});
-  final AppNotification n;
-  final bool revealed;
-  final String giveawayTitle;
+  const _NotificationTile({required this.row, required this.onTap});
+  final NotificationRow row;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final c = context.colors;
-    final spoiler = isDrawResultType(n.type) && !revealed;
-    final kind = NotificationKind.of(spoiler ? 'draw_result' : n.type); // ikon/label "Menang" juga spoiler
-    final text = drawNotificationText(type: n.type, title: n.title, body: n.body, giveawayTitle: giveawayTitle, revealed: revealed);
+    final n = row.source;
+    final isResult = row.kind == NotificationRowKind.result;
+    final kind = switch (row.kind) {
+      NotificationRowKind.normal => NotificationKind.of(n.type),
+      NotificationRowKind.announcement => NotificationKind.of('draw_result'),
+      NotificationRowKind.result => row.won
+          ? NotificationKind.of('winner')
+          : const NotificationKind(Icons.remove_circle_outline, 'Tidak terpilih', StatusTone.neutral),
+    };
+    final text = (title: row.title, body: row.body);
     return SurfaceCard(
-      key: Key('notification_${n.id}'),
+      key: Key(isResult ? 'notification_${n.id}_result' : 'notification_${n.id}'),
       onTap: onTap,
       semanticLabel: '${n.isRead ? '' : 'Belum dibaca. '}${kind.label}. ${text.title}. ${text.body}',
       child: Row(
@@ -148,10 +154,10 @@ class _NotificationTile extends StatelessWidget {
                 Text(text.title, style: theme.textTheme.titleMedium?.copyWith(fontWeight: n.isRead ? FontWeight.w500 : FontWeight.w700)),
                 if (text.body.isNotEmpty)
                   Padding(padding: const EdgeInsets.only(top: Spacing.s4), child: Text(text.body, style: theme.textTheme.bodyMedium)),
-                if (n.createdAt != null)
+                if (row.at != null)
                   Padding(
                     padding: const EdgeInsets.only(top: Spacing.s4),
-                    child: Text(context.when(n.createdAt!), style: theme.textTheme.bodySmall?.copyWith(color: c.muted)),
+                    child: Text(context.when(row.at!), style: theme.textTheme.bodySmall?.copyWith(color: c.muted)),
                   ),
               ],
             ),
