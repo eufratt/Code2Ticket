@@ -100,10 +100,10 @@ Alur skenario pengujian komprehensif berdurasi 5 menit untuk mendemokan seluruh 
    - Masuk ke tab **Asisten**:
      - Ajukan pertanyaan seputar rekomendasi giveaway (mis. *"Giveaway apa yang cocok untuk pecinta kuliner di Surabaya?"* atau *"Ada giveaway teknologi apa saja yang aktif?"*).
      - Asisten menjawab secara kontekstual menggunakan OpenAI Chat Completions dan RAG berbasis giveaway aktif, lengkap dengan kartu tautan langsung.
-   - Masuk ke menu **Game Maze** (di tab Profil):
-     - Mainkan labirin interaktif menggunakan sensor kemiringan ponsel (tilt/accelerometer) atau D-pad on-screen.
-     - Capai garis akhir sebelum waktu habis untuk mendapatkan bintang.
-     - Kirim skor permainan ke server dan lihat posisimu di **Papan Peringkat** (Leaderboard).
+   - Masuk ke menu **Game** (Home > Menu fitur > Game), lalu pilih **Buru Kode**:
+     - Mainkan labirin interaktif menggunakan sensor kemiringan ponsel (gyroscope/accelerometer) atau tombol panah di layar.
+     - Antar chip kode ke Mesin Undian sebelum waktu habis sambil mengumpulkan segmen kode.
+     - Kirim skor ke server dan lihat posisimu di **Papan Peringkat**, dibuka dari dalam fitur Game.
 
 ---
 
