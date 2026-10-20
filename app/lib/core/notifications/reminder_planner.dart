@@ -41,6 +41,9 @@ int _fnv32(String s) {
 }
 
 int reminderId(String giveawayId, ReminderKind kind) => _reminderBase | ((_fnv32(giveawayId) & _mask) << 1) | kind.index;
+/// Satu giveaway = satu notifikasi sistem hasil draw: alarm lokal saat draw_at dan notifikasi server hasil draw memakai id yang sama,
+/// jadi bila keduanya sempat tampil, yang kedua menimpa yang pertama.
+int drawResultNotificationId(String giveawayId) => reminderId(giveawayId, ReminderKind.atDraw);
 bool isReminderId(int id) => id >= _reminderBase;
 int ticketCreatedId(String ticketId) => _ticketBase | (_fnv32(ticketId) & _mask);
 int serverNotificationId(int serverId) => _serverBase | (serverId & _mask);
@@ -69,8 +72,11 @@ String? routeForPayload(String? payload) {
 
 /// Satu notifikasi terjadwal (waktu absolut; zona waktu tidak berpengaruh).
 class PlannedReminder {
-  const PlannedReminder({required this.id, required this.at, required this.title, required this.body, required this.payload});
+  const PlannedReminder({required this.id, required this.at, required this.title, required this.body, required this.payload, this.drawGiveawayId});
   final int id;
+
+  /// Terisi hanya untuk pengingat "saat draw" (hasil draw): dipakai untuk penanda terjadwal [drawReminderKey].
+  final String? drawGiveawayId;
   final DateTime at;
   final String title, body, payload;
 }
@@ -110,6 +116,7 @@ List<PlannedReminder> planReminders(List<Ticket> tickets, DateTime now, {require
         title: neutralDrawTitle,
         body: neutralDrawBody(name),
         payload: resultPayload(gid),
+        drawGiveawayId: gid,
       ));
     }
   }

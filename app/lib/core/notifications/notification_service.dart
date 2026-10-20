@@ -258,7 +258,12 @@ class NotificationService extends ChangeNotifier {
     }
     for (final r in diff.schedule) {
       await _safe(() => _gateway.schedule(r, mode));
+      final gid = r.drawGiveawayId;
+      if (gid != null && _activeUser != null) {
+        await _safe(() => _store.setSetting(drawReminderKey(gid), '${r.at.millisecondsSinceEpoch}', userId: _activeUser!));
+      }
     }
+    if (desired.isEmpty) await _clearDrawMarkers(); // jadwal tidak dipasang: jalur server harus tetap tampil
     _appliedSignature = sig;
   }
 
@@ -287,11 +292,14 @@ class NotificationService extends ChangeNotifier {
       var revealed = false;
       if (isDrawResultType(n.type) && gid != null) {
         revealed = await _safe(() => _store.getSetting(drawSeenKey(gid), userId: userId)) == '1';
-        if (!shouldShowDrawResultNotification(giveawayId: gid, revealed: revealed, activeResultGiveawayId: activeResultGiveawayId)) continue;
+        final marker = await _safe(() => _store.getSetting(drawReminderKey(gid), userId: userId));
+        final fired = localDrawReminderFired(marker: marker, now: _now(), remindersEnabled: remindersEnabled);
+        if (!shouldShowDrawResultNotification(giveawayId: gid, revealed: revealed, activeResultGiveawayId: activeResultGiveawayId, localReminderFired: fired)) continue;
       }
       final title = [for (final t in _tickets) if (t.giveawayId == gid) t.giveawayTitle].firstOrNull ?? '';
       final text = drawNotificationText(type: n.type, title: n.title, body: n.body, giveawayTitle: title, revealed: revealed);
-      await _safe(() => _gateway.show(serverNotificationId(n.id), text.title, text.body, payloadForServer(n)));
+      final id = gid != null && isDrawResultType(n.type) ? drawResultNotificationId(gid) : serverNotificationId(n.id);
+      await _safe(() => _gateway.show(id, text.title, text.body, payloadForServer(n)));
     }
   }
 
@@ -307,11 +315,26 @@ class NotificationService extends ChangeNotifier {
     }
   }
 
+  String? _activeUser;
+
+  Future<void> _clearDrawMarkers() async {
+    final u = _activeUser;
+    if (u == null) return;
+    for (final gid in {for (final t in _tickets) t.giveawayId}) {
+      await _safe(() => _store.setSetting(drawReminderKey(gid), null, userId: u));
+    }
+  }
+
   /// Pengguna masuk: simpan id pengguna aktif (dibaca pemeriksaan latar belakang).
-  Future<void> onSignedIn(String userId) => _safe(() => _store.setSetting(NotifKeys.activeUser, userId)).then((_) {});
+  Future<void> onSignedIn(String userId) {
+    _activeUser = userId;
+    return _safe(() => _store.setSetting(NotifKeys.activeUser, userId)).then((_) {});
+  }
 
   /// Logout: semua jadwal dan notifikasi yang masih tampil dibatalkan, kondisi dihapus.
   Future<void> onLogout() async {
+    await _clearDrawMarkers();
+    _activeUser = null;
     _tickets = const [];
     _ticketsKnown = false;
     _appliedSignature = null;

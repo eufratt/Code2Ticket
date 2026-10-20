@@ -27,8 +27,24 @@ String drawSeenKey(String giveawayId) => 'draw_seen:$giveawayId';
     isDrawResultType(type) && !revealed ? (title: neutralDrawTitle, body: neutralDrawBody(giveawayTitle)) : (title: title, body: body);
 
 /// Notifikasi sistem hasil draw hanya tampil bila belum di-reveal dan layar hasil giveaway itu tidak sedang terbuka.
-bool shouldShowDrawResultNotification({required String giveawayId, required bool revealed, required String? activeResultGiveawayId}) =>
-    !revealed && activeResultGiveawayId != giveawayId;
+/// [localReminderFired]: alarm lokal draw_at giveaway ini sudah berbunyi (lihat [localDrawReminderFired]); server tidak menampilkan yang kedua.
+bool shouldShowDrawResultNotification({
+  required String giveawayId,
+  required bool revealed,
+  required String? activeResultGiveawayId,
+  bool localReminderFired = false,
+}) =>
+    !revealed && activeResultGiveawayId != giveawayId && !localReminderFired;
+
+/// Penanda (app_settings, per pengguna) bahwa pengingat lokal draw_at sudah dijadwalkan; isinya draw_at dalam ms epoch.
+String drawReminderKey(String giveawayId) => 'draw_reminder:$giveawayId';
+
+/// Alarm lokal sudah berbunyi bila saklar pengingat menyala, penanda ada, dan draw_at sudah lewat.
+/// Saklar mati / penanda kosong (jadwal tidak dipasang) -> false, jadi jalur server tetap tampil.
+bool localDrawReminderFired({required String? marker, required DateTime now, required bool remindersEnabled}) {
+  final ms = int.tryParse(marker ?? '');
+  return remindersEnabled && ms != null && !DateTime.fromMillisecondsSinceEpoch(ms, isUtc: true).isAfter(now);
+}
 
 /// Jenis baris di pusat notifikasi dalam aplikasi.
 enum NotificationRowKind { normal, announcement, result }

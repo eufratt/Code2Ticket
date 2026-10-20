@@ -277,7 +277,7 @@ void main() {
     test('notifikasi server: tampil sekali; pemeriksaan ulang tidak menggandakan; batas tersimpan per pengguna', () async {
       await setUpService();
       await svc.showServerNotifications('u1', [notif(7), notif(6, read: true)]);
-      expect(gw.shown.map((s) => s.$1), [serverNotificationId(7)]);
+      expect(gw.shown.map((s) => s.$1), [drawResultNotificationId('g1')]);
       await svc.showServerNotifications('u1', [notif(7), notif(6, read: true)]);
       expect(gw.shown.length, 1);
       expect(await store.getSetting(NotifKeys.lastShown, userId: 'u1'), '7');

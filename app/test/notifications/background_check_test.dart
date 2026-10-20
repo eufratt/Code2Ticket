@@ -36,7 +36,7 @@ void main() {
     await store.setSetting(NotifKeys.activeUser, 'u1');
     final api = FakeApi((m, p, b) async => {'ok': true, 'data': [_notif(5), _notif(4, read: true)]});
     await run(api);
-    expect(gw.shown.map((s) => s.$1), [serverNotificationId(5)]);
+    expect(gw.shown.map((s) => s.$1), [drawResultNotificationId('g1')]);
     expect(gw.shown.single.$4, 'result/g1');
     await run(api);
     expect(gw.shown.length, 1);
