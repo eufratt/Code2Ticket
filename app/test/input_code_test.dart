@@ -29,7 +29,7 @@ class FakeApi extends ApiClient {
   int posts(String path) => calls.where((c) => c.method == 'POST' && c.path == path).length;
 
   @override
-  Future<Map<String, dynamic>> get(String path, {dynamic body, String? token}) {
+  Future<Map<String, dynamic>> get(String path, {dynamic body, String? token, bool retry = true}) {
     calls.add((method: 'GET', path: path, body: body, retry: true));
     return handler('GET', path, body);
   }

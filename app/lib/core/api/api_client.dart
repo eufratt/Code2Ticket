@@ -64,8 +64,9 @@ class ApiClient {
     String path, {
     dynamic body,
     String? token,
+    bool retry = true,
   }) =>
-      _send('GET', path, body: body, token: token);
+      _send('GET', path, body: body, token: token, retry: retry);
 
   /// GET yang cepat gagal saat koneksi putus (tanpa jeda 3 dtk + 6 dtk); timeout dan 502/503 Render tetap diulang.
   /// Untuk cek sesi: pengguna offline tidak boleh menunggu di Splash.
@@ -166,6 +167,17 @@ class ApiClient {
             attempt++;
             continue;
           }
+          throw NetworkException('Tidak ada koneksi internet.');
+        } on InvalidSessionException {
+          rethrow;
+        } on ForbiddenException {
+          rethrow;
+        } on NetworkException {
+          rethrow;
+        } on IOException {
+          // HandshakeException, TlsException, HttpException, dst.: semua galat transport = jaringan, bukan galat program.
+          throw NetworkException('Tidak ada koneksi internet.');
+        } on OSError {
           throw NetworkException('Tidak ada koneksi internet.');
         }
       }

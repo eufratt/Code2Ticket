@@ -67,10 +67,10 @@ class GiveawaysController extends ChangeNotifier with OfflineRetry {
     } on NetworkException catch (e) {
       if (silent) return; // masih offline: biarkan tampilan cache apa adanya
       final now = DateTime.now();
-      final cached = ((await bestEffort(_cache.loadGiveaways)) ?? const <Giveaway>[])
-          .where((g) => g.phaseAt(now) == GiveawayPhase.active)
-          .toList();
-      if (cached.isNotEmpty) {
+      final all = (await bestEffort(_cache.loadGiveaways)) ?? const <Giveaway>[];
+      final cached = all.where((g) => g.phaseAt(now) == GiveawayPhase.active).toList();
+      // Cache ada tetapi semuanya sudah berakhir: tampilkan daftar kosong + banner offline, bukan galat "Coba lagi".
+      if (all.isNotEmpty) {
         items = cached;
         offline = true;
         cachedAt = await bestEffort(_cache.giveawaysUpdatedAt);

@@ -11,7 +11,7 @@ class AuthedApi {
   final ApiClient _api;
   final AuthController _auth;
 
-  Future<Map<String, dynamic>> get(String path) => _run((t) => _api.get(path, token: t));
+  Future<Map<String, dynamic>> get(String path) => _run((t) => _api.get(path, token: t, retry: !_auth.offlineSession)); // sesi offline: gagal cepat, tanpa jeda ulang 3+6 dtk
 
   Future<Map<String, dynamic>> post(String path, {dynamic body, bool retry = true}) =>
       _write((t) => _api.post(path, body: body, token: t, retry: retry));
