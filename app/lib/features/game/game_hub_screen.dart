@@ -16,11 +16,10 @@ class GameHubScreen extends StatelessWidget {
     final theme = Theme.of(context);
     final c = context.colors;
     return Scaffold(
-      appBar: AppBar(title: const Text('Game')),
+      appBar: AppBar(title: const Text('Code Hunt')),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(Spacing.screen, Spacing.s4, Spacing.screen, Spacing.s24),
         children: [
-          const SectionHeader('Code Hunt'),
           SurfaceCard(
             color: c.primaryContainer,
             child: Row(
@@ -67,25 +66,7 @@ class GameHubScreen extends StatelessWidget {
                 ),
               ),
             ),
-          const SectionHeader('Rakit Rantai', padding: EdgeInsets.only(top: Spacing.s8)),
-          SurfaceCard(
-            key: const Key('open_chain'),
-            onTap: () => context.push('/game/chain'),
-            semanticLabel: 'Rakit Rantai. Susun dan periksa block hash-chain seperti pada verifikasi undian asli.',
-            child: Row(children: [
-              ExcludeSemantics(child: Icon(Icons.link, size: 32, color: c.primary)),
-              const SizedBox(width: Spacing.s12),
-              Expanded(
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('Rakit Rantai', style: theme.textTheme.titleMedium),
-                  const SizedBox(height: Spacing.s4),
-                  Text('Susun dan periksa block hash-chain seperti pada verifikasi undian asli.', style: theme.textTheme.bodySmall?.copyWith(color: c.muted)),
-                ]),
-              ),
-              Icon(Icons.chevron_right, color: c.muted),
-            ]),
-          ),
-          const SizedBox(height: Spacing.s16),
+          const SizedBox(height: Spacing.s8),
           PrimaryButton(key: const Key('open_leaderboard'), label: 'Papan peringkat', icon: Icons.leaderboard_outlined, variant: ButtonVariant.secondary, onPressed: () => context.push('/leaderboard')),
         ],
       ),

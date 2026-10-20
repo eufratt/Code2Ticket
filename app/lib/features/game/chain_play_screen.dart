@@ -9,9 +9,23 @@ import 'chain_levels_screen.dart' show chainStoreOf;
 import 'chain_puzzle.dart';
 
 const chainExplanation =
-    'Inilah yang dilakukan layar Verifikasi pada undian asli: menghitung ulang hash tiap block dan memastikan rantainya bersambung.';
+    'Inilah yang dilakukan layar Verifikasi pada undian asli: menghitung ulang hash tiap block dan memastikan rantainya bersambung, '
+    'yaitu "prev" tiap block sama dengan hash block sebelumnya.';
 
-/// Layar satu level Rakit Rantai: mode Susun (urutkan block) atau Periksa (temukan block yang dipalsukan).
+const howToArrange = 'Setiap block menyimpan hash block sebelumnya. Urutkan block sampai \'prev\' tiap block sama dengan \'hash\' block di atasnya.';
+const howToInspect =
+    'Kalau isi satu block diubah, hash-nya berubah dan sambungan ke block berikutnya putus. '
+    'Bandingkan \'prev\' tiap block dengan \'hash\' block sebelumnya, lalu ketuk sambungan yang tidak cocok.';
+
+/// Salah sebanyak ini -> tombol "Petunjuk" muncul (mode Periksa).
+const hintAfterWrong = 2;
+
+/// Penjelasan setelah sambungan putus ditemukan (mode Periksa).
+String brokenExplanation(ChainPuzzle p) =>
+    'Block ${p.brokenAfter! + 1} diubah, hash barunya ${p.newHash} tidak lagi sama dengan yang tersimpan di block berikutnya (${p.storedHash}). '
+    'Karena itu rantai putus dan semua block sesudahnya ikut tidak valid.';
+
+/// Layar satu level Rakit Rantai: mode Susun (urutkan block) atau Periksa (ketuk sambungan yang putus).
 /// Logika ada di chain_puzzle.dart; layar hanya menyajikan. Tidak ada XP, lencana, atau skor ke server.
 class ChainPlayScreen extends StatefulWidget {
   const ChainPlayScreen({super.key, required this.levelNumber});
@@ -27,10 +41,27 @@ class _ChainPlayScreenState extends State<ChainPlayScreen> {
   int _steps = 0;
   List<bool>? _marks; // hasil "Cek Rantai" (per posisi); hilang saat urutan berubah
   bool _won = false;
-  int? _tapped; // mode Periksa: posisi block yang terakhir diketuk
+  bool _howTo = false;
+  int _wrong = 0; // mode Periksa
+  bool _hint = false;
+  final Map<int, bool> _checked = {}; // mode Periksa: sambungan -> true bila putus
   ChainProgress? _progress;
 
   bool get _arrange => _level.mode == ChainMode.arrange;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadHowTo();
+  }
+
+  /// Kartu "Cara main" terbuka otomatis pada kunjungan pertama ke mode ini.
+  Future<void> _loadHowTo() async {
+    final store = chainStoreOf(context);
+    if (await store.howToSeen(_level.mode)) return;
+    if (mounted) setState(() => _howTo = true);
+    await store.markHowToSeen(_level.mode);
+  }
 
   void _move(int from, int to) {
     if (_won || to < 0 || to >= _order.length) return;
@@ -56,15 +87,20 @@ class _ChainPlayScreenState extends State<ChainPlayScreen> {
     if (_won) await _finish();
   }
 
-  Future<void> _tap(int pos) async {
-    if (_won) return;
-    final found = !_order[pos].hashMatches;
+  /// Mode Periksa: pemain mengetuk sambungan [i] (antara block i dan i+1).
+  Future<void> _tapLink(int i) async {
+    if (_won || _checked.containsKey(i)) return;
+    final broken = !linkIntact(_order, i);
     setState(() {
-      _tapped = pos;
+      _checked[i] = broken;
       _steps++;
-      _won = found;
+      if (broken) {
+        _won = true;
+      } else {
+        _wrong++;
+      }
     });
-    if (found) await _finish();
+    if (broken) await _finish();
   }
 
   Future<void> _finish() async {
@@ -78,14 +114,41 @@ class _ChainPlayScreenState extends State<ChainPlayScreen> {
     final c = context.colors;
     final hasNext = _level.number < ChainLevel.all.length;
     return Scaffold(
-      appBar: AppBar(title: Text('Rakit Rantai · ${_level.title}')),
+      appBar: AppBar(
+        title: Text('Rakit Rantai · ${_level.title}'),
+        actions: [
+          IconButton(key: const Key('chain_help'), tooltip: 'Cara main', icon: const Icon(Icons.help_outline), onPressed: () => setState(() => _howTo = !_howTo)),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(Spacing.screen, Spacing.s4, Spacing.screen, Spacing.s24),
         children: [
+          if (_howTo)
+            Padding(
+              padding: const EdgeInsets.only(bottom: Spacing.s12),
+              child: SurfaceCard(
+                key: const Key('chain_howto'),
+                color: c.primaryContainer,
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    ExcludeSemantics(child: Icon(Icons.help_outline, color: c.onPrimaryContainer)),
+                    const SizedBox(width: Spacing.s12),
+                    Expanded(
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Semantics(header: true, child: Text('Cara main', style: theme.textTheme.titleMedium?.copyWith(color: c.onPrimaryContainer))),
+                        const SizedBox(height: Spacing.s4),
+                        Text(_arrange ? howToArrange : howToInspect, style: theme.textTheme.bodyMedium?.copyWith(color: c.onPrimaryContainer)),
+                      ]),
+                    ),
+                  ]),
+                  PrimaryButton(key: const Key('chain_howto_close'), label: 'Mengerti', variant: ButtonVariant.text, expand: false, onPressed: () => setState(() => _howTo = false)),
+                ]),
+              ),
+            ),
           Text(
             _arrange
-                ? 'Susun block dari yang pertama: block pertama memakai previous hash genesis (00000000), dan previous hash tiap block sama dengan hash block sebelumnya. Seret gagang atau pakai tombol naik/turun.'
-                : 'Rantai ini sudah berurutan. Satu block isinya diubah setelah hash-nya dicatat. Ketuk block yang kamu curigai.',
+                ? 'Block pertama memakai previous hash genesis (00000000). Seret gagang atau pakai tombol naik/turun.'
+                : 'Rantai ini sudah berurutan. Ketuk "Sambungan putus?" di antara dua block yang menurutmu tidak cocok.',
             style: theme.textTheme.bodyMedium,
           ),
           const SizedBox(height: Spacing.s12),
@@ -102,18 +165,27 @@ class _ChainPlayScreenState extends State<ChainPlayScreen> {
               padding: const EdgeInsets.only(top: Spacing.s8),
               child: InlineMessage('${_marks!.where((x) => x).length} dari ${_marks!.length} block sudah di posisi yang benar.', tone: StatusTone.info),
             ),
-          if (!_arrange && _tapped != null && !_won)
+          if (!_arrange && !_won && _wrong > 0)
             const InlineMessage(
-              'Hash block itu cocok dengan hasil hitung ulang. Petunjuk: hitung ulang SHA-256(previous_hash|payload) dan bandingkan dengan hash tersimpan. Coba block lain.',
+              'Sambungan itu cocok: "prev" block bawah sama dengan "hash" block di atasnya. Bandingkan sambungan lain.',
               tone: StatusTone.warning,
             ),
-          if (!_arrange && _tapped != null) _Compare(block: _order[_tapped!]),
+          if (!_arrange && !_won && _wrong >= hintAfterWrong && !_hint)
+            Padding(
+              padding: const EdgeInsets.only(top: Spacing.s8),
+              child: PrimaryButton(key: const Key('chain_hint'), label: 'Petunjuk', icon: Icons.lightbulb_outline, variant: ButtonVariant.secondary, onPressed: () => setState(() => _hint = true)),
+            ),
+          if (!_arrange && !_won && _hint)
+            const Padding(
+              padding: EdgeInsets.only(top: Spacing.s8),
+              child: InlineMessage('Sambungan yang putus ada di antara dua block bertanda "Periksa di sini".', tone: StatusTone.info),
+            ),
           if (_won) ...[
             const SizedBox(height: Spacing.s12),
-            InlineMessage(
-              _arrange ? 'Rantai bersambung! Selesai dalam $_steps langkah.' : 'Tidak valid: hash block tidak cocok',
-              tone: StatusTone.success,
-            ),
+            if (_arrange)
+              InlineMessage('Rantai bersambung! Selesai dalam $_steps langkah.', tone: StatusTone.success)
+            else
+              Semantics(liveRegion: true, child: InlineMessage(brokenExplanation(_puzzle), key: const Key('chain_broken_explain'), tone: StatusTone.success)),
             if (_progress != null)
               Padding(
                 padding: const EdgeInsets.only(top: Spacing.s8),
@@ -178,26 +250,34 @@ class _ChainPlayScreenState extends State<ChainPlayScreen> {
         },
       );
 
-  Widget _inspectList() => Column(children: [
-        for (var i = 0; i < _order.length; i++)
-          Padding(
-            padding: const EdgeInsets.only(bottom: Spacing.cardGap),
-            child: _BlockCard(
-              key: Key('chain_block_$i'),
-              block: _order[i],
-              position: i + 1,
-              status: _tapped == i ? (_order[i].hashMatches ? _BlockStatus.matches : _BlockStatus.mismatch) : null,
-              onTap: _won ? null : () => _tap(i),
-            ),
+  Widget _inspectList() {
+    final t = _puzzle.brokenAfter!;
+    bool hinted(int i) => _hint && !_won && (i == t || i == t + 1);
+    return Column(children: [
+      for (var i = 0; i < _order.length; i++) ...[
+        _BlockCard(
+          key: Key('chain_block_$i'),
+          block: _order[i],
+          position: i + 1,
+          status: hinted(i) ? _BlockStatus.hint : null,
+        ),
+        if (i < _order.length - 1)
+          _Connector(
+            key: Key('chain_link_$i'),
+            upper: i + 1,
+            lower: i + 2,
+            broken: _checked[i],
+            onTap: _won || _checked.containsKey(i) ? null : () => _tapLink(i),
           ),
-      ]);
+      ],
+    ]);
+  }
 }
 
 enum _BlockStatus {
   right('Posisi benar', StatusTone.success, Icons.check_circle_outline),
   wrong('Posisi salah', StatusTone.error, Icons.cancel_outlined),
-  matches('Hash cocok', StatusTone.success, Icons.check_circle_outline),
-  mismatch('Hash tidak cocok', StatusTone.error, Icons.cancel_outlined);
+  hint('Periksa di sini', StatusTone.info, Icons.search);
 
   const _BlockStatus(this.label, this.tone, this.icon);
   final String label;
@@ -206,19 +286,18 @@ enum _BlockStatus {
 }
 
 class _BlockCard extends StatelessWidget {
-  const _BlockCard({super.key, required this.block, required this.position, this.status, this.leading, this.trailing, this.onTap});
+  const _BlockCard({super.key, required this.block, required this.position, this.status, this.leading, this.trailing});
   final ChainBlock block;
   final int position;
   final _BlockStatus? status;
   final Widget? leading, trailing;
-  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final c = context.colors;
     final mono = AppTypography.mono(theme.textTheme.bodyMedium!);
-    final label = 'Block posisi $position, isi ${block.payload}, previous hash ${block.shortPrevious}, hash ${block.shortHash}${status == null ? '' : ', ${status!.label}'}';
+    final label = 'Block posisi $position, isi ${block.payload}, prev ${block.shortPrevious}, hash ${block.shortHash}${status == null ? '' : ', ${status!.label}'}';
     final info = Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text('$position. ${block.payload}', style: theme.textTheme.titleMedium),
       const SizedBox(height: Spacing.s4),
@@ -228,43 +307,60 @@ class _BlockCard extends StatelessWidget {
       ]),
       if (status != null) Padding(padding: const EdgeInsets.only(top: Spacing.s8), child: StatusChip.custom(label: status!.label, tone: status!.tone, icon: status!.icon)),
     ]);
-    final body = Semantics(container: true, label: label, excludeSemantics: true, child: info);
     return SurfaceCard(
       padding: const EdgeInsets.symmetric(horizontal: Spacing.s8, vertical: Spacing.s8),
-      onTap: onTap,
       child: Row(children: [
         ?leading,
-        Expanded(child: Padding(padding: const EdgeInsets.symmetric(horizontal: Spacing.s8), child: body)),
+        Expanded(child: Padding(padding: const EdgeInsets.symmetric(horizontal: Spacing.s8), child: Semantics(container: true, label: label, excludeSemantics: true, child: info))),
         ?trailing,
       ]),
     );
   }
 }
 
-/// Hash tersimpan vs hash hitung ulang untuk block yang diketuk (mode Periksa).
-class _Compare extends StatelessWidget {
-  const _Compare({required this.block});
-  final ChainBlock block;
+/// Konektor di antara dua block (mode Periksa). Status selalu teks + ikon: belum diperiksa, cocok, atau putus.
+class _Connector extends StatelessWidget {
+  const _Connector({super.key, required this.upper, required this.lower, required this.broken, required this.onTap});
+  final int upper, lower;
+  final bool? broken; // null = belum diperiksa
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final mono = AppTypography.mono(theme.textTheme.bodyMedium!);
-    final ok = block.hashMatches;
-    return Padding(
-      padding: const EdgeInsets.only(top: Spacing.s8),
-      child: SurfaceCard(
-        key: const Key('chain_compare'),
-        semanticLabel: 'Hash tersimpan ${block.shortHash}, hash hitung ulang ${block.shortRecomputed}, ${ok ? 'cocok' : 'tidak cocok'}',
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('Hash tersimpan', style: theme.textTheme.bodySmall?.copyWith(color: context.colors.muted)),
-          Text(block.shortHash, key: const Key('chain_stored'), style: mono),
-          const SizedBox(height: Spacing.s8),
-          Text('Hash hitung ulang', style: theme.textTheme.bodySmall?.copyWith(color: context.colors.muted)),
-          Text(block.shortRecomputed, key: const Key('chain_recomputed'), style: mono),
-          const SizedBox(height: Spacing.s8),
-          StatusChip.custom(label: ok ? 'Cocok' : 'Tidak cocok', tone: ok ? StatusTone.success : StatusTone.error, icon: ok ? Icons.check_circle_outline : Icons.cancel_outlined),
-        ]),
+    final c = context.colors;
+    final (text, icon, status) = switch (broken) {
+      null => ('Sambungan putus?', Icons.link, 'belum diperiksa'),
+      true => ('Sambungan putus', Icons.link_off, 'putus'),
+      false => ('Sambungan cocok', Icons.link, 'cocok'),
+    };
+    final sc = broken == null ? null : StatusChip.colorsOf(c, broken! ? StatusTone.error : StatusTone.success);
+    return Semantics(
+      button: onTap != null,
+      label: 'Sambungan antara block $upper dan block $lower, $status${onTap != null ? '. Ketuk jika prev block $lower tidak sama dengan hash block $upper' : ''}',
+      excludeSemantics: true,
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: Spacing.cardGap),
+          child: Material(
+            color: sc?.bg ?? c.surfaceVariant,
+            shape: StadiumBorder(side: BorderSide(color: sc?.fg ?? c.muted)),
+            child: InkWell(
+              customBorder: const StadiumBorder(),
+              onTap: onTap,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 48),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: Spacing.s16, vertical: Spacing.s8),
+                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                    Icon(icon, size: 20, color: sc?.fg ?? c.onBackground),
+                    const SizedBox(width: Spacing.s8),
+                    Flexible(child: Text(text, style: Theme.of(context).textTheme.labelLarge?.copyWith(color: sc?.fg ?? c.onBackground))),
+                  ]),
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

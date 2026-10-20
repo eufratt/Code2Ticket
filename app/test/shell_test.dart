@@ -210,7 +210,7 @@ void main() {
     await opens('menu_discover', find.byKey(const Key('search_field')));
     await opens('menu_tickets', find.text('#000001'));
     await opens('menu_assistant', find.byKey(const Key('chat_field')));
-    await opens('menu_game', find.widgetWithText(AppBar, 'Game'));
+    await opens('menu_game', find.widgetWithText(AppBar, 'Pilih game'));
     await opens('menu_leaderboard', find.widgetWithText(AppBar, 'Papan Peringkat'));
     await opens('menu_converter', find.widgetWithText(AppBar, 'Konverter'));
     await opens('menu_map', find.widgetWithText(AppBar, 'Peta'));

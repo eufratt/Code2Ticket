@@ -12,6 +12,7 @@ import '../../core/widgets/widgets.dart';
 import '../auth/auth_controller.dart';
 import '../profile/profile_screen.dart' show badgeLabel;
 import 'code_hunt.dart';
+import 'code_hunt_record.dart';
 import 'code_hunt_widgets.dart';
 import 'game_controller.dart';
 import 'maze.dart';
@@ -133,6 +134,7 @@ class _MazePlayScreenState extends State<MazePlayScreen> with SingleTickerProvid
 
   void _finish() {
     _update(() {});
+    if (_game.score.cleared) CodeHuntRecordStore.of(context).record(widget.levelIndex, _game.score.score);
     if (_game.score.worthSubmitting && !_submitted) _submit();
   }
 

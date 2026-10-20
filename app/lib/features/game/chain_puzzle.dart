@@ -23,8 +23,6 @@ class ChainBlock {
   String get recomputed => compute(previousHash, payload);
   String get shortRecomputed => recomputed.substring(0, 8);
   bool get hashMatches => recomputed == hash;
-
-  ChainBlock withPayload(String p) => ChainBlock(index: index, payload: p, previousHash: previousHash, hash: hash);
 }
 
 class ChainLevel {
@@ -61,18 +59,23 @@ class _Rng {
 
 /// Teka-teki satu level, deterministik per nomor level.
 class ChainPuzzle {
-  ChainPuzzle._(this.level, this.correct, this.shuffled, this.tamperedIndex);
+  ChainPuzzle._(this.level, this.correct, this.shuffled, this.brokenAfter);
 
   final ChainLevel level;
 
-  /// Urutan benar (di mode Periksa, satu block sudah dimanipulasi).
+  /// Urutan benar (di mode Periksa, satu block sudah diubah dan hash-nya dihitung ulang).
   final List<ChainBlock> correct;
 
   /// Urutan tampil awal (mode Susun): acak, dijamin berbeda dari [correct].
   final List<ChainBlock> shuffled;
 
-  /// Posisi block yang payload-nya dimanipulasi (mode Periksa); null di mode Susun.
-  final int? tamperedIndex;
+  /// Mode Periksa: posisi block t yang diubah; sambungan t -> t+1 putus (block t+1 masih menyimpan previous_hash lama). Bukan block
+  /// terakhir. null di mode Susun.
+  final int? brokenAfter;
+
+  /// Hash baru block t (dihitung ulang) dan hash lama yang masih tersimpan di block t+1 (mode Periksa).
+  String? get newHash => brokenAfter == null ? null : correct[brokenAfter!].shortHash;
+  String? get storedHash => brokenAfter == null ? null : correct[brokenAfter! + 1].shortPrevious;
 
   static ChainPuzzle generate(ChainLevel level) {
     final r = _Rng(level.number * 7919 + 17);
@@ -85,10 +88,14 @@ class ChainPuzzle {
       prev = h;
     }
     if (level.mode == ChainMode.inspect) {
-      // Block 2..akhir (bukan yang pertama) diubah payload-nya; hash tersimpan dibiarkan sehingga tidak cocok.
-      final t = 1 + r.next(level.blockCount - 1);
-      final fake = 'tiket #${(r.next(999999) + 1).toString().padLeft(6, '0')}x';
-      blocks[t] = blocks[t].withPayload(fake);
+      // Block t (bukan yang terakhir) diubah payload-nya dan hash-nya dihitung ulang, jadi block t konsisten dengan dirinya sendiri;
+      // block t+1 tetap menyimpan previous_hash lama, sehingga tepat satu sambungan (t -> t+1) putus.
+      final t = r.next(level.blockCount - 1);
+      var fake = blocks[t].payload;
+      while (fake == blocks[t].payload) {
+        fake = 'tiket #${(r.next(999999) + 1).toString().padLeft(6, '0')}';
+      }
+      blocks[t] = ChainBlock(index: t, payload: fake, previousHash: blocks[t].previousHash, hash: ChainBlock.compute(blocks[t].previousHash, fake));
       return ChainPuzzle._(level, blocks, List.of(blocks), t);
     }
     final order = List.of(blocks);
@@ -114,6 +121,9 @@ class ChainPuzzle {
 List<bool> checkChain(List<ChainBlock> order) => [
       for (var i = 0; i < order.length; i++) order[i].previousHash == (i == 0 ? genesisHash : order[i - 1].hash),
     ];
+
+/// Mode Periksa: sambungan i (antara block i dan i+1) utuh bila previous_hash block i+1 sama dengan hash block i.
+bool linkIntact(List<ChainBlock> chain, int i) => chain[i + 1].previousHash == chain[i].hash;
 
 /// Seluruh rantai bersambung.
 bool isChained(List<ChainBlock> order) => checkChain(order).every((x) => x);
@@ -166,6 +176,21 @@ class ChainProgressStore {
     } catch (_) {
       return const ChainProgress();
     }
+  }
+
+  /// Kartu "Cara main" per mode: true bila sudah pernah dibuka otomatis (kunjungan pertama).
+  Future<bool> howToSeen(ChainMode m) async {
+    try {
+      return await _store?.getSetting('chain_howto_${m.name}', userId: _userId) == '1';
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> markHowToSeen(ChainMode m) async {
+    try {
+      await _store?.setSetting('chain_howto_${m.name}', '1', userId: _userId);
+    } catch (_) {}
   }
 
   Future<ChainProgress> record(int level, int steps) async {

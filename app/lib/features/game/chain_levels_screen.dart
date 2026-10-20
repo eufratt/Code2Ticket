@@ -49,7 +49,7 @@ class _ChainLevelsScreenState extends State<ChainLevelsScreen> {
               const SizedBox(width: Spacing.s12),
               Expanded(
                 child: Text(
-                  'Tiap block menyimpan hash block sebelumnya. Susun block sampai rantainya bersambung, atau periksa rantai dan temukan block yang dipalsukan. '
+                  'Tiap block menyimpan hash block sebelumnya. Susun block sampai rantainya bersambung, atau periksa rantai dan temukan sambungan yang putus. '
                   'Ini hanya latihan: tanpa XP, lencana, atau skor.',
                   style: theme.textTheme.bodyMedium?.copyWith(color: c.onPrimaryContainer),
                 ),

@@ -5,6 +5,8 @@ import 'package:code2ticket/features/auth/auth_controller.dart';
 import 'package:code2ticket/features/game/chain_levels_screen.dart';
 import 'package:code2ticket/features/game/chain_play_screen.dart';
 import 'package:code2ticket/features/game/chain_puzzle.dart';
+import 'package:code2ticket/features/game/code_hunt_record.dart';
+import 'package:code2ticket/features/game/game_chooser_screen.dart';
 import 'package:code2ticket/features/game/game_hub_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -55,15 +57,20 @@ void main() {
       }
     });
 
-    test('mode Periksa: tepat satu block dimanipulasi (bukan yang pertama), hash tersimpan tidak cocok dengan hitung ulang', () {
+    test('mode Periksa: tepat satu sambungan putus (t -> t+1), t bukan block terakhir, tiap block konsisten sendiri, deterministik', () {
       for (final l in ChainLevel.all.where((l) => l.mode == ChainMode.inspect)) {
         final p = ChainPuzzle.generate(l);
-        final t = p.tamperedIndex!;
-        expect(t, inInclusiveRange(1, l.blockCount - 1));
-        expect([for (final b in p.correct) b.hashMatches], [for (var i = 0; i < l.blockCount; i++) i != t]);
-        expect(p.correct[t].hash, isNot(p.correct[t].recomputed));
-        expect(p.correct[t].shortHash, isNot(p.correct[t].shortRecomputed));
-        expect(isChained(p.correct), isTrue); // sambungan previous_hash tetap utuh; hanya hash yang tidak cocok
+        final t = p.brokenAfter!;
+        expect(t, inInclusiveRange(0, l.blockCount - 2));
+        expect([for (var i = 0; i < l.blockCount - 1; i++) linkIntact(p.correct, i)], [for (var i = 0; i < l.blockCount - 1; i++) i != t]);
+        expect(p.correct.every((b) => b.hashMatches), isTrue); // block t dihitung ulang: konsisten dengan dirinya sendiri
+        expect(p.correct.first.previousHash, genesisHash);
+        expect(p.newHash, p.correct[t].shortHash);
+        expect(p.storedHash, p.correct[t + 1].shortPrevious);
+        expect(p.newHash, isNot(p.storedHash));
+        final again = ChainPuzzle.generate(l);
+        expect(again.brokenAfter, t);
+        expect(again.correct.map((b) => b.hash), p.correct.map((b) => b.hash));
       }
     });
   });
@@ -125,6 +132,8 @@ void main() {
       final router = GoRouter(routes: [
         GoRoute(path: '/', builder: (_, _) => const Scaffold(body: Text('awal'))),
         GoRoute(path: '/page', builder: (_, _) => page()),
+        GoRoute(path: '/game/codehunt', builder: (_, _) => const GameHubScreen()),
+        GoRoute(path: '/leaderboard', builder: (_, _) => Scaffold(appBar: AppBar(), body: const Text('papan'))),
         GoRoute(path: '/game/chain', builder: (_, _) => const ChainLevelsScreen()),
         GoRoute(path: '/game/chain/play', builder: (_, s) => ChainPlayScreen(levelNumber: s.extra as int)),
       ]);
@@ -169,13 +178,51 @@ void main() {
       }
     }
 
-    testWidgets('hub: kartu Rakit Rantai membuka daftar level', (tester) async {
-      await pump(tester, () => const GameHubScreen());
-      await tapKey(tester, const Key('open_chain'));
+    testWidgets('pemilih game: dua kartu; Code Hunt membuka hub-nya, kembali ke pemilih; papan peringkat dari Code Hunt', (tester) async {
+      await pump(tester, () => const GameChooserScreen());
+      expect(find.text('Pilih game'), findsOneWidget);
+      expect(find.byKey(const Key('choose_codehunt')), findsOneWidget);
+      expect(find.byKey(const Key('choose_chain')), findsOneWidget);
+      expect(find.text('Sensor: gyroscope + accelerometer'), findsOneWidget);
+      expect(find.text('Belum ada rekor'), findsOneWidget);
+      expect(find.text('Puzzle hash-chain'), findsOneWidget);
+      expect(find.text('0/5 level selesai'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('choose_codehunt')));
+      await tester.pumpAndSettle();
+      expect(find.widgetWithText(AppBar, 'Code Hunt'), findsOneWidget);
+      expect(find.byKey(const Key('level_0')), findsOneWidget);
+      expect(find.byKey(const Key('open_chain')), findsNothing);
+      await tapKey(tester, const Key('open_leaderboard'));
+      await tester.pumpAndSettle();
+      expect(find.text('papan'), findsOneWidget);
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
+      expect(find.text('Pilih game'), findsOneWidget);
+    });
+
+    testWidgets('pemilih game: Rakit Rantai membuka daftar level; progres dan rekor tampil di kartu', (tester) async {
+      settings.values['u1|chain_progress'] = const ChainProgress().record(1, 4).record(4, 3).encode();
+      settings.values['u1|codehunt_best'] = const CodeHuntRecord().merge(1, 820).encode();
+      await pump(tester, () => const GameChooserScreen());
+      expect(find.text('2/5 level selesai'), findsOneWidget);
+      expect(find.text('Rekor 820 · level Sedang selesai'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('choose_chain')));
       await tester.pumpAndSettle();
       for (final l in ChainLevel.all) {
         expect(find.byKey(Key('chain_level_${l.number}')), findsOneWidget);
       }
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
+      expect(find.text('Pilih game'), findsOneWidget);
+    });
+
+    testWidgets('pemilih game: tautan papan peringkat kecil', (tester) async {
+      await pump(tester, () => const GameChooserScreen());
+      await tester.tap(find.byKey(const Key('chooser_leaderboard')));
+      await tester.pumpAndSettle();
+      expect(find.text('papan'), findsOneWidget);
     });
 
     testWidgets('Susun: tombol naik/turun menghitung langkah; Cek Rantai menandai benar/salah (ikon + teks)', (tester) async {
@@ -219,26 +266,80 @@ void main() {
       expect(steps(tester), 'Langkah: 1');
     });
 
-    testWidgets('Periksa: jawaban salah -> petunjuk dan coba lagi; benar -> "Tidak valid", hash tersimpan vs hitung ulang', (tester) async {
-      final l = ChainLevel.all[3];
-      final p = ChainPuzzle.generate(l);
-      final t = p.tamperedIndex!;
-      final wrong = t == 0 ? 1 : 0;
+    testWidgets('Periksa: sambungan cocok -> petunjuk dan coba lagi; petunjuk muncul setelah 2 salah dan menyorot dua block; benar -> penjelasan', (tester) async {
+      final p = ChainPuzzle.generate(ChainLevel.all[3]);
+      final t = p.brokenAfter!;
+      final wrongLinks = [for (var i = 0; i < 4; i++) if (i != t) i];
       await pump(tester, () => const ChainPlayScreen(levelNumber: 4));
-      await tapKey(tester, Key('chain_block_$wrong'));
+      expect(find.byKey(const Key('chain_hint')), findsNothing);
+      await tapKey(tester, Key('chain_link_${wrongLinks[0]}'));
       await tester.pump();
-      expect(find.textContaining('Hash block itu cocok'), findsOneWidget);
+      expect(find.textContaining('Sambungan itu cocok'), findsOneWidget);
+      expect(find.text('Sambungan cocok'), findsOneWidget);
       expect(find.text('Percobaan: 1'), findsOneWidget);
-      expect(find.text(chainExplanation), findsNothing);
-      expect(settings.values, isEmpty);
-      await tapKey(tester, Key('chain_block_$t'));
+      expect(find.byKey(const Key('chain_hint')), findsNothing);
+      await tapKey(tester, Key('chain_link_${wrongLinks[1]}'));
+      await tester.pump();
+      expect(find.byKey(const Key('chain_hint')), findsOneWidget);
+      expect(find.text('Periksa di sini'), findsNothing);
+      await tapKey(tester, const Key('chain_hint'));
+      await tester.pump();
+      expect(find.text('Periksa di sini'), findsNWidgets(2)); // block t dan t+1
+      expect(find.byKey(const Key('chain_broken_explain')), findsNothing);
+      expect(settings.values.containsKey('u1|chain_progress'), isFalse);
+      await tapKey(tester, Key('chain_link_$t'));
       await tester.pumpAndSettle();
-      expect(find.text('Tidak valid: hash block tidak cocok'), findsOneWidget);
-      expect(tester.widget<Text>(find.byKey(const Key('chain_stored'))).data, p.correct[t].shortHash);
-      expect(tester.widget<Text>(find.byKey(const Key('chain_recomputed'))).data, p.correct[t].shortRecomputed);
-      expect(p.correct[t].shortHash, isNot(p.correct[t].shortRecomputed));
+      expect(find.text('Sambungan putus'), findsOneWidget);
+      expect(find.text('Periksa di sini'), findsNothing);
+      expect(find.text(brokenExplanation(p)), findsOneWidget);
+      expect(brokenExplanation(p), startsWith('Block ${t + 1} diubah, hash barunya ${p.newHash} tidak lagi sama dengan yang tersimpan di block berikutnya (${p.storedHash}).'));
       expect(find.text(chainExplanation), findsOneWidget);
-      expect(ChainProgress.decode(settings.values['u1|chain_progress']).best, {4: 2});
+      expect(ChainProgress.decode(settings.values['u1|chain_progress']).best, {4: 3});
+    });
+
+    testWidgets('Periksa: langsung benar tanpa salah', (tester) async {
+      final t = ChainPuzzle.generate(ChainLevel.all[3]).brokenAfter!;
+      await pump(tester, () => const ChainPlayScreen(levelNumber: 4));
+      await tapKey(tester, Key('chain_link_$t'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('chain_broken_explain')), findsOneWidget);
+      expect(ChainProgress.decode(settings.values['u1|chain_progress']).best, {4: 1});
+    });
+
+    testWidgets('Semantics konektor: status belum diperiksa, cocok, putus (teks, bukan hanya warna)', (tester) async {
+      final t = ChainPuzzle.generate(ChainLevel.all[3]).brokenAfter!;
+      final other = t == 0 ? 1 : 0;
+      await pump(tester, () => const ChainPlayScreen(levelNumber: 4));
+      final h = tester.ensureSemantics();
+      expect(find.bySemanticsLabel(RegExp('Sambungan antara block ${other + 1} dan block ${other + 2}, belum diperiksa')), findsOneWidget);
+      await tapKey(tester, Key('chain_link_$other'));
+      await tester.pump();
+      expect(find.bySemanticsLabel(RegExp('Sambungan antara block ${other + 1} dan block ${other + 2}, cocok')), findsOneWidget);
+      await tapKey(tester, Key('chain_link_$t'));
+      await tester.pump();
+      expect(find.bySemanticsLabel(RegExp('Sambungan antara block ${t + 1} dan block ${t + 2}, putus')), findsOneWidget);
+      h.dispose();
+    });
+
+    testWidgets('Cara main: terbuka otomatis pada kunjungan pertama tiap mode, bisa dibuka lagi lewat ikon ?', (tester) async {
+      await pump(tester, () => const ChainPlayScreen(levelNumber: 1));
+      expect(find.byKey(const Key('chain_howto')), findsOneWidget);
+      expect(find.text(howToArrange), findsOneWidget);
+      expect(settings.values['u1|chain_howto_arrange'], '1');
+      expect(settings.values.containsKey('u1|chain_howto_inspect'), isFalse);
+      await tester.tap(find.byKey(const Key('chain_howto_close')));
+      await tester.pump();
+      expect(find.byKey(const Key('chain_howto')), findsNothing);
+      await tester.tap(find.byKey(const Key('chain_help')));
+      await tester.pump();
+      expect(find.byKey(const Key('chain_howto')), findsOneWidget);
+      // Kunjungan kedua ke mode yang sama: tertutup.
+      await pump(tester, () => const ChainPlayScreen(levelNumber: 2));
+      expect(find.byKey(const Key('chain_howto')), findsNothing);
+      // Mode Periksa masih kunjungan pertama.
+      await pump(tester, () => const ChainPlayScreen(levelNumber: 4));
+      expect(find.text(howToInspect), findsOneWidget);
+      expect(settings.values['u1|chain_howto_inspect'], '1');
     });
 
     testWidgets('daftar level menampilkan progres tersimpan setelah dibuka lagi', (tester) async {
@@ -253,7 +354,7 @@ void main() {
       final h = tester.ensureSemantics();
       await tapKey(tester, const Key('chain_check'));
       await tester.pump();
-      expect(find.bySemanticsLabel(RegExp(r'Block posisi 1, isi tiket #\d{6}, previous hash [0-9a-f]{8}, hash [0-9a-f]{8}, Posisi (benar|salah)')), findsOneWidget);
+      expect(find.bySemanticsLabel(RegExp(r'Block posisi 1, isi tiket #\d{6}, prev [0-9a-f]{8}, hash [0-9a-f]{8}, Posisi (benar|salah)')), findsOneWidget);
       h.dispose();
     });
 
@@ -270,11 +371,19 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.byKey(const Key('chain_explain')), findsOneWidget);
         expect(tester.takeException(), isNull);
+        await pump(tester, () => const GameChooserScreen(), width: v.w, scale: v.s, brightness: v.b);
+        expect(tester.takeException(), isNull);
         await pump(tester, () => const ChainPlayScreen(levelNumber: 5), width: v.w, scale: v.s, brightness: v.b);
-        final t = ChainPuzzle.generate(ChainLevel.all[4]).tamperedIndex!;
-        await tapKey(tester, Key('chain_block_${t == 0 ? 1 : 0}'));
+        expect(find.byKey(const Key('chain_howto')), findsOneWidget);
+        expect(tester.takeException(), isNull);
+        final t = ChainPuzzle.generate(ChainLevel.all[4]).brokenAfter!;
+        final wrong = [for (var i = 0; i < 5; i++) if (i != t) i];
+        await tapKey(tester, Key('chain_link_${wrong[0]}'));
+        await tapKey(tester, Key('chain_link_${wrong[1]}'));
+        await tapKey(tester, const Key('chain_hint'));
         await tester.pump();
-        await tapKey(tester, Key('chain_block_$t'));
+        expect(tester.takeException(), isNull);
+        await tapKey(tester, Key('chain_link_$t'));
         await tester.pumpAndSettle();
         expect(find.byKey(const Key('chain_explain')), findsOneWidget);
         expect(tester.takeException(), isNull);
