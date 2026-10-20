@@ -31,7 +31,7 @@ Login/session dibuat sendiri (bukan Firebase/Supabase Auth). Scheduler draw: nod
 ## Navigasi
 Bottom navigation 4 item sama lebar: Home, Profil (ikon = foto profil), Saran & Kesan, Logout; tanpa FAB (kerangka: app\lib\features\shell\app_shell.dart, rute: app\lib\app_router.dart).
 Home, Profil, dan Saran & Kesan adalah 3 cabang StatefulShellRoute; Logout hanya aksi (dialog konfirmasi + alur logout yang sudah ada), tidak pernah menjadi tab terpilih.
-Home adalah pusat fitur (tombol Input Code + grid Menu fitur). Discover, My Tickets, Asisten, Input Code, Game, Papan Peringkat, Konverter, dan Peta adalah rute tingkat atas
+Home adalah pusat fitur (tombol Input Code + grid Menu fitur). Discover, My Tickets, Asisten, Input Code, Game, Konverter, dan Peta adalah rute tingkat atas
 yang dibuka dengan context.push dari Home (layar penuh, tombol kembali, tanpa bottom nav). Jangan memakai context.go untuk membuka layar fitur (tumpukan Home hilang); gunakan push / pushReplacement.
 Padding bawah daftar di dalam shell = Spacing.listBottom (tinggi bar + 16).
 

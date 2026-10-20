@@ -211,7 +211,6 @@ void main() {
     await opens('menu_tickets', find.text('#000001'));
     await opens('menu_assistant', find.byKey(const Key('chat_field')));
     await opens('menu_game', find.widgetWithText(AppBar, 'Pilih game'));
-    await opens('menu_leaderboard', find.widgetWithText(AppBar, 'Papan Peringkat'));
     await opens('menu_converter', find.widgetWithText(AppBar, 'Konverter'));
     await opens('menu_map', find.widgetWithText(AppBar, 'Peta'));
     await opens('home_search', find.byKey(const Key('search_field')));
@@ -231,7 +230,7 @@ void main() {
           }
           expect(find.text('Menu fitur'), findsOneWidget);
           // Semua kotak menu terbangun setelah digulir, cukup besar untuk disentuh, tanpa overflow.
-          for (final k in ['discover', 'tickets', 'assistant', 'game', 'leaderboard', 'converter', 'map']) {
+          for (final k in ['discover', 'tickets', 'assistant', 'game', 'converter', 'map']) {
             await tester.scrollUntilVisible(find.byKey(Key('menu_$k')), 120, scrollable: find.byType(Scrollable).first);
             expect(tester.getSize(find.byKey(Key('menu_$k'))).height, greaterThanOrEqualTo(48), reason: 'menu_$k: target sentuh');
           }

@@ -332,7 +332,6 @@ const _featureMenu = [
   ('tickets', Icons.confirmation_number_outlined, 'My Tickets', '/tickets'),
   ('assistant', Icons.smart_toy_outlined, 'Asisten', '/assistant'),
   ('game', Icons.sports_esports_outlined, 'Game', '/game'),
-  ('leaderboard', Icons.leaderboard_outlined, 'Papan Peringkat', '/leaderboard'),
   ('converter', Icons.currency_exchange, 'Konverter', '/converter'),
   ('map', Icons.map_outlined, 'Peta', '/map'),
 ];
