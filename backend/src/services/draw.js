@@ -112,7 +112,7 @@ export async function runDueDraws(pool) {
     } catch (e) {
       await pool
         .query("insert into system_events(level, event, details) values ('error', 'draw_exception', $1::jsonb)", [
-          JSON.stringify({ giveaway_id: id, message: e.message }),
+          JSON.stringify({ giveaway_id: id, message: String(e.message).slice(0, 500) }),
         ])
         .catch(() => {});
     }

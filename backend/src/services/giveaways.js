@@ -24,7 +24,8 @@ export async function searchGiveaways(pool, query) {
   let q = a.q == null ? null : pgTrim(a.q) || null;
   if (q !== null) q = '%' + q.replace(/\\/g, '\\\\').replace(/%/g, '\\%').replace(/_/g, '\\_') + '%';
   const limit = Math.min(Math.max(a.limit ?? 20, 1), 50);
-  const offset = Math.max(a.offset ?? 0, 0);
+  const offset = Math.min(Math.max(a.offset ?? 0, 0), 10_000); // di atas batas int4 SQL akan 500
+  const deadlineDays = a.deadline_days == null ? null : Math.min(Math.max(a.deadline_days, 0), 3650);
 
   const r = await pool.query(
     `with base as (
@@ -62,7 +63,7 @@ export async function searchGiveaways(pool, query) {
             radius_km, start_at, end_at, draw_at, winner_count, ticket_count, status, distance_km
        from ranked where rn > $12::int and rn <= $12::int + $11::int order by rn`,
     [q, a.category ?? null, a.min_value ?? null, a.max_value ?? null, a.lat ?? null, a.lng ?? null,
-      a.radius_km ?? null, a.deadline_days ?? null, a.status ?? null, a.sort ?? null, limit, offset],
+      a.radius_km ?? null, deadlineDays, a.status ?? null, a.sort ?? null, limit, offset],
   );
   return r.rows;
 }

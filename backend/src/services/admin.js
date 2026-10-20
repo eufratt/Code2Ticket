@@ -61,7 +61,7 @@ export async function upsertGiveaway(pool, admin, body) {
   try {
     return await withTx(pool, (c) => (creating ? createGiveaway(c, admin, p.data) : updateGiveaway(c, p.data, b)));
   } catch (e) {
-    if (INPUT_ERROR_CODES.has(e.code)) return fail('invalid_input', { detail: e.message });
+    if (INPUT_ERROR_CODES.has(e.code)) return fail('invalid_input');
     throw e;
   }
 }

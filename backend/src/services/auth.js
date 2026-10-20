@@ -118,7 +118,8 @@ export async function logout(pool, token) {
 export async function updateProfile(pool, u, body) {
   const schema = z.object({
     full_name: z.string().nullish().transform((s) => pgTrim(s ?? u.full_name)).pipe(z.string().refine((s) => cpLen(s) >= 1 && cpLen(s) <= 100)),
-    photo_url: z.string().refine((s) => cpLen(s) <= 500).nullish(),
+    // Foto hanya diubah lewat PUT /me/photo: yang diterima di sini cuma alamat foto milik sendiri.
+    photo_url: z.string().refine((s) => new RegExp(`^/users/${u.id}/photo([?]v=[0-9]{1,16})?$`).test(s)).nullish(),
   });
   const p = parseInput(schema, body);
   if (p.error) return p.error;
