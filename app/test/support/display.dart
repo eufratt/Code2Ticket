@@ -51,7 +51,7 @@ class MemoryRates implements RateCache {
 /// Klien yang selalu gagal: tes tidak boleh menyentuh jaringan.
 http.Client offlineClient() => MockClient((_) async => throw http.ClientException('offline'));
 
-/// Penyedia pengaturan tampilan + kurs untuk tes layar. Tanpa kurs: nilai ditampilkan dalam USD.
+/// Penyedia pengaturan tampilan + kurs untuk tes layar. Tanpa kurs: nilai hadiah ditampilkan dalam IDR (mata uang dasar).
 List<SingleChildWidget> displayProviders({SettingsController? settings, RatesController? rates}) {
   initTimeZones();
   return [

@@ -10,13 +10,10 @@ import 'time/zones.dart';
 
 /// Tampilan uang dan waktu sesuai pilihan pengguna (Pengaturan). Memantau perubahan pilihan dan kurs.
 extension DisplayContext on BuildContext {
-  /// Nilai hadiah (USD di backend) dalam mata uang pilihan. Bila kurs belum ada, ditampilkan dalam USD.
-  String money(double? usd) {
-    if (usd == null) return '-';
-    final code = watch<SettingsController>().currency;
-    final rates = watch<RatesController>().rates;
-    final v = rates.convert(usd, 'USD', code);
-    return v == null ? formatMoney(usd, 'USD') : formatMoney(v, code);
+  /// Nilai hadiah (rupiah di backend) dalam mata uang pilihan. Bila kurs belum ada, ditampilkan dalam IDR.
+  String money(int? idr) {
+    if (idr == null) return '-';
+    return formatPrize(idr, watch<SettingsController>().currency, watch<RatesController>().rates);
   }
 
   /// Waktu dalam zona pilihan: "19 Okt 2026, 03.29 WIB".
@@ -30,9 +27,11 @@ class RateNote extends StatelessWidget {
   Widget build(BuildContext context) {
     final code = context.watch<SettingsController>().currency;
     final r = context.watch<RatesController>();
-    if (code == 'USD') return const SizedBox.shrink();
+    if (code == 'IDR') return const SizedBox.shrink();
     final style = Theme.of(context).textTheme.bodySmall;
-    if (!r.hasRates) return Text('Kurs belum tersedia, nilai ditampilkan dalam USD.', key: const Key('rate_note'), style: style);
+    if (prizeCurrency(code, r.rates) != code) {
+      return Text('Kurs belum tersedia, nilai ditampilkan dalam IDR (mata uang dasar).', key: const Key('rate_note'), style: style);
+    }
     final d = r.rates.rateDate;
     return Text(
       'Kurs per ${d == null ? '-' : formatDate(d)}${r.offline ? ' · offline (kurs tersimpan)' : ''}',

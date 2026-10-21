@@ -32,7 +32,7 @@ Map<String, dynamic> listOf(List<Giveaway> gs, {double? distance}) => {
         for (final g in gs)
           {
             'id': g.id, 'title': g.title, 'category': g.category, 'prize_name': g.prizeName,
-            'prize_value_usd': g.prizeValueUsd, 'latitude': g.latitude, 'longitude': g.longitude,
+            'prize_value_idr': g.prizeValueIdr, 'latitude': g.latitude, 'longitude': g.longitude,
             'start_at': g.startAt!.toUtc().toIso8601String(), 'end_at': g.endAt!.toUtc().toIso8601String(),
             'draw_at': g.drawAt!.toUtc().toIso8601String(), 'winner_count': 1, 'ticket_count': 0,
             'status': 'active', 'distance_km': distance,
@@ -52,14 +52,14 @@ void main() {
       final f = const DiscoverFilters().copyWith(
         query: '  laptop ',
         category: 'tech',
-        minValue: 100,
-        maxValue: 2500.5,
+        minValueIdr: 1000000,
+        maxValueIdr: 25000000,
         deadlineDays: 7,
         status: GiveawayStatusFilter.upcoming,
         sort: GiveawaySort.value,
       );
       expect(f.toQuery(offset: 20), {
-        'q': 'laptop', 'category': 'tech', 'min_value': '100', 'max_value': '2500.5', 'deadline_days': '7',
+        'q': 'laptop', 'category': 'tech', 'min_value': '1000000', 'max_value': '25000000', 'deadline_days': '7',
         'status': 'upcoming', 'sort': 'value', 'limit': '20', 'offset': '20',
       });
     });
@@ -75,10 +75,10 @@ void main() {
     });
 
     test('copyWith: null mengosongkan, tidak diisi = tetap', () {
-      final f = const DiscoverFilters(category: 'tech', minValue: 5);
+      final f = const DiscoverFilters(category: 'tech', minValueIdr: 5);
       expect(f.copyWith(query: 'x').category, 'tech');
       expect(f.copyWith(category: null).category, isNull);
-      expect(f.copyWith(minValue: null).minValue, isNull);
+      expect(f.copyWith(minValueIdr: null).minValueIdr, isNull);
       expect(f.activeFilterCount, 2); // kategori + rentang nilai
     });
   });
@@ -88,7 +88,7 @@ void main() {
     final a = gw('a', title: 'Laptop Gaming', lat: -6.2, lng: 106.8, end: now.add(const Duration(hours: 5)));
     final b = Giveaway(
       id: 'b', title: 'Paket Bali', category: 'travel', prizeName: 'Liburan', organizer: 'Biro Wisata',
-      prizeValueUsd: 900, latitude: -8.4, longitude: 115.2,
+      prizeValueIdr: 15000000, latitude: -8.4, longitude: 115.2,
       startAt: now.subtract(const Duration(hours: 1)), endAt: now.add(const Duration(days: 3)),
     );
     final c = gw('c', title: 'Kopi', end: now.add(const Duration(hours: 1)));
@@ -107,8 +107,8 @@ void main() {
     });
     test('kategori dan rentang nilai', () {
       expect(ids(const DiscoverFilters(category: 'travel')), ['b']);
-      expect(ids(const DiscoverFilters(minValue: 500)), ['b']);
-      expect(ids(const DiscoverFilters(maxValue: 300)), ['c', 'a']);
+      expect(ids(const DiscoverFilters(minValueIdr: 10000000)), ['b']);
+      expect(ids(const DiscoverFilters(maxValueIdr: 5000000)), ['c', 'a']);
     });
     test('deadline dalam N hari', () => expect(ids(const DiscoverFilters(deadlineDays: 1)), ['c', 'a']));
     test('status akan datang dan selesai', () {
@@ -320,7 +320,7 @@ void main() {
       await pump(tester);
       await tester.pumpAndSettle();
       expect(find.text('Demo: Laptop Gaming Giveaway'), findsOneWidget);
-      expect(find.textContaining('US\$1.200,00'), findsOneWidget);
+      expect(find.textContaining('Rp 20.000.000'), findsOneWidget);
     });
 
     testWidgets('hasil kosong: pesan kosong yang informatif', (tester) async {
@@ -425,15 +425,15 @@ void main() {
       await tester.tap(find.byKey(const Key('open_filter')));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('cat_gaming')));
-      await tester.enterText(find.byKey(const Key('min_value')), '100');
-      await tester.enterText(find.byKey(const Key('max_value')), '50'); // min > max: ditolak
+      await tester.enterText(find.byKey(const Key('min_value')), '1.000.000');
+      await tester.enterText(find.byKey(const Key('max_value')), '500.000'); // min > max: ditolak
       await tester.tap(find.byKey(const Key('apply_filter')));
       await tester.pumpAndSettle();
       expect(find.textContaining('tidak boleh lebih besar'), findsOneWidget);
-      await tester.enterText(find.byKey(const Key('max_value')), '900');
+      await tester.enterText(find.byKey(const Key('max_value')), '9000000');
       await tester.tap(find.byKey(const Key('apply_filter')));
       await tester.pumpAndSettle();
-      expect([queries.last['category'], queries.last['min_value'], queries.last['max_value']], ['gaming', '100', '900']);
+      expect([queries.last['category'], queries.last['min_value'], queries.last['max_value']], ['gaming', '1000000', '9000000']);
       expect(find.text('2'), findsOneWidget); // lencana: kategori + nilai
       expect(find.widgetWithText(InputChip, 'Gaming'), findsOneWidget);
     });

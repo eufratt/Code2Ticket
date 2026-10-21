@@ -95,13 +95,13 @@ void main() {
         ChatMessage(role: r, text: t, related: related, createdAt: DateTime.utc(2026, 10, 19, 3, 42));
 
     test('tersimpan berurutan per pengguna beserta kartu giveaway; pengguna lain terisolasi', () async {
-      const g = Giveaway(id: 'g1', title: 'Laptop Gaming', category: 'gaming', prizeName: 'Laptop', prizeValueUsd: 1200, winnerCount: 2);
+      const g = Giveaway(id: 'g1', title: 'Laptop Gaming', category: 'gaming', prizeName: 'Laptop', prizeValueIdr: 20000000, winnerCount: 2);
       await localDb.appendChat('u1', [m(ChatRole.user, 'ada gaming?'), m(ChatRole.assistant, 'Ada.', related: [g])]);
       await localDb.appendChat('u2', [m(ChatRole.user, 'rahasia u2')]);
       final rows = await localDb.loadChat('u1');
       expect(rows.map((x) => (x.role, x.text)), [(ChatRole.user, 'ada gaming?'), (ChatRole.assistant, 'Ada.')]);
       expect(rows.last.related.single.title, 'Laptop Gaming');
-      expect(rows.last.related.single.prizeValueUsd, 1200);
+      expect(rows.last.related.single.prizeValueIdr, 20000000);
       expect(rows.first.confirmed && !rows.first.isError, isTrue);
       expect((await localDb.loadChat('u2')).single.text, 'rahasia u2');
     });

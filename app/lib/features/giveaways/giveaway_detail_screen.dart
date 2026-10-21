@@ -197,7 +197,7 @@ class _PrizeBlock extends StatelessWidget {
               children: [
                 Text('Nilai hadiah', style: theme.textTheme.bodySmall?.copyWith(color: c.muted)),
                 Text(
-                  context.money(giveaway.prizeValueUsd),
+                  context.money(giveaway.prizeValueIdr),
                   key: const Key('prize_value'),
                   style: AppTypography.tabular(theme.textTheme.displaySmall!.copyWith(color: c.accentText)),
                 ),

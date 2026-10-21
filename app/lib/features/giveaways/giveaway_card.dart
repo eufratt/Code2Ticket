@@ -209,7 +209,7 @@ class _Prize extends StatelessWidget {
       crossAxisAlignment: WrapCrossAlignment.center,
       spacing: Spacing.s8,
       children: [
-        Text(context.money(g.prizeValueUsd), style: theme.textTheme.titleMedium?.copyWith(color: c.accentText, fontWeight: FontWeight.w700)),
+        Text(context.money(g.prizeValueIdr), style: theme.textTheme.titleMedium?.copyWith(color: c.accentText, fontWeight: FontWeight.w700)),
         if (g.prizeName.isNotEmpty) Text(g.prizeName, style: theme.textTheme.bodyMedium),
       ],
     );
@@ -268,7 +268,7 @@ class _Compact extends StatelessWidget {
               children: [
                 Text(g.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: theme.textTheme.titleSmall),
                 const SizedBox(height: Spacing.s4),
-                Text(context.money(g.prizeValueUsd), style: theme.textTheme.titleSmall?.copyWith(color: c.accentText, fontWeight: FontWeight.w700)),
+                Text(context.money(g.prizeValueIdr), style: theme.textTheme.titleSmall?.copyWith(color: c.accentText, fontWeight: FontWeight.w700)),
                 const SizedBox(height: Spacing.s4),
                 Wrap(spacing: Spacing.s8, runSpacing: Spacing.s4, crossAxisAlignment: WrapCrossAlignment.center, children: [
                   StatusChip(status),

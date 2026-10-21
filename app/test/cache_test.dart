@@ -23,7 +23,7 @@ Giveaway gw(String id, {String title = 'T', DateTime? start, DateTime? end, doub
     title: title,
     category: 'tech',
     prizeName: 'Hadiah',
-    prizeValueUsd: 250.5,
+    prizeValueIdr: 4500000,
     latitude: lat,
     longitude: lng,
     startAt: start ?? now.subtract(const Duration(hours: 1)),
@@ -81,7 +81,7 @@ void main() {
       await local.saveGiveaways([g, gw('b', lat: -6.2, lng: 106.8)]);
       final back = (await local.loadGiveaway(g.id))!;
       expect(back.title, g.title);
-      expect(back.prizeValueUsd, 1200);
+      expect(back.prizeValueIdr, 20000000);
       expect(back.drawAt!.toUtc(), g.drawAt!.toUtc());
       expect(back.winnerCount, 3);
       final b = (await local.loadGiveaway('b'))!;

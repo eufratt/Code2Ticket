@@ -1,3 +1,4 @@
+import '../../core/currency/currency.dart' show maxPrizeIdr;
 import '../../core/geo.dart';
 import '../giveaways/giveaway_models.dart';
 
@@ -40,8 +41,8 @@ class DiscoverFilters {
   const DiscoverFilters({
     this.query = '',
     this.category,
-    this.minValue,
-    this.maxValue,
+    this.minValueIdr,
+    this.maxValueIdr,
     this.deadlineDays,
     this.status = GiveawayStatusFilter.active,
     this.sort = GiveawaySort.deadline,
@@ -50,7 +51,9 @@ class DiscoverFilters {
 
   final String query;
   final String? category;
-  final double? minValue, maxValue;
+  /// Rentang nilai hadiah dalam rupiah (sama dengan `min_value`/`max_value` di backend). Layar filter
+  /// mengonversi masukan dalam mata uang pilihan ke rupiah sebelum sampai ke sini.
+  final int? minValueIdr, maxValueIdr;
 
   /// Deadline (end_at) dalam N hari ke depan; null = semua.
   final int? deadlineDays;
@@ -65,7 +68,7 @@ class DiscoverFilters {
   /// Filter selain kata kunci/urutan yang sedang aktif (untuk lencana tombol filter).
   int get activeFilterCount =>
       (category != null ? 1 : 0) +
-      (minValue != null || maxValue != null ? 1 : 0) +
+      (minValueIdr != null || maxValueIdr != null ? 1 : 0) +
       (deadlineDays != null ? 1 : 0) +
       (status != GiveawayStatusFilter.active ? 1 : 0);
 
@@ -73,8 +76,8 @@ class DiscoverFilters {
   DiscoverFilters copyWith({
     String? query,
     Object? category = _keep,
-    Object? minValue = _keep,
-    Object? maxValue = _keep,
+    Object? minValueIdr = _keep,
+    Object? maxValueIdr = _keep,
     Object? deadlineDays = _keep,
     GiveawayStatusFilter? status,
     GiveawaySort? sort,
@@ -83,8 +86,8 @@ class DiscoverFilters {
       DiscoverFilters(
         query: query ?? this.query,
         category: identical(category, _keep) ? this.category : category as String?,
-        minValue: identical(minValue, _keep) ? this.minValue : (minValue as num?)?.toDouble(),
-        maxValue: identical(maxValue, _keep) ? this.maxValue : (maxValue as num?)?.toDouble(),
+        minValueIdr: identical(minValueIdr, _keep) ? this.minValueIdr : minValueIdr as int?,
+        maxValueIdr: identical(maxValueIdr, _keep) ? this.maxValueIdr : maxValueIdr as int?,
         deadlineDays: identical(deadlineDays, _keep) ? this.deadlineDays : deadlineDays as int?,
         status: status ?? this.status,
         sort: sort ?? this.sort,
@@ -97,8 +100,8 @@ class DiscoverFilters {
     return {
       if (q.isNotEmpty) 'q': q,
       'category': ?category,
-      if (minValue != null) 'min_value': _num(minValue!),
-      if (maxValue != null) 'max_value': _num(maxValue!),
+      if (minValueIdr != null) 'min_value': '$minValueIdr',
+      if (maxValueIdr != null) 'max_value': '$maxValueIdr',
       if (deadlineDays != null) 'deadline_days': '$deadlineDays',
       'status': status.api,
       'sort': sort.api,
@@ -111,8 +114,6 @@ class DiscoverFilters {
       if (offset > 0) 'offset': '$offset',
     };
   }
-
-  static String _num(double v) => v == v.roundToDouble() ? v.toStringAsFixed(0) : '$v';
 
   /// Penyaringan lokal (offline) dengan semantik yang sama dengan backend.
   List<Giveaway> applyLocal(List<Giveaway> all, {double? lat, double? lng, DateTime? now}) {
@@ -138,8 +139,8 @@ class DiscoverFilters {
         continue;
       }
       if (category != null && g.category != category) continue;
-      if (minValue != null && (g.prizeValueUsd ?? -1) < minValue!) continue;
-      if (maxValue != null && (g.prizeValueUsd ?? double.infinity) > maxValue!) continue;
+      if (minValueIdr != null && (g.prizeValueIdr ?? -1) < minValueIdr!) continue;
+      if (maxValueIdr != null && (g.prizeValueIdr ?? maxPrizeIdr + 1) > maxValueIdr!) continue;
       if (deadlineDays != null && (g.endAt == null || g.endAt!.isAfter(at.add(Duration(days: deadlineDays!))))) continue;
       if (!statusOk(g)) continue;
 
@@ -156,7 +157,7 @@ class DiscoverFilters {
     out.sort((a, b) {
       final c = switch (sort) {
         GiveawaySort.nearest => (a.distanceKm ?? double.infinity).compareTo(b.distanceKm ?? double.infinity),
-        GiveawaySort.value => (b.prizeValueUsd ?? -1).compareTo(a.prizeValueUsd ?? -1),
+        GiveawaySort.value => (b.prizeValueIdr ?? -1).compareTo(a.prizeValueIdr ?? -1),
         GiveawaySort.newest => (b.startAt ?? DateTime(0)).compareTo(a.startAt ?? DateTime(0)),
         GiveawaySort.deadline => 0,
       };

@@ -268,7 +268,7 @@ void main() {
     await tester.tap(find.text('Demo: Laptop Gaming Giveaway'));
     await tester.pumpAndSettle();
     expect(find.text('Detail Giveaway'), findsOneWidget);
-    expect(find.text('US\$1.200,00'), findsOneWidget);
+    expect(find.text('Rp 20.000.000'), findsOneWidget);
     await tester.scrollUntilVisible(find.text('Tiket saya'), 200, scrollable: find.byType(Scrollable).first);
     expect(find.text('Tiket saya'), findsOneWidget);
     expect(find.text('1'), findsWidgets);

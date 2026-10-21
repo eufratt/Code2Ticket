@@ -350,7 +350,7 @@ void main() {
                   category: 'travel',
                   ticketNumber: '#000012',
                   status: AppStatus.ticketNotSelected,
-                  prizeText: 'US\$1.200,00 · Paket liburan',
+                  prizeText: 'Rp 20.000.000 · Paket liburan',
                   subtitle: 'Draw 20 Okt 2026, 20.00 WIB',
                   onTap: () {},
                 ),

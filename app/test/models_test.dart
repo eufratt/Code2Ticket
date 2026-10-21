@@ -9,7 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 // Contoh respons asli dari backend/src (GET /giveaways, POST /codes/redeem, GET /tickets).
 const giveawayJson = '''
-{"id":"5deb977d-ff30-4e4e-849d-ff389fe51e6a","title":"Demo: Laptop Gaming Giveaway","description":"Giveaway demo tanpa batas lokasi.","organizer":"Code2Ticket Demo","category":"gaming","prize_name":"Laptop Gaming 15\\"","prize_value_usd":1200,"latitude":null,"longitude":null,"address":null,"radius_km":null,"start_at":"2026-10-18T16:23:20.789Z","end_at":"2026-10-18T19:29:20.790Z","draw_at":"2026-10-18T20:29:20.790Z","winner_count":3,"ticket_count":0,"status":"active","distance_km":null}''';
+{"id":"5deb977d-ff30-4e4e-849d-ff389fe51e6a","title":"Demo: Laptop Gaming Giveaway","description":"Giveaway demo tanpa batas lokasi.","organizer":"Code2Ticket Demo","category":"gaming","prize_name":"Laptop Gaming 15\\"","prize_value_idr":20000000,"latitude":null,"longitude":null,"address":null,"radius_km":null,"start_at":"2026-10-18T16:23:20.789Z","end_at":"2026-10-18T19:29:20.790Z","draw_at":"2026-10-18T20:29:20.790Z","winner_count":3,"ticket_count":0,"status":"active","distance_km":null}''';
 const redeemOk = '''
 {"ok":true,"ticket":{"id":"1d1c22a6-2381-41ec-9baf-1b1c174fc622","ticket_number":1,"giveaway_id":"5deb977d-ff30-4e4e-849d-ff389fe51e6a","giveaway_title":"Demo: Laptop Gaming Giveaway","prize_name":"Laptop Gaming 15\\"","draw_at":"2026-10-18T20:29:20.790Z","result":"eligible"}}''';
 const ticketJson = '''
@@ -22,7 +22,7 @@ void main() {
       expect(g.id, '5deb977d-ff30-4e4e-849d-ff389fe51e6a');
       expect(g.title, 'Demo: Laptop Gaming Giveaway');
       expect(g.prizeName, 'Laptop Gaming 15"');
-      expect(g.prizeValueUsd, 1200.0);
+      expect(g.prizeValueIdr, 20000000);
       expect(g.winnerCount, 3);
       expect(g.ticketCount, 0);
       expect(g.latitude, isNull);
@@ -35,12 +35,12 @@ void main() {
       final g = Giveaway.tryParse({
         'id': 'x',
         'title': 'T',
-        'prize_value_usd': '99.5', // numeric dalam bentuk string
+        'prize_value_idr': '5000000', // numeric dalam bentuk string
         'winner_count': 'tiga',
         'end_at': 'bukan tanggal',
         'ticket_count': null,
       })!;
-      expect(g.prizeValueUsd, 99.5);
+      expect(g.prizeValueIdr, 5000000);
       expect(g.winnerCount, 1);
       expect(g.endAt, isNull);
       expect(g.ticketCount, 0);

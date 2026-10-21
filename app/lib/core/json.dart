@@ -5,6 +5,12 @@ String? asString(dynamic v) => v is String ? v : null;
 int asInt(dynamic v, [int fallback = 0]) =>
     v is num ? v.toInt() : (v is String ? int.tryParse(v) : null) ?? fallback;
 
+/// Bilangan bulat nullable (null bila bukan angka); angka desimal dibulatkan.
+int? asIntOrNull(dynamic v) {
+  final d = v is num ? v.toDouble() : (v is String ? double.tryParse(v) : null);
+  return d != null && d.isFinite ? d.round() : null;
+}
+
 double? asDouble(dynamic v) =>
     v is num ? v.toDouble() : (v is String ? double.tryParse(v) : null);
 

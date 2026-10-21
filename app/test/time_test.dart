@@ -160,7 +160,7 @@ void main() {
       await tester.pumpWidget(MultiProvider(
         providers: displayProviders(settings: settings),
         child: MaterialApp(
-          home: Builder(builder: (c) => Column(children: [Text(c.when(instant), key: const Key('t')), Text(c.money(1200), key: const Key('m'))])),
+          home: Builder(builder: (c) => Column(children: [Text(c.when(instant), key: const Key('t')), Text(c.money(5000000), key: const Key('m'))])),
         ),
       ));
       String text(String k) => tester.widget<Text>(find.byKey(Key(k))).data!;
@@ -168,7 +168,7 @@ void main() {
       await settings.setZone(AppZone.london);
       await tester.pump();
       expect(text('t'), '15 Jul 2026, 13.00 BST');
-      expect(text('m'), 'US\$1.200,00'); // kurs belum ada -> USD
+      expect(text('m'), 'Rp 5.000.000'); // mata uang bawaan IDR: persis sama dengan nilai tersimpan
     });
   });
 }

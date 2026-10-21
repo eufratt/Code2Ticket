@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/currency/currency.dart';
+import '../../core/currency/rates_controller.dart';
+import '../../core/format.dart';
 import '../../core/location/location_service.dart';
+import '../../core/settings/settings_controller.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/widgets.dart';
@@ -341,7 +345,7 @@ class _Results extends StatelessWidget {
   }
 }
 
-/// Bottom sheet filter: kategori, rentang nilai hadiah (USD), deadline, dan status.
+/// Bottom sheet filter: kategori, rentang nilai hadiah (mata uang tampilan, dikonversi ke rupiah saat diterapkan), deadline, dan status.
 class FilterSheet extends StatefulWidget {
   const FilterSheet({super.key, required this.initial});
   final DiscoverFilters initial;
@@ -351,11 +355,14 @@ class FilterSheet extends StatefulWidget {
 
 class _FilterSheetState extends State<FilterSheet> {
   late DiscoverFilters _f = widget.initial;
-  late final _min = TextEditingController(text: _fmt(widget.initial.minValue));
-  late final _max = TextEditingController(text: _fmt(widget.initial.maxValue));
+  late final _min = TextEditingController(text: _fmt(widget.initial.minValueIdr));
+  late final _max = TextEditingController(text: _fmt(widget.initial.maxValueIdr));
   String? _error;
 
-  static String _fmt(double? v) => v == null ? '' : (v == v.roundToDouble() ? v.toStringAsFixed(0) : '$v');
+  /// Mata uang isian = mata uang tampilan pengguna; tanpa kurs (offline) rupiah.
+  String get _code => prizeCurrency(context.read<SettingsController>().currency, context.read<RatesController>().rates);
+
+  String _fmt(int? idr) => idr == null ? '' : prizeInputText(idr, _code, context.read<RatesController>().rates);
 
   @override
   void dispose() {
@@ -364,12 +371,11 @@ class _FilterSheetState extends State<FilterSheet> {
     super.dispose();
   }
 
-  double? _parse(String s) => s.trim().isEmpty ? null : double.tryParse(s.trim().replaceAll(',', '.'));
+  double? _parse(String s) => s.trim().isEmpty ? null : parseIdNumber(s);
 
   void _apply() {
     final lo = _parse(_min.text), hi = _parse(_max.text);
-    if ((_min.text.trim().isNotEmpty && lo == null) || (_max.text.trim().isNotEmpty && hi == null) ||
-        (lo != null && lo < 0) || (hi != null && hi < 0)) {
+    if ((_min.text.trim().isNotEmpty && lo == null) || (_max.text.trim().isNotEmpty && hi == null)) {
       setState(() => _error = 'Nilai hadiah harus berupa angka positif.');
       return;
     }
@@ -377,7 +383,15 @@ class _FilterSheetState extends State<FilterSheet> {
       setState(() => _error = 'Nilai minimum tidak boleh lebih besar dari maksimum.');
       return;
     }
-    Navigator.pop(context, _f.copyWith(minValue: lo, maxValue: hi));
+    // Minimum dibulatkan ke bawah dan maksimum ke atas supaya hasil di tepi rentang tidak hilang.
+    final rates = context.read<RatesController>().rates;
+    Navigator.pop(
+      context,
+      _f.copyWith(
+        minValueIdr: lo == null ? null : prizeToIdr(lo, _code, rates, up: false),
+        maxValueIdr: hi == null ? null : prizeToIdr(hi, _code, rates, up: true),
+      ),
+    );
   }
 
   @override
@@ -422,7 +436,7 @@ class _FilterSheetState extends State<FilterSheet> {
                   ]),
                 ),
                 section(
-                  'Nilai hadiah (USD)',
+                  'Nilai hadiah (${_code == 'IDR' ? 'Rp' : _code})',
                   Row(children: [
                     Expanded(
                       child: TextField(
@@ -483,7 +497,7 @@ class _FilterSheetState extends State<FilterSheet> {
             onPressed: () => Navigator.pop(
               context,
               widget.initial.copyWith(
-                category: null, minValue: null, maxValue: null, deadlineDays: null,
+                category: null, minValueIdr: null, maxValueIdr: null, deadlineDays: null,
                 status: GiveawayStatusFilter.active,
               ),
             ),

@@ -26,7 +26,7 @@ class LocalDb implements CacheStore, RateCache, SettingsStore, ChatStore {
   }
 
   static const String dbName = 'code2ticket.db';
-  static const int dbVersion = 2;
+  static const int dbVersion = 3;
 
   Future<Database> _initDb() async {
     final dbPath = await getDatabasesPath();
@@ -40,17 +40,7 @@ class LocalDb implements CacheStore, RateCache, SettingsStore, ChatStore {
   }
 
   static Future<void> createTables(Database db, int version) async {
-    await db.execute('''
-      CREATE TABLE cached_giveaways (
-        id TEXT PRIMARY KEY, title TEXT NOT NULL, description TEXT, organizer TEXT, category TEXT,
-        prize_name TEXT, prize_value_usd REAL, latitude REAL, longitude REAL, address TEXT, radius_km REAL,
-        start_at TEXT, end_at TEXT, draw_at TEXT, winner_count INTEGER, ticket_count INTEGER,
-        status TEXT, seed_hash TEXT, cached_at TEXT NOT NULL
-      )
-    ''');
-    await db.execute(
-        'CREATE INDEX idx_cg_category ON cached_giveaways(category)');
-    await db.execute('CREATE INDEX idx_cg_end ON cached_giveaways(end_at)');
+    await _createGiveawaysTable(db);
 
     await db.execute('''
       CREATE TABLE cached_tickets (
@@ -83,9 +73,29 @@ class LocalDb implements CacheStore, RateCache, SettingsStore, ChatStore {
     await _createChatTable(db);
   }
 
-  /// v2: riwayat percakapan Asisten.
+  /// v2: riwayat percakapan Asisten. v3: nilai hadiah rupiah (prize_value_idr menggantikan prize_value_usd).
   static Future<void> upgradeTables(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) await _createChatTable(db);
+    if (oldVersion < 3) {
+      // Cache giveaway hanya salinan server (diisi ulang saat online), jadi dibuang dan dibuat ulang.
+      // Kartu giveaway di riwayat Asisten menyimpan kolom USD lama: kartunya dikosongkan, teks percakapan tetap.
+      await db.execute('DROP TABLE IF EXISTS cached_giveaways');
+      await _createGiveawaysTable(db);
+      await db.execute('UPDATE chat_messages SET related_json = NULL WHERE related_json IS NOT NULL');
+    }
+  }
+
+  static Future<void> _createGiveawaysTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE cached_giveaways (
+        id TEXT PRIMARY KEY, title TEXT NOT NULL, description TEXT, organizer TEXT, category TEXT,
+        prize_name TEXT, prize_value_idr INTEGER, latitude REAL, longitude REAL, address TEXT, radius_km REAL,
+        start_at TEXT, end_at TEXT, draw_at TEXT, winner_count INTEGER, ticket_count INTEGER,
+        status TEXT, seed_hash TEXT, cached_at TEXT NOT NULL
+      )
+    ''');
+    await db.execute('CREATE INDEX idx_cg_category ON cached_giveaways(category)');
+    await db.execute('CREATE INDEX idx_cg_end ON cached_giveaways(end_at)');
   }
 
   static Future<void> _createChatTable(Database db) async {
