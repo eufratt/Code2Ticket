@@ -13,6 +13,7 @@ psql "$DATABASE_URL" -f db/01_schema.sql
 psql "$DATABASE_URL" -f db/06_backend.sql
 psql "$DATABASE_URL" -f db/07_user_photos.sql   # foto profil (Supabase: tempel di SQL Editor)
 psql "$DATABASE_URL" -f db/08_prize_value_idr.sql   # nilai hadiah dalam rupiah (lihat "Nilai hadiah" di bawah)
+psql "$DATABASE_URL" -f db/09_giveaway_participation.sql   # cara mendapatkan kode + tautan penyelenggara
 ADMIN_PASSWORD='...' npm run create-admin -- namamu email@kamu.com "Nama Lengkap"
 npm start
 ```
@@ -36,6 +37,14 @@ npm start
 - Konteks Asisten memuat `nilai_rupiah` (bukan `nilai_usd`).
 - Migrasi `db/08_prize_value_idr.sql`: aditif dan idempotent; backfill baris lama `round(prize_value_usd * 18000, -3)` (kurs tetap, data uji). Urutan deploy: jalankan SQL -> deploy backend -> pasang APK baru.
   APK lama membaca `prize_value_usd` yang tidak ada lagi: nilai hadiah tampil "-" (tanpa crash), filter nilai di APK lama dianggap rupiah.
+
+## Cara mendapatkan kode dan tautan penyelenggara
+
+- Kolom `giveaways.how_to_participate` (text, CHECK <= 2000, NULL untuk data lama) dan `organizer_url` (text, CHECK <= 500, NULL boleh); migrasi `db/09_giveaway_participation.sql` (aditif, idempotent, tanpa backfill).
+- `POST /admin/giveaways` membuat: `how_to_participate` WAJIB, string 10..2000 karakter setelah trim (kalau tidak `invalid_input` + `field`). `organizer_url` opsional: absolut `https://` saja, maks. 500, tanpa `user:pass@`, spasi/karakter kontrol, host domain bertitik (IP dan `localhost` ditolak); nilai di-trim, `''`/`null` = tidak ada. Mengubah: field opsional; `organizer_url: null` mengosongkan.
+- Payload: `GET /giveaways` (daftar, Discover, Peta) memuat `organizer_url` tetapi TIDAK `how_to_participate`; `GET /giveaways/:id` memuat keduanya.
+- Asisten: DATA berisi `penyelenggara`, `cara_ikut` (dipotong 600 karakter) dan `tautan_penyelenggara`; prompt melarang mengarang cara atau tautan.
+- Urutan deploy: jalankan SQL -> deploy backend -> pasang APK baru. APK lama + backend baru: tidak crash (field tambahan diabaikan) tetapi form Admin APK lama ditolak (`how_to_participate` wajib). APK baru + backend lama: detail memakai pesan pengganti, form Admin mengirim field tak dikenal yang diabaikan server lama.
 
 ## Perilaku yang perlu diketahui (M8a)
 
