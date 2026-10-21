@@ -89,7 +89,7 @@ class _GiveawayDetailScreenState extends State<GiveawayDetailScreen> {
           : DecoratedBox(
               decoration: BoxDecoration(
                 color: c.surface,
-                border: Border(top: BorderSide(color: c.outline)),
+                border: Border(top: BorderSide(color: c.outlineSoft)),
                 boxShadow: AppShadows.raised(c),
               ),
               child: SafeArea(

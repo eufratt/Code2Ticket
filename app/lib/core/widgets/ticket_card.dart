@@ -205,13 +205,13 @@ class _TicketPartPainter extends CustomPainter {
     }
     canvas.restore();
     canvas.drawPath(path, Paint()..color = colors.surface);
-    canvas.drawPath(path, Paint()..color = colors.outline..style = PaintingStyle.stroke..strokeWidth = 1);
+    canvas.drawPath(path, Paint()..color = colors.outlineSoft..style = PaintingStyle.stroke..strokeWidth = 1);
     if (!top) _dashedLine(canvas, size);
   }
 
   void _dashedLine(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = colors.outline
+      ..color = colors.outlineSoft
       ..strokeWidth = 1.5
       ..strokeCap = StrokeCap.round;
     const dash = 6.0, gap = 5.0;

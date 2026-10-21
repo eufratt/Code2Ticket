@@ -130,7 +130,7 @@ class AppShell extends StatelessWidget {
           elevation: 0,
           surfaceTintColor: Colors.transparent,
           child: DecoratedBox(
-            decoration: BoxDecoration(border: Border(top: BorderSide(color: c.outline))),
+            decoration: BoxDecoration(border: Border(top: BorderSide(color: c.outlineSoft))),
             child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [for (var i = 0; i < _items.length; i++) item(i)]),
           ),
         ),

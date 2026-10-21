@@ -21,6 +21,8 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.muted,
     required this.mutedOnVariant,
     required this.outline,
+    required this.outlineSoft,
+    required this.outlineField,
     required this.primary,
     required this.onPrimary,
     required this.primaryContainer,
@@ -50,6 +52,12 @@ class AppColors extends ThemeExtension<AppColors> {
   /// Teks sekunder di atas surfaceVariant (kolom input): di tema gelap muted hanya 4,0:1 di sana, jadi dipakai yang lebih terang.
   final Color mutedOnVariant;
   final Color outline;
+
+  /// Border halus untuk kartu, kontainer, dan garis pembatas (divider).
+  final Color outlineSoft;
+
+  /// Border kolom isian dan dropdown saat diam.
+  final Color outlineField;
   final Color primary, onPrimary, primaryContainer, onPrimaryContainer;
 
   /// Amber: HANYA isi/ikon besar. Teks amber kecil memakai [accentText].
@@ -69,6 +77,8 @@ class AppColors extends ThemeExtension<AppColors> {
     muted: Color(0xFF475569),
     mutedOnVariant: Color(0xFF475569),
     outline: Color(0xFF64748B),
+    outlineSoft: Color(0xFFCBD5E1),
+    outlineField: Color(0xFF94A3B8),
     primary: Color(0xFF4F46E5),
     onPrimary: Color(0xFFFFFFFF),
     primaryContainer: Color(0xFFEEF2FF),
@@ -98,6 +108,8 @@ class AppColors extends ThemeExtension<AppColors> {
     muted: Color(0xFF94A3B8),
     mutedOnVariant: Color(0xFFCBD5E1),
     outline: Color(0xFF94A3B8),
+    outlineSoft: Color(0xFF334155),
+    outlineField: Color(0xFF64748B),
     primary: Color(0xFF818CF8),
     onPrimary: Color(0xFF0F172A),
     primaryContainer: Color(0xFF312E81),
@@ -135,6 +147,8 @@ class AppColors extends ThemeExtension<AppColors> {
       muted: c(muted, other.muted),
       mutedOnVariant: c(mutedOnVariant, other.mutedOnVariant),
       outline: c(outline, other.outline),
+      outlineSoft: c(outlineSoft, other.outlineSoft),
+      outlineField: c(outlineField, other.outlineField),
       primary: c(primary, other.primary),
       onPrimary: c(onPrimary, other.onPrimary),
       primaryContainer: c(primaryContainer, other.primaryContainer),

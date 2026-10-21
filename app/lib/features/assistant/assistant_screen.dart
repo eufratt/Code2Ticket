@@ -186,7 +186,7 @@ class _Bubble extends StatelessWidget {
           child: DecoratedBox(
             decoration: BoxDecoration(
               color: mine ? c.primary : c.surface,
-              border: mine ? null : Border.all(color: c.outline),
+              border: mine ? null : Border.all(color: c.outlineSoft),
               borderRadius: BorderRadius.only(topLeft: r, topRight: r, bottomLeft: mine ? r : tail, bottomRight: mine ? tail : r),
             ),
             child: Padding(
@@ -286,7 +286,7 @@ class _TypingBubbleState extends State<_TypingBubble> with SingleTickerProviderS
             DecoratedBox(
               decoration: BoxDecoration(
                 color: c.surface,
-                border: Border.all(color: c.outline),
+                border: Border.all(color: c.outlineSoft),
                 borderRadius: const BorderRadius.only(topLeft: r, topRight: r, bottomRight: r, bottomLeft: Radius.circular(Spacing.s4)),
               ),
               child: Padding(
@@ -330,7 +330,7 @@ class _InputBar extends StatelessWidget {
     final n = controller.text.runes.length;
     final over = n > chatMaxLength;
     return DecoratedBox(
-      decoration: BoxDecoration(color: c.surface, border: Border(top: BorderSide(color: c.outline))),
+      decoration: BoxDecoration(color: c.surface, border: Border(top: BorderSide(color: c.outlineSoft))),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(Spacing.screen, Spacing.s8, Spacing.s8, Spacing.s8),
         child: Row(
