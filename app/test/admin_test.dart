@@ -41,6 +41,7 @@ GiveawayDraft draft({int? max, double? lat}) => GiveawayDraft(
       category: 'gaming',
       prizeName: 'Laptop',
       prizeValueIdr: 20000000,
+      howToParticipate: 'Cari kode di Instagram penyelenggara.',
       winnerCount: 2,
       maxTicketsPerUser: max,
       startAt: DateTime.utc(2026, 10, 19, 3, 0),
@@ -80,6 +81,8 @@ void main() {
       expect(body['draw_at'], '2026-10-19T04:00:00.000Z');
       expect(body['prize_value_idr'], 20000000);
       expect(body.containsKey('prize_value_usd'), isFalse);
+      expect(body['how_to_participate'], 'Cari kode di Instagram penyelenggara.');
+      expect(body.containsKey('organizer_url'), isFalse); // kosong tidak dikirim
       expect(body.containsKey('max_tickets_per_user'), isFalse);
       expect(body.containsKey('latitude'), isFalse);
       expect(body.containsKey('address'), isFalse);
@@ -259,6 +262,7 @@ void main() {
       await tester.enterText(find.byKey(const Key('giveaway_organizer')), 'Penyelenggara');
       await tester.enterText(find.byKey(const Key('giveaway_prize')), 'Laptop');
       await tester.enterText(find.byKey(const Key('giveaway_value')), '5000000');
+      await tester.enterText(find.byKey(const Key('giveaway_how_to')), 'Ambil kode di stan penyelenggara.');
       await tester.tap(find.byKey(const Key('giveaway_category')));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Gaming').last);
@@ -326,6 +330,42 @@ void main() {
       await submit(tester);
       expect(find.text('Harus antara -90 dan 90'), findsOneWidget);
       expect(api.calls.where((x) => x.method == 'POST'), isEmpty);
+    });
+
+    testWidgets('cara mendapatkan kode wajib 10-2000 karakter; tautan opsional hanya https', (tester) async {
+      await pumpWith(tester, (_) => const CreateGiveawayScreen());
+      await fillValid(tester);
+      final how = find.byKey(const Key('giveaway_how_to')), url = find.byKey(const Key('giveaway_org_url'));
+      Future<void> tryWith(String h, String u) async {
+        await tester.enterText(how, h);
+        await tester.enterText(url, u);
+        await submit(tester);
+      }
+
+      await tryWith('', '');
+      expect(find.text('Cara mendapatkan kode wajib diisi'), findsOneWidget);
+      await tryWith('pendek', '');
+      expect(find.text('Cara mendapatkan kode minimal 10 karakter'), findsOneWidget);
+      await tryWith('x' * 2001, '');
+      expect(find.text('Cara mendapatkan kode maksimal 2000 karakter'), findsOneWidget);
+      for (final bad in ['http://example.com', 'javascript:alert(1)', 'ftp://example.com']) {
+        await tryWith('Ambil kode di stan penyelenggara.', bad);
+        expect(find.text('Tautan harus diawali https://'), findsOneWidget, reason: bad);
+      }
+      await tryWith('Ambil kode di stan penyelenggara.', 'https://user:pw@example.com');
+      expect(find.text('Tautan tidak valid'), findsOneWidget);
+      expect(api.calls.where((x) => x.method == 'POST'), isEmpty);
+    });
+
+    testWidgets('tautan https valid terkirim apa adanya bersama cara ikut', (tester) async {
+      handler = (m, p, b) async => m == 'POST' ? {'ok': true, 'giveaway_id': gid} : {'ok': true, 'data': []};
+      await pumpWith(tester, (_) => const CreateGiveawayScreen());
+      await fillValid(tester);
+      await tester.enterText(find.byKey(const Key('giveaway_org_url')), ' https://example.com/giveaway ');
+      await submit(tester);
+      final body = api.calls.singleWhere((x) => x.method == 'POST').body as Map<String, dynamic>;
+      expect(body['organizer_url'], 'https://example.com/giveaway');
+      expect(body['how_to_participate'], 'Ambil kode di stan penyelenggara.');
     });
 
     testWidgets('nilai hadiah rupiah: pemisah ribuan otomatis, label Rp, batas atas', (tester) async {

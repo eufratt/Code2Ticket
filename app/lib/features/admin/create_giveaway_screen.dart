@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/currency/currency.dart';
+import '../../core/open_link.dart';
 import '../../core/rupiah_input.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_tokens.dart';
@@ -52,6 +53,7 @@ class _CreateGiveawayScreenState extends State<CreateGiveawayScreen> {
   final _title = TextEditingController(), _organizer = TextEditingController(), _description = TextEditingController();
   final _prize = TextEditingController(), _value = TextEditingController(), _winners = TextEditingController(text: '1');
   final _maxTickets = TextEditingController();
+  final _howTo = TextEditingController(), _orgUrl = TextEditingController();
   final _lat = TextEditingController(), _lng = TextEditingController(), _radius = TextEditingController(), _address = TextEditingController();
   String? _category;
   late DateTime _startAt, _endAt, _drawAt;
@@ -70,7 +72,7 @@ class _CreateGiveawayScreenState extends State<CreateGiveawayScreen> {
 
   @override
   void dispose() {
-    for (final c in [_title, _organizer, _description, _prize, _value, _winners, _maxTickets, _lat, _lng, _radius, _address]) {
+    for (final c in [_title, _organizer, _description, _prize, _value, _winners, _maxTickets, _howTo, _orgUrl, _lat, _lng, _radius, _address]) {
       c.dispose();
     }
     super.dispose();
@@ -140,6 +142,8 @@ class _CreateGiveawayScreenState extends State<CreateGiveawayScreen> {
       category: _category!,
       prizeName: _prize.text.trim(),
       prizeValueIdr: parseRupiah(_value.text)!,
+      howToParticipate: _howTo.text.trim(),
+      organizerUrl: _orgUrl.text.trim(),
       winnerCount: int.parse(_winners.text.trim()),
       maxTicketsPerUser: int.tryParse(_maxTickets.text.trim()),
       startAt: _startAt,
@@ -238,6 +242,36 @@ class _CreateGiveawayScreenState extends State<CreateGiveawayScreen> {
                 if (t.isEmpty) return null;
                 final n = int.tryParse(t);
                 return n == null || n < 1 ? 'Minimal 1' : null;
+              },
+            ),
+            const SizedBox(height: Spacing.sectionGap),
+            const SectionHeader('Cara ikut'),
+            TextFormField(
+              key: const Key('giveaway_how_to'),
+              controller: _howTo,
+              decoration: deco('Cara mendapatkan kode', helper: 'Jelaskan di mana peserta mendapat kode dari penyelenggara.'),
+              minLines: 3,
+              maxLines: 6,
+              textCapitalization: TextCapitalization.sentences,
+              validator: (v) {
+                final n = (v ?? '').trim().runes.length;
+                if (n == 0) return 'Cara mendapatkan kode wajib diisi';
+                if (n < 10) return 'Cara mendapatkan kode minimal 10 karakter';
+                if (n > 2000) return 'Cara mendapatkan kode maksimal 2000 karakter';
+                return null;
+              },
+            ),
+            gap,
+            TextFormField(
+              key: const Key('giveaway_org_url'),
+              controller: _orgUrl,
+              decoration: deco('Tautan penyelenggara (opsional)', hint: 'https://'),
+              keyboardType: TextInputType.url,
+              validator: (v) {
+                final t = (v ?? '').trim();
+                if (t.isEmpty) return null;
+                if (!t.toLowerCase().startsWith('https://')) return 'Tautan harus diawali https://';
+                return isHttpsUrl(t) ? null : 'Tautan tidak valid';
               },
             ),
             const SizedBox(height: Spacing.sectionGap),

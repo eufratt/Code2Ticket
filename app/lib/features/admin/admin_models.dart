@@ -13,6 +13,8 @@ class GiveawayDraft {
     required this.category,
     required this.prizeName,
     required this.prizeValueIdr,
+    required this.howToParticipate,
+    this.organizerUrl,
     required this.winnerCount,
     required this.startAt,
     required this.endAt,
@@ -26,6 +28,8 @@ class GiveawayDraft {
 
   final String title, organizer, description, category, prizeName;
   final int prizeValueIdr;
+  final String howToParticipate;
+  final String? organizerUrl;
   final int winnerCount;
   final int? maxTicketsPerUser;
   final DateTime startAt, endAt, drawAt;
@@ -39,6 +43,8 @@ class GiveawayDraft {
         'category': category,
         'prize_name': prizeName,
         'prize_value_idr': prizeValueIdr,
+        'how_to_participate': howToParticipate,
+        if (organizerUrl != null && organizerUrl!.isNotEmpty) 'organizer_url': organizerUrl,
         'winner_count': winnerCount,
         'start_at': startAt.toUtc().toIso8601String(),
         'end_at': endAt.toUtc().toIso8601String(),
@@ -112,6 +118,8 @@ String adminErrorMessage(String? code, {String? field}) {
         'category' => 'Kategori tidak valid.',
         'prize_name' => 'Nama hadiah wajib diisi (maksimal 200 karakter).',
         'prize_value_idr' => 'Nilai hadiah harus berupa angka positif (maksimal Rp 100.000.000.000).',
+        'how_to_participate' => 'Cara mendapatkan kode wajib diisi (10-2000 karakter).',
+        'organizer_url' => 'Tautan penyelenggara harus berupa alamat https:// yang valid (maksimal 500 karakter).',
         'latitude' || 'longitude' || 'geo' || 'geo_lat' || 'geo_lng' => 'Koordinat tidak valid.',
         'radius_km' || 'geo_radius_km' => 'Radius harus lebih dari 0 km.',
         'start_at' || 'end_at' || 'draw_at' => 'Waktu tidak valid.',
