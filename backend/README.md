@@ -159,6 +159,7 @@ Token dikirim lewat `Authorization: Bearer <token>`.
 | `POST /feedback` (`suggestion,impression`), `GET /feedback` | session | `rpc_submit_feedback`, `rpc_get_my_feedback` |
 | `POST /admin/giveaways` (tanpa `id` = buat, dengan `id` = ubah) | admin | `rpc_admin_upsert_giveaway` |
 | `POST /admin/giveaways/:id/codes` (`count,geo_lat,geo_lng,geo_radius_km`), `GET` daftar | admin | `rpc_admin_generate_codes`, `rpc_admin_list_codes` |
+| `GET /admin/giveaways` (`limit`, `offset`; semua status, terbaru dulu; `GET /giveaways` publik bawaannya hanya `active`) | admin | (baru) |
 | `POST /admin/giveaways/:id/draw` | admin | `rpc_admin_run_draw` |
 | `POST /internal/tick` | `X-Tick-Secret` | `fn_run_due_draws` |
 

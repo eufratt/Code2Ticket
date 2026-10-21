@@ -11,7 +11,7 @@ import '../giveaways/giveaway_models.dart';
 import '../giveaways/giveaways_controller.dart' show LoadState;
 import 'admin_controller.dart';
 
-/// Pintu Admin: daftar giveaway (GET /giveaways) menuju Generate Code, Daftar Kode, dan Draw manual; tombol Buat giveaway.
+/// Pintu Admin: daftar semua giveaway (GET /admin/giveaways) menuju Generate Code, Daftar Kode, dan Draw manual; tombol Buat giveaway.
 /// Hanya dibuka dari menu Profil untuk role admin (router juga menolak non-admin); server tetap penentu (403).
 class AdminGiveawaysScreen extends StatefulWidget {
   const AdminGiveawaysScreen({super.key});

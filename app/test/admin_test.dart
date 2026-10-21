@@ -60,7 +60,7 @@ void main() {
 
   setUp(() {
     handler = (m, p, b) async {
-      if (m == 'GET' && p.startsWith('/giveaways')) return {'ok': true, 'data': [sampleGiveaway(gid, 'gaming', title: 'Giveaway Uji')]};
+      if (m == 'GET' && p.startsWith('/admin/giveaways?')) return {'ok': true, 'data': [sampleGiveaway(gid, 'gaming', title: 'Giveaway Uji')]};
       return {'ok': true};
     };
     api = FakeApi((m, p, b) => handler(m, p, b));
@@ -222,9 +222,10 @@ void main() {
   });
 
   group('AdminController: daftar giveaway', () {
-    test('memuat GET /giveaways; galat jaringan -> state error; logout mengosongkan', () async {
+    test('memuat GET /admin/giveaways; galat jaringan -> state error; logout mengosongkan', () async {
       await c.loadGiveaways();
       expect(c.giveaways.single.id, gid);
+      expect(api.calls.last.path, '/admin/giveaways?limit=50');
       handler = (m, p, b) async => throw NetworkException('putus');
       await c.loadGiveaways();
       expect(c.error, 'putus');
@@ -395,6 +396,7 @@ void main() {
       expect(body['winner_count'], 1);
       expect(find.text('Giveaway dibuat.'), findsOneWidget);
       expect(find.byType(CreateGiveawayScreen), findsNothing);
+      expect(api.calls.last.path, '/admin/giveaways?limit=50'); // daftar dimuat ulang setelah dibuat
     });
 
     testWidgets('galat server tampil di layar (bukan hanya snackbar); tombol memuat mencegah kirim ganda', (tester) async {
@@ -416,6 +418,31 @@ void main() {
   });
 
   group('layar Admin', () {
+    testWidgets('semua status tampil dengan chip teks; Generate Code ada untuk upcoming', (tester) async {
+      Map<String, dynamic> g(String id, String title, String status, Duration start, Duration end) => {
+            ...sampleGiveaway(id, 'gaming', title: title),
+            'status': status,
+            'start_at': DateTime.now().toUtc().add(start).toIso8601String(),
+            'end_at': DateTime.now().toUtc().add(end).toIso8601String(),
+          };
+      handler = (m, p, b) async => {
+            'ok': true,
+            'data': [
+              g('g1', 'Akan Datang', 'upcoming', const Duration(hours: 2), const Duration(hours: 5)),
+              g('g2', 'Sedang Jalan', 'active', const Duration(hours: -1), const Duration(hours: 2)),
+              g('g3', 'Tunggu Undi', 'waiting_draw', const Duration(hours: -5), const Duration(hours: -1)),
+              g('g4', 'Sudah Undi', 'drawn', const Duration(hours: -5), const Duration(hours: -1)),
+            ],
+          };
+      await pumpWith(tester, (_) => const AdminGiveawaysScreen());
+      for (final t in ['Akan Datang', 'Sedang Jalan', 'Tunggu Undi', 'Sudah Undi']) {
+        expect(find.text(t), findsOneWidget);
+      }
+      for (final label in ['Segera dimulai', 'Aktif', 'Menunggu draw', 'Selesai']) {
+        expect(find.text(label), findsOneWidget);
+      }
+    });
+
     testWidgets('daftar giveaway: ketuk membuka kelola; tombol Buat giveaway', (tester) async {
       await pumpWith(tester, (_) => const AdminGiveawaysScreen());
       expect(find.text('Giveaway Uji'), findsOneWidget);

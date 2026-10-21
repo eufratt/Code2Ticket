@@ -17,7 +17,7 @@ class AdminResult<T> {
   bool get isOk => error == null;
 }
 
-/// Operasi admin lewat endpoint yang sudah ada: POST /admin/giveaways, POST|GET /admin/giveaways/:id/codes,
+/// Operasi admin: GET|POST /admin/giveaways, POST|GET /admin/giveaways/:id/codes,
 /// POST /admin/giveaways/:id/draw. Semua POST: tanpa retry otomatis, satu per satu ([busy]). Server tetap penentu
 /// hak akses (403 -> "Akses ditolak"). Kode yang dibuat hanya dikembalikan ke pemanggil: tidak disimpan di sini,
 /// di SQLite, maupun di log.
@@ -37,7 +37,7 @@ class AdminController extends ChangeNotifier {
   bool busy = false;
   Future<void>? _inflight;
 
-  /// Daftar giveaway untuk admin: GET /giveaways yang sudah ada (semua status).
+  /// Daftar giveaway untuk admin: GET /admin/giveaways (semua status; GET /giveaways publik hanya yang aktif).
   Future<void> loadGiveaways() => _inflight ??= _loadGiveaways().whenComplete(() => _inflight = null);
 
   Future<void> _loadGiveaways() async {
@@ -45,7 +45,7 @@ class AdminController extends ChangeNotifier {
     error = null;
     notifyListeners();
     try {
-      final r = await _api.get('/giveaways?limit=50&sort=newest');
+      final r = await _api.get('/admin/giveaways?limit=50');
       if (r['ok'] == false) throw NetworkException('Gagal memuat giveaway (${r['error']}).');
       giveaways = parseList(r['data'], Giveaway.tryParse);
       state = LoadState.loaded;

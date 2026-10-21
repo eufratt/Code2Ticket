@@ -3,12 +3,17 @@ import { requireAdmin } from '../middleware/auth.js';
 import { upsertGiveaway } from '../services/admin.js';
 import { generateCodes, listCodes } from '../services/codes.js';
 import { adminRunDraw } from '../services/draw.js';
-import { uuidSchema } from '../services/giveaways.js';
+import { searchGiveaways, uuidSchema } from '../services/giveaways.js';
 import { invalid } from '../lib/util.js';
 
 export default function adminRoutes({ pool }) {
   const r = Router();
   r.use(requireAdmin(pool));
+  // Semua status (upcoming, active, waiting_draw, drawn), terbaru dulu; GET /giveaways publik hanya yang aktif.
+  r.get('/giveaways', async (req, res) => {
+    const { limit, offset } = req.query;
+    res.json(await searchGiveaways(pool, { limit, offset, status: 'all', sort: 'newest' }));
+  });
   // Buat (tanpa id) atau ubah (dengan id) giveaway, seperti rpc_admin_upsert_giveaway.
   r.post('/giveaways', async (req, res) => res.json(await upsertGiveaway(pool, req.user, req.body)));
 
