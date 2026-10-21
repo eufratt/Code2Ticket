@@ -6,6 +6,7 @@ import '../../core/currency/currency.dart';
 import '../../core/currency/rates_controller.dart';
 import '../../core/format.dart';
 import '../../core/location/location_service.dart';
+import '../../core/rupiah_input.dart';
 import '../../core/settings/settings_controller.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_tokens.dart';
@@ -362,6 +363,9 @@ class _FilterSheetState extends State<FilterSheet> {
   /// Mata uang isian = mata uang tampilan pengguna; tanpa kurs (offline) rupiah.
   String get _code => prizeCurrency(context.read<SettingsController>().currency, context.read<RatesController>().rates);
 
+  /// IDR dan JPY bilangan bulat; USD dan EUR dua desimal.
+  int get _decimals => _code == 'IDR' || _code == 'JPY' ? 0 : 2;
+
   String _fmt(int? idr) => idr == null ? '' : prizeInputText(idr, _code, context.read<RatesController>().rates);
 
   @override
@@ -442,6 +446,7 @@ class _FilterSheetState extends State<FilterSheet> {
                       child: TextField(
                         key: const Key('min_value'),
                         controller: _min,
+                        inputFormatters: [DecimalInputFormatter(decimals: _decimals)],
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
                         decoration: const InputDecoration(labelText: 'Minimum'),
                       ),
@@ -451,6 +456,7 @@ class _FilterSheetState extends State<FilterSheet> {
                       child: TextField(
                         key: const Key('max_value'),
                         controller: _max,
+                        inputFormatters: [DecimalInputFormatter(decimals: _decimals)],
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
                         decoration: const InputDecoration(labelText: 'Maksimum'),
                       ),

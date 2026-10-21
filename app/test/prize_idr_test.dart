@@ -257,18 +257,6 @@ void main() {
       expect(got!.minValueIdr, 750000);
     });
 
-    testWidgets('masukan bukan angka atau negatif ditolak dengan pesan Indonesia', (tester) async {
-      await tester.pumpWidget(MultiProvider(
-        providers: displayProviders(),
-        child: MaterialApp(home: Scaffold(body: SingleChildScrollView(child: const FilterSheet(initial: DiscoverFilters())))),
-      ));
-      for (final bad in ['abc', '-5']) {
-        await tester.enterText(find.byKey(const Key('min_value')), bad);
-        await tester.tap(find.byKey(const Key('apply_filter')));
-        await tester.pumpAndSettle();
-        expect(find.text('Nilai hadiah harus berupa angka positif.'), findsOneWidget, reason: bad);
-      }
-    });
 
     test('filter lokal dan sort pada IDR: tepi inklusif, nilai kosong tersaring bila ada batas', () {
       final now = DateTime.now();
