@@ -18,15 +18,15 @@ export function redeemSections(ctx) {
     it('generate 0 kode ditolak', async () => {
       expect((await api.post(`/admin/giveaways/${s.gid1}/codes`, { token: s.adm, body: { count: 0 } })).error).toBe('invalid_input');
     });
-    it('generate 1001 kode / geo tidak lengkap ditolak', async () => {
+    it('generate 1001 kode / field geo per kode ditolak', async () => {
       expect((await api.post(`/admin/giveaways/${s.gid1}/codes`, { token: s.adm, body: { count: 1001 } })).error).toBe('invalid_input');
-      const r = await api.post(`/admin/giveaways/${s.gid1}/codes`, { token: s.adm, body: { count: 1, geo_lat: 1 } });
+      const r = await api.post(`/admin/giveaways/${s.gid1}/codes`, { token: s.adm, body: { count: 1, geo_radius_km: 5 } });
       expect(r.field).toBe('geo');
     });
     it('daftar kode (admin)', async () => {
       const l = await api.get(`/admin/giveaways/${s.gid1}/codes`, { token: s.adm });
       expect(l).toHaveLength(40);
-      expect(l[0]).toEqual({ code: expect.any(String), is_used: false, used_at: null, geo_radius_km: null });
+      expect(l[0]).toEqual({ code: expect.any(String), is_used: false, used_at: null });
     });
 
     it('format salah -> invalid_format', async () => {
@@ -98,15 +98,15 @@ export function redeemSections(ctx) {
       expect((await redeem(api, s.bobTok, s.codes[10])).ok).toBe(true);
     });
 
-    it('kode geo tanpa lokasi -> location_required', async () => {
-      s.g2 = await mkGiveaway(api, s.adm, { title: 'Geo Prize', winners: 1, category: 'travel', lat: -6.2, lng: 106.8 });
-      s.gcodes = await genCodes(api, s.adm, s.g2.giveaway_id, 3, [-6.2, 106.8, 5]);
+    it('giveaway terbatas lokasi, tanpa lokasi -> location_required', async () => {
+      s.g2 = await mkGiveaway(api, s.adm, { title: 'Geo Prize', winners: 1, category: 'travel', lat: -6.2, lng: 106.8, radius_km: 5, redeem_geo_restricted: true });
+      s.gcodes = await genCodes(api, s.adm, s.g2.giveaway_id, 3);
       expect((await redeem(api, s.bobTok, s.gcodes[0])).error).toBe('location_required');
     });
-    it('kode geo di luar radius -> out_of_area', async () => {
+    it('giveaway terbatas di luar radius -> out_of_area', async () => {
       expect((await redeem(api, s.bobTok, s.gcodes[0], -6.9175, 107.6191)).error).toBe('out_of_area'); // Bandung
     });
-    it('kode geo di dalam radius diterima', async () => {
+    it('giveaway terbatas di dalam radius diterima', async () => {
       expect((await redeem(api, s.bobTok, s.gcodes[0], -6.205, 106.82)).ok).toBe(true);
     });
     it('jarak haversine JS = SQL lama (2-3 km)', async () => {

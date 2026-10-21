@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { withTx } from '../db.js';
 import { appendBlock } from '../lib/chain.js';
-import { cpLen, fail, ok, parseInput, randomHex, sha256Hex } from '../lib/util.js';
+import { cpLen, fail, invalid, ok, parseInput, randomHex, sha256Hex } from '../lib/util.js';
 
 const CATEGORIES = ['tech', 'gaming', 'travel', 'fashion', 'food', 'lifestyle', 'other'];
 
@@ -50,6 +50,7 @@ const fields = {
   max_tickets_per_user: z.number().int().min(1),
   how_to_participate: howTo,
   organizer_url: orgUrl,
+  redeem_geo_restricted: z.boolean(),
 };
 const idField = z.union([z.uuid(), z.literal(''), z.null()]).optional();
 
@@ -61,6 +62,7 @@ const createSchema = z.object({
   radius_km: fields.radius_km.optional(), start_at: fields.start_at, end_at: fields.end_at, draw_at: fields.draw_at,
   winner_count: fields.winner_count, max_tickets_per_user: fields.max_tickets_per_user.nullish(),
   how_to_participate: fields.how_to_participate, organizer_url: fields.organizer_url.optional(),
+  redeem_geo_restricted: fields.redeem_geo_restricted.nullish(),
 });
 
 // Ubah: semua field opsional; null/absen = pertahankan (coalesce), kecuali lokasi/alamat/radius
@@ -73,7 +75,11 @@ const updateSchema = z.object({
   radius_km: fields.radius_km.optional(), start_at: ts.nullish(), end_at: ts.nullish(), draw_at: ts.nullish(),
   winner_count: fields.winner_count.nullish(), max_tickets_per_user: fields.max_tickets_per_user.nullish(),
   how_to_participate: fields.how_to_participate.nullish(), organizer_url: fields.organizer_url.optional(),
+  redeem_geo_restricted: fields.redeem_geo_restricted.nullish(),
 });
+
+// Batas lokasi tukar kode memakai lokasi giveaway: wajib lintang, bujur, dan radius > 0.
+const geoComplete = (lat, lng, rad) => lat != null && lng != null && rad != null && Number(rad) > 0;
 
 export async function upsertGiveaway(pool, admin, body) {
   const b = body ?? {};
@@ -91,21 +97,23 @@ export async function upsertGiveaway(pool, admin, body) {
 // Seed dibuat sekali di sini; hash-nya langsung di-commit ke hash-chain (dalam transaksi yang sama,
 // jadi giveaway yang gagal tidak meninggalkan seed/block yatim).
 async function createGiveaway(c, admin, d) {
+  const restricted = d.redeem_geo_restricted ?? false;
+  if (restricted && !geoComplete(d.latitude, d.longitude, d.radius_km)) return invalid('redeem_geo_restricted');
   const seed = randomHex(32);
   const seedHash = sha256Hex(seed);
   const g = await c.query(
     `insert into giveaways(title, description, organizer, category, prize_name, prize_value_idr,
         latitude, longitude, address, radius_km, start_at, end_at, draw_at, winner_count,
-        max_tickets_per_user, seed_hash, status, created_by, how_to_participate, organizer_url)
+        max_tickets_per_user, seed_hash, status, created_by, how_to_participate, organizer_url, redeem_geo_restricted)
      values ($1, coalesce($2::text, ''), coalesce($3::text, ''), $4, $5, $6::numeric,
         $7::float8, $8::float8, $9::text, $10::numeric, $11::timestamptz, $12::timestamptz, $13::timestamptz, $14::int,
         coalesce($15::int, 10), $16,
         case when now() < $11::timestamptz then 'upcoming' when now() < $12::timestamptz then 'active' else 'waiting_draw' end,
-        $17, $18::text, $19::text)
+        $17, $18::text, $19::text, $20::boolean)
      returning id`,
     [d.title, d.description ?? null, d.organizer ?? null, d.category, d.prize_name, d.prize_value_idr,
       d.latitude ?? null, d.longitude ?? null, d.address ?? null, d.radius_km ?? null, d.start_at, d.end_at, d.draw_at,
-      d.winner_count, d.max_tickets_per_user ?? null, seedHash, admin.id, d.how_to_participate, d.organizer_url || null],
+      d.winner_count, d.max_tickets_per_user ?? null, seedHash, admin.id, d.how_to_participate, d.organizer_url || null, restricted],
   );
   const id = g.rows[0].id;
   await c.query('insert into giveaway_secrets(giveaway_id, seed) values ($1, $2)', [id, seed]);
@@ -119,6 +127,7 @@ async function updateGiveaway(c, d, raw) {
   const g = (
     await c.query(
       `select id, status, winner_count, now() >= start_at as started,
+              ticket_counter, redeem_geo_restricted, latitude, longitude, radius_km,
               ($2::timestamptz is distinct from start_at) as start_changed
          from giveaways where id = $1 for update`,
       [d.id, has('start_at') ? (d.start_at ?? null) : null],
@@ -130,6 +139,15 @@ async function updateGiveaway(c, d, raw) {
     if (has('winner_count') && (d.winner_count ?? null) !== g.winner_count) return fail('winner_count_locked');
     if (has('start_at') && g.start_changed) return fail('start_at_locked');
   }
+  const restricted = d.redeem_geo_restricted ?? g.redeem_geo_restricted;
+  const lat = has('latitude') ? d.latitude : g.latitude;
+  const lng = has('longitude') ? d.longitude : g.longitude;
+  const rad = has('radius_km') ? d.radius_km : g.radius_km;
+  if (restricted && !geoComplete(lat, lng, rad)) return invalid('redeem_geo_restricted');
+  // Setelah ada tiket terbit, aturan lokasi tidak boleh berubah (peserta awal dan akhir harus diperlakukan sama).
+  const geoChanged = restricted !== g.redeem_geo_restricted
+    || (g.redeem_geo_restricted && (lat !== g.latitude || lng !== g.longitude || Number(rad) !== Number(g.radius_km)));
+  if (g.ticket_counter > 0 && geoChanged) return fail('redeem_geo_locked');
   await c.query(
     `update giveaways set
         title = coalesce($2::text, title), description = coalesce($3::text, description),
@@ -145,6 +163,7 @@ async function updateGiveaway(c, d, raw) {
         max_tickets_per_user = coalesce($20::int, max_tickets_per_user),
         how_to_participate = coalesce($21::text, how_to_participate),
         organizer_url = case when $22::boolean then $23::text else organizer_url end,
+        redeem_geo_restricted = coalesce($24::boolean, redeem_geo_restricted),
         status = case when now() < coalesce($16::timestamptz, start_at) then 'upcoming'
                       when now() < coalesce($17::timestamptz, end_at) then 'active' else 'waiting_draw' end
       where id = $1`,
@@ -152,7 +171,7 @@ async function updateGiveaway(c, d, raw) {
       d.prize_value_idr ?? null, has('latitude'), d.latitude ?? null, has('longitude'), d.longitude ?? null,
       has('address'), d.address ?? null, has('radius_km'), d.radius_km ?? null, d.start_at ?? null, d.end_at ?? null,
       d.draw_at ?? null, d.winner_count ?? null, d.max_tickets_per_user ?? null, d.how_to_participate ?? null,
-      has('organizer_url'), d.organizer_url || null],
+      has('organizer_url'), d.organizer_url || null, d.redeem_geo_restricted ?? null],
   );
   return ok({ giveaway_id: g.id, created: false });
 }

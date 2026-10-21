@@ -32,7 +32,7 @@ export async function searchGiveaways(pool, query) {
     `with base as (
        select g.id, g.title, g.description, g.organizer, g.category, g.prize_name, g.prize_value_idr, g.organizer_url,
               g.latitude, g.longitude, g.address, g.radius_km, g.start_at, g.end_at, g.draw_at,
-              g.winner_count, g.ticket_counter as ticket_count, ${effectiveStatus('g')} as status,
+              g.winner_count, g.ticket_counter as ticket_count, g.redeem_geo_restricted, ${effectiveStatus('g')} as status,
               case when $5::float8 is not null and $6::float8 is not null and g.latitude is not null
                    then round((2 * 6371.0 * asin(sqrt(least(1.0,
                           power(sin(radians(g.latitude - $5::float8) / 2), 2)
@@ -61,7 +61,7 @@ export async function searchGiveaways(pool, query) {
          from filtered f
      )
      select id, title, description, organizer, category, prize_name, prize_value_idr, organizer_url, latitude, longitude, address,
-            radius_km, start_at, end_at, draw_at, winner_count, ticket_count, status, distance_km
+            radius_km, start_at, end_at, draw_at, winner_count, ticket_count, redeem_geo_restricted, status, distance_km
        from ranked where rn > $12::int and rn <= $12::int + $11::int order by rn`,
     [q, a.category ?? null, a.min_value ?? null, a.max_value ?? null, a.lat ?? null, a.lng ?? null,
       a.radius_km ?? null, deadlineDays, a.status ?? null, a.sort ?? null, limit, offset],
@@ -74,7 +74,7 @@ export async function searchGiveaways(pool, query) {
 export async function getGiveaway(pool, id) {
   const r = await pool.query(
     `select id, title, description, organizer, category, prize_name, prize_value_idr, organizer_url, how_to_participate, latitude, longitude, address,
-            radius_km, start_at, end_at, draw_at, winner_count, ticket_counter as ticket_count, ${effectiveStatus('g')} as status,
+            radius_km, start_at, end_at, draw_at, winner_count, ticket_counter as ticket_count, redeem_geo_restricted, ${effectiveStatus('g')} as status,
             null::numeric as distance_km
        from giveaways g where id = $1`,
     [id],

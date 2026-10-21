@@ -175,7 +175,7 @@ try {
       }
     } else {
       isNew = true;
-      const g = must(await call('POST', '/admin/giveaways', { token, body: d }), `Buat "${d.title}"`);
+      const g = must(await call('POST', '/admin/giveaways', { token, body: { ...d, redeem_geo_restricted: Boolean(d.radius_km) } }), `Buat "${d.title}"`);
       giveawayId = g.giveaway_id;
     }
 
@@ -190,11 +190,6 @@ try {
     if (unusedCodes.length < TARGET_CODES) {
       const needed = TARGET_CODES - unusedCodes.length;
       const codeBody = { count: needed };
-      if (d.radius_km && d.latitude != null && d.longitude != null) {
-        codeBody.geo_lat = d.latitude;
-        codeBody.geo_lng = d.longitude;
-        codeBody.geo_radius_km = d.radius_km;
-      }
       const c = must(await call('POST', `/admin/giveaways/${giveawayId}/codes`, { token, body: codeBody }), 'Buat kode');
       activeCodes = [...activeCodes, ...c.codes];
     } else {

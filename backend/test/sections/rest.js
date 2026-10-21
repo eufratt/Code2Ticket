@@ -13,7 +13,7 @@ export function searchSection(ctx) {
       expect(r.every((x) => x.status !== 'drawn')).toBe(true);
       expect(Object.keys(r[0]).sort()).toEqual([
         'address', 'category', 'description', 'distance_km', 'draw_at', 'end_at', 'id', 'latitude', 'longitude', 'organizer',
-        'organizer_url', 'prize_name', 'prize_value_idr', 'radius_km', 'start_at', 'status', 'ticket_count', 'title', 'winner_count',
+        'organizer_url', 'prize_name', 'prize_value_idr', 'radius_km', 'redeem_geo_restricted', 'start_at', 'status', 'ticket_count', 'title', 'winner_count',
       ]);
       expect(typeof r[0].prize_value_idr).toBe('number');
     });

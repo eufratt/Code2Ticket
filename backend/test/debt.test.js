@@ -106,8 +106,8 @@ describe('3. kegagalan sah tidak dihitung ke batas 5 kegagalan redeem', () => {
   it('alasan sah berulang (> 5x) tidak mengunci; kode benar sesudahnya tetap diterima', async () => {
     const limit1 = (await mkGiveaway(api, adm, { title: 'Satu tiket', maxTickets: 1 })).giveaway_id;
     const c1 = await genCodes(api, adm, limit1, 3);
-    const geo = (await mkGiveaway(api, adm, { title: 'Geo', lat: -6.2, lng: 106.8 })).giveaway_id;
-    const cg = await genCodes(api, adm, geo, 1, [-6.2, 106.8, 5]);
+    const geo = (await mkGiveaway(api, adm, { title: 'Geo', lat: -6.2, lng: 106.8, radius_km: 5, redeem_geo_restricted: true })).giveaway_id;
+    const cg = await genCodes(api, adm, geo, 1);
     const future = (await mkGiveaway(api, adm, { title: 'Belum mulai' })).giveaway_id;
     const cf = await genCodes(api, adm, future, 1);
     await real.su.query('update giveaways set start_at=$2, end_at=$3, draw_at=$4 where id=$1', [future, iso(HOUR), iso(2 * HOUR), iso(3 * HOUR)]);

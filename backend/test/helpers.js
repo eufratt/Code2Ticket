@@ -13,6 +13,7 @@ export const BACKEND_SQL = path.resolve(HERE, '../db/06_backend.sql');
 export const PHOTOS_SQL = path.resolve(HERE, '../db/07_user_photos.sql');
 export const PRIZE_IDR_SQL = path.resolve(HERE, '../db/08_prize_value_idr.sql');
 export const PARTICIPATION_SQL = path.resolve(HERE, '../db/09_giveaway_participation.sql');
+export const REDEEM_GEO_SQL = path.resolve(HERE, '../db/10_redeem_geo_restricted.sql');
 const BASE_URL = process.env.TEST_PG_URL ?? 'postgres://postgres@127.0.0.1:54329';
 
 export const sha = (s) => crypto.createHash('sha256').update(s, 'utf8').digest('hex');
@@ -20,7 +21,7 @@ export const sha = (s) => crypto.createHash('sha256').update(s, 'utf8').digest('
 export const clientHash = (password, salt) => crypto.pbkdf2Sync(password, salt, 10_000, 32, 'sha256').toString('hex');
 
 // Database uji baru per file tes: shim role Supabase + 01_schema.sql + 06_backend.sql + 07 + 08.
-export async function createTestDb(name, migrations = [BACKEND_SQL, PHOTOS_SQL, PRIZE_IDR_SQL, PARTICIPATION_SQL]) {
+export async function createTestDb(name, migrations = [BACKEND_SQL, PHOTOS_SQL, PRIZE_IDR_SQL, PARTICIPATION_SQL, REDEEM_GEO_SQL]) {
   const dbName = `c2t_node_${name}`;
   const admin = new pg.Client({ connectionString: `${BASE_URL}/postgres` });
   await admin.connect();
@@ -111,9 +112,8 @@ export function giveawayBody({
 }
 export const mkGiveaway = (api, token, opts) => api.post('/admin/giveaways', { token, body: giveawayBody(opts) });
 
-export async function genCodes(api, token, gid, n, geo) {
+export async function genCodes(api, token, gid, n) {
   const body = { count: n };
-  if (geo) Object.assign(body, { geo_lat: geo[0], geo_lng: geo[1], geo_radius_km: geo[2] });
   const r = await api.post(`/admin/giveaways/${gid}/codes`, { token, body });
   return r.codes;
 }

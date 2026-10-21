@@ -61,7 +61,7 @@ export async function redeemCode(pool, user, body) {
     const norm = stripped.toUpperCase();
     const formatted = `${norm.slice(0, 4)}-${norm.slice(4, 8)}-${norm.slice(8, 12)}`;
 
-    const cd = (await c.query('select * from codes where code = $1 for update', [formatted])).rows[0];
+    const cd = (await c.query('select id, giveaway_id, is_used, used_by from codes where code = $1 for update', [formatted])).rows[0];
     if (!cd) return failCode('code_not_found');
     const g = (
       await c.query(
@@ -81,9 +81,9 @@ export async function redeemCode(pool, user, body) {
     const mine = (await c.query('select count(*)::int as n from tickets where giveaway_id = $1 and user_id = $2', [g.id, user.id])).rows[0].n;
     if (mine >= g.max_tickets_per_user) return failCode('ticket_limit');
 
-    if (cd.geo_radius_km !== null) {
+    if (g.redeem_geo_restricted) {
       if (lat == null || lng == null) return failCode('location_required');
-      if (distanceKm(cd.geo_lat, cd.geo_lng, lat, lng) > cd.geo_radius_km) return failCode('out_of_area');
+      if (distanceKm(g.latitude, g.longitude, lat, lng) > Number(g.radius_km)) return failCode('out_of_area');
     }
 
     const num = g.ticket_counter + 1;
