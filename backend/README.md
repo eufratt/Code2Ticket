@@ -14,6 +14,7 @@ psql "$DATABASE_URL" -f db/06_backend.sql
 psql "$DATABASE_URL" -f db/07_user_photos.sql   # foto profil (Supabase: tempel di SQL Editor)
 psql "$DATABASE_URL" -f db/08_prize_value_idr.sql   # nilai hadiah dalam rupiah (lihat "Nilai hadiah" di bawah)
 psql "$DATABASE_URL" -f db/09_giveaway_participation.sql   # cara mendapatkan kode + tautan penyelenggara
+psql "$DATABASE_URL" -f db/10_redeem_geo_restricted.sql     # batas lokasi tukar kode per giveaway
 ADMIN_PASSWORD='...' npm run create-admin -- namamu email@kamu.com "Nama Lengkap"
 npm start
 ```
@@ -40,6 +41,7 @@ npm start
 
 ## Cara mendapatkan kode dan tautan penyelenggara
 
+- Batas lokasi tukar kode ada di level GIVEAWAY: kolom `giveaways.redeem_geo_restricted` (boolean, bawaan false; CHECK: bila true, `latitude`, `longitude`, `radius_km` wajib terisi dan radius > 0; migrasi `db/10_redeem_geo_restricted.sql`, aditif, idempotent, tanpa backfill). `POST /codes/redeem` pada giveaway terbatas: tanpa lokasi `location_required`, di luar `radius_km` (haversine) `out_of_area`; lokasi tidak disimpan. `codes.geo_lat/geo_lng/geo_radius_km` DEPRECATED (tidak dibaca/ditulis). `POST /admin/giveaways` menerima `redeem_geo_restricted` (boolean, bawaan false; true tanpa koordinat+radius > 0 -> `invalid_input` field `redeem_geo_restricted`). Mengubah saklar atau lokasi/radius giveaway terbatas setelah ada tiket terbit -> `redeem_geo_locked`. `POST /admin/giveaways/:id/codes` menolak `geo_lat/geo_lng/geo_radius_km` (`invalid_input`, field `geo`); `GET` daftar kode tidak lagi berisi `geo_radius_km`. List/detail giveaway menyertakan `redeem_geo_restricted`.
 - Kolom `giveaways.how_to_participate` (text, CHECK <= 2000, NULL untuk data lama) dan `organizer_url` (text, CHECK <= 500, NULL boleh); migrasi `db/09_giveaway_participation.sql` (aditif, idempotent, tanpa backfill).
 - `POST /admin/giveaways` membuat: `how_to_participate` WAJIB, string 10..2000 karakter setelah trim (kalau tidak `invalid_input` + `field`). `organizer_url` opsional: absolut `https://` saja, maks. 500, tanpa `user:pass@`, spasi/karakter kontrol, host domain bertitik (IP dan `localhost` ditolak); nilai di-trim, `''`/`null` = tidak ada. Mengubah: field opsional; `organizer_url: null` mengosongkan.
 - Payload: `GET /giveaways` (daftar, Discover, Peta) memuat `organizer_url` tetapi TIDAK `how_to_participate`; `GET /giveaways/:id` memuat keduanya.
@@ -158,7 +160,7 @@ Token dikirim lewat `Authorization: Bearer <token>`.
 | `POST /chat` (`message` 1-500 karakter, `history` maks. 6 giliran terakhir dipakai: `{role: user|assistant, content <= 1000}`) | session | (baru) |
 | `POST /feedback` (`suggestion,impression`), `GET /feedback` | session | `rpc_submit_feedback`, `rpc_get_my_feedback` |
 | `POST /admin/giveaways` (tanpa `id` = buat, dengan `id` = ubah) | admin | `rpc_admin_upsert_giveaway` |
-| `POST /admin/giveaways/:id/codes` (`count,geo_lat,geo_lng,geo_radius_km`), `GET` daftar | admin | `rpc_admin_generate_codes`, `rpc_admin_list_codes` |
+| `POST /admin/giveaways/:id/codes` (`count`; `geo_*` per kode ditolak `invalid_input` field `geo`), `GET` daftar | admin | `rpc_admin_generate_codes`, `rpc_admin_list_codes` |
 | `GET /admin/giveaways` (`limit`, `offset`; semua status, terbaru dulu; `GET /giveaways` publik bawaannya hanya `active`) | admin | (baru) |
 | `POST /admin/giveaways/:id/draw` | admin | `rpc_admin_run_draw` |
 | `POST /internal/tick` | `X-Tick-Secret` | `fn_run_due_draws` |

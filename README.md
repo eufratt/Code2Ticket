@@ -78,7 +78,7 @@ Alur skenario pengujian komprehensif berdurasi 5 menit untuk mendemokan seluruh 
 3. **Menit 1:50 – 2:40: Penukaran Kode & Verifikasi Lokasi**
    - Tekan tombol melayang (**FAB Input Code**) di bagian tengah bawah.
    - Masukkan kode demo dari `npm run demo-seed`:
-     - **Uji verifikasi lokasi**: coba tukar kode giveaway Surabaya/Jakarta saat berada di luar radius area -> sistem menampilkan galat `out_of_area` ("Kamu berada di luar area penukaran kode ini") dan tombol bantuan "Gunakan lokasiku".
+     - **Uji verifikasi lokasi**: coba tukar kode giveaway Surabaya/Jakarta saat berada di luar radius area -> sistem menampilkan galat `out_of_area` ("Kamu berada di luar area giveaway ini...") dan tombol bantuan "Gunakan lokasiku".
      - **Tukar kode yang valid**: masukkan kode yang sesuai lokasi (atau kode tanpa batas lokasi dari giveaway Laptop Gaming) -> berhasil membuat tiket undian digital! Nomor tiket diterbitkan secara urut dan tercatat di hash-chain.
 
 4. **Menit 2:40 – 3:30: Tiket Saya & Pengundian (Draw Otomatis / Manual)**
