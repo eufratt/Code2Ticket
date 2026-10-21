@@ -10,6 +10,9 @@ const CATEGORIES = ['tech', 'gaming', 'travel', 'fashion', 'food', 'lifestyle', 
 // invalid_datetime_format, numeric_value_out_of_range.
 const INPUT_ERROR_CODES = new Set(['23514', '23502', '22P02', '22008', '22007', '22003']);
 
+// Nilai hadiah: rupiah bulat positif (mata uang dasar), batas atas sama dengan CHECK di 08_prize_value_idr.sql.
+export const MAX_PRIZE_IDR = 100_000_000_000;
+const prizeIdr = z.number().int().min(1).max(MAX_PRIZE_IDR);
 const numLike = z.union([z.number().finite(), z.string().regex(/^-?\d+(\.\d+)?$/)]);
 // Waktu wajib menyertakan zona (Z atau +hh[:mm]) supaya tidak bergantung pada zona sesi database.
 const ts = z.string().max(64).regex(/(Z|[+-]\d{2}(:?\d{2})?)$/i);
@@ -20,7 +23,7 @@ const fields = {
   organizer: z.string().max(200),
   category: z.enum(CATEGORIES),
   prize_name: z.string().min(1).max(200),
-  prize_value_usd: numLike,
+  prize_value_idr: prizeIdr,
   latitude: z.number().min(-90).max(90).nullable(),
   longitude: z.number().min(-180).max(180).nullable(),
   address: z.string().max(500).nullable(),
@@ -36,7 +39,7 @@ const idField = z.union([z.uuid(), z.literal(''), z.null()]).optional();
 const createSchema = z.object({
   id: idField,
   title: fields.title, description: fields.description.nullish(), organizer: fields.organizer.nullish(),
-  category: fields.category, prize_name: fields.prize_name, prize_value_usd: fields.prize_value_usd,
+  category: fields.category, prize_name: fields.prize_name, prize_value_idr: fields.prize_value_idr,
   latitude: fields.latitude.optional(), longitude: fields.longitude.optional(), address: fields.address.optional(),
   radius_km: fields.radius_km.optional(), start_at: fields.start_at, end_at: fields.end_at, draw_at: fields.draw_at,
   winner_count: fields.winner_count, max_tickets_per_user: fields.max_tickets_per_user.nullish(),
@@ -47,7 +50,7 @@ const createSchema = z.object({
 const updateSchema = z.object({
   id: z.uuid(),
   title: fields.title.nullish(), description: fields.description.nullish(), organizer: fields.organizer.nullish(),
-  category: fields.category.nullish(), prize_name: fields.prize_name.nullish(), prize_value_usd: fields.prize_value_usd.nullish(),
+  category: fields.category.nullish(), prize_name: fields.prize_name.nullish(), prize_value_idr: fields.prize_value_idr.nullish(),
   latitude: fields.latitude.optional(), longitude: fields.longitude.optional(), address: fields.address.optional(),
   radius_km: fields.radius_km.optional(), start_at: ts.nullish(), end_at: ts.nullish(), draw_at: ts.nullish(),
   winner_count: fields.winner_count.nullish(), max_tickets_per_user: fields.max_tickets_per_user.nullish(),
@@ -72,7 +75,7 @@ async function createGiveaway(c, admin, d) {
   const seed = randomHex(32);
   const seedHash = sha256Hex(seed);
   const g = await c.query(
-    `insert into giveaways(title, description, organizer, category, prize_name, prize_value_usd,
+    `insert into giveaways(title, description, organizer, category, prize_name, prize_value_idr,
         latitude, longitude, address, radius_km, start_at, end_at, draw_at, winner_count,
         max_tickets_per_user, seed_hash, status, created_by)
      values ($1, coalesce($2::text, ''), coalesce($3::text, ''), $4, $5, $6::numeric,
@@ -81,7 +84,7 @@ async function createGiveaway(c, admin, d) {
         case when now() < $11::timestamptz then 'upcoming' when now() < $12::timestamptz then 'active' else 'waiting_draw' end,
         $17)
      returning id`,
-    [d.title, d.description ?? null, d.organizer ?? null, d.category, d.prize_name, d.prize_value_usd,
+    [d.title, d.description ?? null, d.organizer ?? null, d.category, d.prize_name, d.prize_value_idr,
       d.latitude ?? null, d.longitude ?? null, d.address ?? null, d.radius_km ?? null, d.start_at, d.end_at, d.draw_at,
       d.winner_count, d.max_tickets_per_user ?? null, seedHash, admin.id],
   );
@@ -112,7 +115,7 @@ async function updateGiveaway(c, d, raw) {
     `update giveaways set
         title = coalesce($2::text, title), description = coalesce($3::text, description),
         organizer = coalesce($4::text, organizer), category = coalesce($5::text, category),
-        prize_name = coalesce($6::text, prize_name), prize_value_usd = coalesce($7::numeric, prize_value_usd),
+        prize_name = coalesce($6::text, prize_name), prize_value_idr = coalesce($7::numeric, prize_value_idr),
         latitude  = case when $8::boolean  then $9::float8  else latitude  end,
         longitude = case when $10::boolean then $11::float8 else longitude end,
         address   = case when $12::boolean then $13::text   else address   end,
@@ -125,7 +128,7 @@ async function updateGiveaway(c, d, raw) {
                       when now() < coalesce($17::timestamptz, end_at) then 'active' else 'waiting_draw' end
       where id = $1`,
     [d.id, d.title ?? null, d.description ?? null, d.organizer ?? null, d.category ?? null, d.prize_name ?? null,
-      d.prize_value_usd ?? null, has('latitude'), d.latitude ?? null, has('longitude'), d.longitude ?? null,
+      d.prize_value_idr ?? null, has('latitude'), d.latitude ?? null, has('longitude'), d.longitude ?? null,
       has('address'), d.address ?? null, has('radius_km'), d.radius_km ?? null, d.start_at ?? null, d.end_at ?? null,
       d.draw_at ?? null, d.winner_count ?? null, d.max_tickets_per_user ?? null],
   );

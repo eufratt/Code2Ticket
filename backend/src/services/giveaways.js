@@ -17,6 +17,7 @@ const searchSchema = z.object({
 export const uuidSchema = z.uuid();
 
 // Pencarian publik (Discover). Filter, radius, dan urutan dilakukan di database.
+// min_value / max_value dan sort=value bekerja pada rupiah (prize_value_idr); klien mengonversi masukan pengguna ke IDR.
 export async function searchGiveaways(pool, query) {
   const p = parseInput(searchSchema, query);
   if (p.error) return p.error;
@@ -29,7 +30,7 @@ export async function searchGiveaways(pool, query) {
 
   const r = await pool.query(
     `with base as (
-       select g.id, g.title, g.description, g.organizer, g.category, g.prize_name, g.prize_value_usd,
+       select g.id, g.title, g.description, g.organizer, g.category, g.prize_name, g.prize_value_idr,
               g.latitude, g.longitude, g.address, g.radius_km, g.start_at, g.end_at, g.draw_at,
               g.winner_count, g.ticket_counter as ticket_count, ${effectiveStatus('g')} as status,
               case when $5::float8 is not null and $6::float8 is not null and g.latitude is not null
@@ -40,8 +41,8 @@ export async function searchGiveaways(pool, query) {
          from giveaways g
         where ($1::text is null or g.title ilike $1 escape '\\' or g.prize_name ilike $1 escape '\\' or g.organizer ilike $1 escape '\\')
           and ($2::text is null or g.category = $2)
-          and ($3::numeric is null or g.prize_value_usd >= $3)
-          and ($4::numeric is null or g.prize_value_usd <= $4)
+          and ($3::numeric is null or g.prize_value_idr >= $3)
+          and ($4::numeric is null or g.prize_value_idr <= $4)
           and ($8::int is null or g.end_at <= now() + make_interval(days => $8::int))
           and case coalesce($9::text, 'active')
                 when 'active'   then g.status <> 'drawn' and now() >= g.start_at and now() < g.end_at
@@ -54,12 +55,12 @@ export async function searchGiveaways(pool, query) {
      ), ranked as (
        select f.*, row_number() over (
                 order by (case when $10::text = 'nearest' then f.distance_km end) asc nulls last,
-                         (case when $10::text = 'value'   then f.prize_value_usd end) desc nulls last,
+                         (case when $10::text = 'value'   then f.prize_value_idr end) desc nulls last,
                          (case when $10::text = 'newest'  then f.start_at end) desc nulls last,
                          f.end_at asc, f.id) as rn
          from filtered f
      )
-     select id, title, description, organizer, category, prize_name, prize_value_usd, latitude, longitude, address,
+     select id, title, description, organizer, category, prize_name, prize_value_idr, latitude, longitude, address,
             radius_km, start_at, end_at, draw_at, winner_count, ticket_count, status, distance_km
        from ranked where rn > $12::int and rn <= $12::int + $11::int order by rn`,
     [q, a.category ?? null, a.min_value ?? null, a.max_value ?? null, a.lat ?? null, a.lng ?? null,
@@ -72,7 +73,7 @@ export async function searchGiveaways(pool, query) {
 // distance_km selalu null (jarak hanya dihitung di daftar saat lat/lng diberikan). null bila tidak ada.
 export async function getGiveaway(pool, id) {
   const r = await pool.query(
-    `select id, title, description, organizer, category, prize_name, prize_value_usd, latitude, longitude, address,
+    `select id, title, description, organizer, category, prize_name, prize_value_idr, latitude, longitude, address,
             radius_km, start_at, end_at, draw_at, winner_count, ticket_counter as ticket_count, ${effectiveStatus('g')} as status,
             null::numeric as distance_km
        from giveaways g where id = $1`,

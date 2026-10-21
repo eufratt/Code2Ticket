@@ -16,8 +16,8 @@ describe('GET /giveaways/:id dan pengurutan daftar', () => {
     ids.mid = (await mkGiveaway(api, adm, { title: 'Mid', end: 5 * H, draw: 6 * H, lat: -6.2, lng: 106.8 })).giveaway_id;
     ids.soon = (await mkGiveaway(api, adm, { title: 'Soon', end: 1 * H, draw: 2 * H, lat: -6.9, lng: 107.6 })).giveaway_id;
     ids.late = (await mkGiveaway(api, adm, { title: 'Late', end: 9 * H, draw: 10 * H, lat: null, lng: null })).giveaway_id;
-    await real.su.query('update giveaways set prize_value_usd = 50 where id = $1', [ids.soon]);
-    await real.su.query('update giveaways set prize_value_usd = 900 where id = $1', [ids.late]);
+    await real.su.query('update giveaways set prize_value_idr = 500000 where id = $1', [ids.soon]);
+    await real.su.query('update giveaways set prize_value_idr = 9000000 where id = $1', [ids.late]);
   }, 60_000);
   afterAll(() => real.close());
 
@@ -71,7 +71,7 @@ describe('GET /giveaways/:id dan pengurutan daftar', () => {
 
   it('rentang nilai hadiah dan kategori digabung dengan kata kunci', async () => {
     const t = async (query) => (await api.get('/giveaways', { query })).map((g) => g.title);
-    expect(await t({ min_value: 100, max_value: 600 })).toEqual(['Mid']);
+    expect(await t({ min_value: 1000000, max_value: 6000000 })).toEqual(['Mid']);
     expect(await t({ q: 'soo', category: 'tech' })).toEqual(['Soon']);
     expect(await t({ q: 'soo', category: 'food' })).toEqual([]);
   });

@@ -91,7 +91,7 @@ describe('POST /chat', () => {
     const r = await chat(appWith(), tok, { message: 'ada giveaway gaming apa?' });
     expect(r.body.related.map((g) => g.title)).toEqual(['Gaming Laptop Giveaway']);
     const g = r.body.related[0];
-    expect(Object.keys(g)).toEqual(expect.arrayContaining(['id', 'title', 'category', 'prize_name', 'prize_value_usd', 'draw_at', 'start_at', 'end_at', 'status']));
+    expect(Object.keys(g)).toEqual(expect.arrayContaining(['id', 'title', 'category', 'prize_name', 'prize_value_idr', 'draw_at', 'start_at', 'end_at', 'status']));
     expect(JSON.stringify(g)).not.toMatch(/user|email|seed/i);
     const none = await chat(appWith(), tok, { message: 'bagaimana cara kerja aplikasi ini?' });
     expect(none.body.related).toEqual([]);

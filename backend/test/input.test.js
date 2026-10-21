@@ -41,8 +41,9 @@ describe('PATCH /me: photo_url', () => {
 
 describe('admin upsert dan system_events', () => {
   it('galat database pada input -> invalid_input tanpa detail dari driver', async () => {
-    const r = await mkGiveaway(api, adm, { title: 'Terlalu mahal', prize_value_usd: 1e20 });
+    const r = await mkGiveaway(api, adm, { title: 'Radius ekstrem', radius_km: 1e20 });
     expect(r).toMatchObject({ ok: false, error: 'invalid_input' });
     expect(r).not.toHaveProperty('detail');
+    expect(await mkGiveaway(api, adm, { title: 'Terlalu mahal', prize_value_idr: 1e20 })).toMatchObject({ ok: false, error: 'invalid_input', field: 'prize_value_idr' });
   });
 });

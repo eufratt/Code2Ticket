@@ -13,9 +13,9 @@ export function searchSection(ctx) {
       expect(r.every((x) => x.status !== 'drawn')).toBe(true);
       expect(Object.keys(r[0]).sort()).toEqual([
         'address', 'category', 'description', 'distance_km', 'draw_at', 'end_at', 'id', 'latitude', 'longitude', 'organizer',
-        'prize_name', 'prize_value_usd', 'radius_km', 'start_at', 'status', 'ticket_count', 'title', 'winner_count',
+        'prize_name', 'prize_value_idr', 'radius_km', 'start_at', 'status', 'ticket_count', 'title', 'winner_count',
       ]);
-      expect(typeof r[0].prize_value_usd).toBe('number');
+      expect(typeof r[0].prize_value_idr).toBe('number');
     });
     it('search kata kunci', async () => {
       const r = await api.get('/giveaways', { query: { q: 'gaming' } });
@@ -32,8 +32,8 @@ export function searchSection(ctx) {
       expect(r[0].category).toBe('travel');
     });
     it('filter nilai hadiah', async () => {
-      expect(await api.get('/giveaways', { query: { min_value: 501 } })).toEqual([]);
-      expect((await api.get('/giveaways', { query: { min_value: 500, max_value: 500 } })).length).toBeGreaterThan(0);
+      expect(await api.get('/giveaways', { query: { min_value: 5_000_001 } })).toEqual([]);
+      expect((await api.get('/giveaways', { query: { min_value: 5_000_000, max_value: 5_000_000 } })).length).toBeGreaterThan(0);
     });
     it('filter radius 10 km dari Jakarta tidak memuat Bandung', async () => {
       const r = await api.get('/giveaways', { query: { lat: -6.2, lng: 106.8, radius_km: 10, sort: 'nearest' } });

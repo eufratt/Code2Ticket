@@ -12,6 +12,7 @@ cp .env.example .env            # isi DATABASE_URL, TICK_SECRET, dst.
 psql "$DATABASE_URL" -f db/01_schema.sql
 psql "$DATABASE_URL" -f db/06_backend.sql
 psql "$DATABASE_URL" -f db/07_user_photos.sql   # foto profil (Supabase: tempel di SQL Editor)
+psql "$DATABASE_URL" -f db/08_prize_value_idr.sql   # nilai hadiah dalam rupiah (lihat "Nilai hadiah" di bawah)
 ADMIN_PASSWORD='...' npm run create-admin -- namamu email@kamu.com "Nama Lengkap"
 npm start
 ```
@@ -25,6 +26,16 @@ npm start
   `POST /internal/tick` dengan header `X-Tick-Secret` dari cron host. Aman dijalankan bersamaan
   (draw dikunci per baris giveaway dan idempotent).
 - `npm run verify-chain` mengaudit seluruh hash-chain.
+
+## Nilai hadiah (rupiah)
+
+- Mata uang dasar nilai hadiah adalah **rupiah bulat**: kolom `giveaways.prize_value_idr` (`numeric(16,0)`, `0..100.000.000.000`), field API `prize_value_idr` (angka bulat).
+  `prize_value_usd` sudah **deprecated**: tidak dibaca/ditulis kode, tidak ada di respons; kolom dibiarkan (nullable) sampai di-drop di migrasi berikutnya.
+- `POST /admin/giveaways`: `prize_value_idr` wajib bilangan bulat `1..100.000.000.000` (JSON number); selain itu `invalid_input` dengan `field: "prize_value_idr"`. Saat mengubah (ada `id`), field opsional tetapi bila ada harus valid.
+- `GET /giveaways`: `min_value` / `max_value` dan `sort=value` bekerja pada **rupiah** (klien mengonversi masukan pengguna ke IDR sebelum mengirim). Konversi ke mata uang lain hanya di aplikasi (Frankfurter).
+- Konteks Asisten memuat `nilai_rupiah` (bukan `nilai_usd`).
+- Migrasi `db/08_prize_value_idr.sql`: aditif dan idempotent; backfill baris lama `round(prize_value_usd * 18000, -3)` (kurs tetap, data uji). Urutan deploy: jalankan SQL -> deploy backend -> pasang APK baru.
+  APK lama membaca `prize_value_usd` yang tidak ada lagi: nilai hadiah tampil "-" (tanpa crash), filter nilai di APK lama dianggap rupiah.
 
 ## Perilaku yang perlu diketahui (M8a)
 

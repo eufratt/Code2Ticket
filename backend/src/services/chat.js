@@ -112,7 +112,7 @@ Aturan:
 
 // "<" di-escape supaya teks di dalam DATA tidak bisa menutup penanda <giveaways> dan menyisipkan instruksi.
 const dataBlock = (rows) =>
-  JSON.stringify(rows.map((g) => ({ id: g.id, judul: g.title, kategori: g.category, hadiah: g.prize_name, nilai_usd: g.prize_value_usd, draw: new Date(g.draw_at).toISOString() })))
+  JSON.stringify(rows.map((g) => ({ id: g.id, judul: g.title, kategori: g.category, hadiah: g.prize_name, nilai_rupiah: g.prize_value_idr, draw: new Date(g.draw_at).toISOString() })))
     .replace(/</g, '\\u003c');
 
 export function buildMessages(message, history, context) {
@@ -125,14 +125,14 @@ export function buildMessages(message, history, context) {
 }
 
 // ---------------------------------------------------------------- layanan
-const SELECT_ACTIVE = `select id, title, description, organizer, category, prize_name, prize_value_usd, latitude, longitude, address,
+const SELECT_ACTIVE = `select id, title, description, organizer, category, prize_name, prize_value_idr, latitude, longitude, address,
        radius_km, start_at, end_at, draw_at, winner_count, ticket_counter as ticket_count, ${effectiveStatus('g')} as status
   from giveaways g where status <> 'drawn' and now() >= start_at and now() < end_at
  order by draw_at, id limit 100`;
 
 const toSummary = (g) => ({
   id: g.id, title: g.title, description: g.description, organizer: g.organizer, category: g.category,
-  prize_name: g.prize_name, prize_value_usd: g.prize_value_usd, latitude: g.latitude, longitude: g.longitude,
+  prize_name: g.prize_name, prize_value_idr: g.prize_value_idr, latitude: g.latitude, longitude: g.longitude,
   address: g.address, radius_km: g.radius_km, start_at: g.start_at, end_at: g.end_at, draw_at: g.draw_at,
   winner_count: g.winner_count, ticket_count: g.ticket_count, status: g.status,
 });

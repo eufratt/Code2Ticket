@@ -135,7 +135,7 @@ export function redeemSections(ctx) {
     });
     it('giveaway tanpa commit block ditolak -> giveaway_not_ready', async () => {
       const g4 = await one(
-        `insert into giveaways(title, category, prize_name, prize_value_usd, start_at, end_at, draw_at, winner_count, seed_hash)
+        `insert into giveaways(title, category, prize_name, prize_value_idr, start_at, end_at, draw_at, winner_count, seed_hash)
          values ('Tanpa Commit','tech','X',1, now()-interval '1 hour', now()+interval '1 hour', now()+interval '2 hours', 1, $1) returning id`,
         [sha('x')],
       );
@@ -144,7 +144,7 @@ export function redeemSections(ctx) {
     });
     it('giveaway sudah lewat end_at -> giveaway_ended', async () => {
       const g = await one(
-        `insert into giveaways(title, category, prize_name, prize_value_usd, start_at, end_at, draw_at, winner_count, seed_hash)
+        `insert into giveaways(title, category, prize_name, prize_value_idr, start_at, end_at, draw_at, winner_count, seed_hash)
          values ('Lewat','tech','X',1, now()-interval '3 hours', now()-interval '1 hour', now()+interval '2 hours', 1, $1) returning id`,
         [sha('y')],
       );
