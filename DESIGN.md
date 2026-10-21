@@ -37,12 +37,12 @@ Bila dokumen ini dan kode berbeda, perbarui salah satunya di commit yang sama.
 | surfaceVariant | `#F1F5F9` | Kolom input, skeleton. Teks sekunder `#475569` (6,9) |
 | onBackground | `#0F172A` | Teks utama (17:1) |
 | onSurfaceMuted | `#475569` | Teks sekunder (7,6). `#64748B` (4,8) hanya untuk keterangan kecil |
-| outline | `#E2E8F0` | Garis pembatas, garis putus tiket |
+| outline | `#64748B` | Garis pembatas, garis putus tiket, border kartu dan input (kontras non-teks 4,5:1 terhadap background, WCAG 1.4.11) |
 
 Latar status (chip): sukses `#DCFCE7` + teks `#166534`; peringatan `#FEF3C7` + teks `#92400E`; error `#FEE2E2` + teks `#991B1B`; info `#EEF2FF` + teks `#3730A3`; netral `#F1F5F9` + teks `#475569`. Semua di atas 6:1.
 
 ### 3.2 Warna (gelap)
-background `#0F172A`, surface `#1E293B`, surfaceVariant `#334155`, onBackground `#E2E8F0` (14,5), onSurfaceMuted `#94A3B8` (5,7 di surface),
+background `#0F172A`, surface `#1E293B`, surfaceVariant `#334155`, onBackground `#E2E8F0` (14,5), onSurfaceMuted `#94A3B8` (5,7 di surface), outline `#94A3B8` (kontras non-teks 7,0:1 di background, 5,7:1 di surface, WCAG 1.4.11),
 primary `#818CF8` (teks gelap `#0F172A` di atasnya, 6,0), accent `#FBBF24` (8,8), success `#4ADE80` (8,4), error `#F87171` (5,3).
 Tema gelap harus punya padanan untuk setiap token terang; tidak ada warna yang hanya didefinisikan di satu tema.
 Tambahan: `mutedOnVariant` = teks sekunder di atas surfaceVariant (kolom input): terang `#475569` (6,9), gelap `#CBD5E1` (7,5), karena `#94A3B8` di atas `#334155` hanya 4,0.

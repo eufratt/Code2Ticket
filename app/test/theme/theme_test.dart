@@ -43,6 +43,17 @@ void main() {
         test(label, () => expect(contrast(p.$1, p.$2), greaterThanOrEqualTo(4.5), reason: label));
       });
     });
+
+    group('kontras border non-teks tema $name (WCAG 1.4.11: border >= 3:1)', () {
+      final nonTextPairs = <String, (Color, Color)>{
+        'border komponen (outline) / background': (c.outline, c.background),
+        'border komponen (outline) / surface': (c.outline, c.surface),
+        'border komponen (outline) / surfaceVariant': (c.outline, c.surfaceVariant),
+      };
+      nonTextPairs.forEach((label, p) {
+        test(label, () => expect(contrast(p.$1, p.$2), greaterThanOrEqualTo(3.0), reason: label));
+      });
+    });
   }
 
   testWidgets('kedua tema membawa token dan mengikuti kecerahan', (tester) async {
@@ -68,4 +79,5 @@ void main() {
     expect(CategoryStyle.of('xyz').key, 'lainnya');
     expect(CategoryStyle.of(null).key, 'lainnya');
   });
+
 }
