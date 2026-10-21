@@ -65,7 +65,7 @@ Alur skenario pengujian komprehensif berdurasi 5 menit untuk mendemokan seluruh 
    - Masuk ke tab **Profil**:
      - Cek profil pengguna, level & badge XP.
      - Unggah foto profil (opsional).
-     - Buka menu **Pengaturan**: ganti tema (Terang / Gelap), ganti zona waktu (WIB, WITA, WIT, UTC), dan ganti mata uang acuan di **Konverter** (kurs Frankfurter).
+     - Buka menu **Pengaturan**: ganti tema (Terang / Gelap), ganti zona waktu (WIB, WITA, WIT, UTC), ganti mata uang tampilan nilai hadiah (bawaan Rupiah; nilai dasar hadiah selalu rupiah, kurs Frankfurter) dan mata uang acuan di **Konverter**.
      - Aktifkan kunci biometrik (bila perangkat mendukung).
 
 2. **Menit 0:50 – 1:50: Jelajah Giveaway, Peta OSM & Fitur Terdekat**
