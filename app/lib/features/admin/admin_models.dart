@@ -24,6 +24,7 @@ class GiveawayDraft {
     this.longitude,
     this.radiusKm,
     this.address,
+    this.redeemGeoRestricted = false,
   });
 
   final String title, organizer, description, category, prizeName;
@@ -35,6 +36,9 @@ class GiveawayDraft {
   final DateTime startAt, endAt, drawAt;
   final double? latitude, longitude, radiusKm;
   final String? address;
+
+  /// Batasi tukar kode ke radius lokasi giveaway ini (butuh lintang, bujur, dan radius).
+  final bool redeemGeoRestricted;
 
   Map<String, dynamic> toJson() => {
         'title': title,
@@ -54,22 +58,22 @@ class GiveawayDraft {
         'longitude': ?longitude,
         'radius_km': ?radiusKm,
         if (address != null && address!.isNotEmpty) 'address': address,
+        'redeem_geo_restricted': redeemGeoRestricted,
       };
 }
 
 /// Satu baris GET /admin/giveaways/:id/codes. Backend mengirim kode LENGKAP (hanya untuk admin).
 class AdminCode {
-  const AdminCode({required this.code, required this.isUsed, this.usedAt, this.geoRadiusKm});
+  const AdminCode({required this.code, required this.isUsed, this.usedAt});
   final String code;
   final bool isUsed;
   final DateTime? usedAt;
-  final double? geoRadiusKm;
 
   static AdminCode? tryParse(dynamic raw) {
     final j = asMap(raw);
     final code = asString(j?['code']);
     if (j == null || code == null) return null;
-    return AdminCode(code: code, isUsed: j['is_used'] == true, usedAt: asDate(j['used_at']), geoRadiusKm: asDouble(j['geo_radius_km']));
+    return AdminCode(code: code, isUsed: j['is_used'] == true, usedAt: asDate(j['used_at']));
   }
 }
 
@@ -108,6 +112,8 @@ String adminErrorMessage(String? code, {String? field}) {
       return 'Terlalu banyak permintaan. Tunggu sebentar lalu coba lagi.';
     case 'winner_count_locked':
       return 'Jumlah pemenang tidak bisa diubah setelah giveaway dimulai.';
+    case 'redeem_geo_locked':
+      return 'Batas lokasi tukar kode tidak bisa diubah setelah ada tiket terbit.';
     case 'start_at_locked':
       return 'Waktu mulai tidak bisa diubah setelah giveaway dimulai.';
     case 'invalid_input':
@@ -120,8 +126,9 @@ String adminErrorMessage(String? code, {String? field}) {
         'prize_value_idr' => 'Nilai hadiah harus berupa angka positif (maksimal Rp 100.000.000.000).',
         'how_to_participate' => 'Cara mendapatkan kode wajib diisi (10-2000 karakter).',
         'organizer_url' => 'Tautan penyelenggara harus berupa alamat https:// yang valid (maksimal 500 karakter).',
-        'latitude' || 'longitude' || 'geo' || 'geo_lat' || 'geo_lng' => 'Koordinat tidak valid.',
-        'radius_km' || 'geo_radius_km' => 'Radius harus lebih dari 0 km.',
+        'redeem_geo_restricted' => 'Batas lokasi butuh lintang, bujur, dan radius lebih dari 0 km.',
+        'latitude' || 'longitude' => 'Koordinat tidak valid.',
+        'radius_km' => 'Radius harus lebih dari 0 km.',
         'start_at' || 'end_at' || 'draw_at' => 'Waktu tidak valid.',
         'winner_count' => 'Jumlah pemenang 1-100.',
         'max_tickets_per_user' => 'Batas tiket per pengguna minimal 1.',

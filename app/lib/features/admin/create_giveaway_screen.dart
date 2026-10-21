@@ -58,6 +58,7 @@ class _CreateGiveawayScreenState extends State<CreateGiveawayScreen> {
   String? _category;
   late DateTime _startAt, _endAt, _drawAt;
   bool _submitted = false;
+  bool _geoRestricted = false;
   String? _error;
 
   @override
@@ -96,6 +97,16 @@ class _CreateGiveawayScreenState extends State<CreateGiveawayScreen> {
     return null;
   }
 
+  /// Saklar batas lokasi butuh lintang, bujur, dan radius yang valid (server juga memeriksa).
+  String? _geoSwitchError() {
+    if (!_geoRestricted) return null;
+    final radius = _num(_radius.text);
+    if (_num(_lat.text) == null || _num(_lng.text) == null || radius == null || radius <= 0) {
+      return 'Isi lintang, bujur, dan radius dulu untuk membatasi lokasi tukar kode.';
+    }
+    return null;
+  }
+
   String? _dateError(String which) {
     final now = DateTime.now();
     return switch (which) {
@@ -129,7 +140,7 @@ class _CreateGiveawayScreenState extends State<CreateGiveawayScreen> {
     setState(() => _submitted = true);
     final formOk = _form.currentState!.validate();
     final dateOk = _dateError('draw') == null && _dateError('end') == null;
-    if (!formOk || !dateOk || _category == null) return;
+    if (!formOk || !dateOk || _category == null || _geoSwitchError() != null) return;
     final c = context.read<AdminController>();
     final messenger = ScaffoldMessenger.of(context);
     final router = GoRouter.of(context);
@@ -153,6 +164,7 @@ class _CreateGiveawayScreenState extends State<CreateGiveawayScreen> {
       longitude: lng,
       radiusKm: _num(_radius.text),
       address: _address.text.trim(),
+      redeemGeoRestricted: _geoRestricted,
     ));
     if (r == null || !mounted) return;
     if (!r.isOk) {
@@ -283,7 +295,7 @@ class _CreateGiveawayScreenState extends State<CreateGiveawayScreen> {
             _DateTimeField(fieldKey: const Key('pick_draw_at'), label: 'Jadwal draw', value: _drawAt, onTap: () => _pick('draw'), error: _submitted ? _dateError('draw') : null),
             const SizedBox(height: Spacing.sectionGap),
             const SectionHeader('Batas lokasi (opsional)'),
-            Text('Isi lintang dan bujur bila redeem kode dibatasi lokasi. Kosongkan untuk giveaway tanpa batas lokasi.', style: theme.textTheme.bodySmall?.copyWith(color: context.colors.muted)),
+            Text('Isi lintang, bujur, dan radius untuk lokasi giveaway. Nyalakan saklar di bawah bila penukaran kode harus dibatasi ke area itu.', style: theme.textTheme.bodySmall?.copyWith(color: context.colors.muted)),
             gap,
             TextFormField(
               key: const Key('giveaway_lat'),
@@ -315,6 +327,17 @@ class _CreateGiveawayScreenState extends State<CreateGiveawayScreen> {
               decoration: deco('Alamat (opsional)'),
               validator: (v) => (v?.runes.length ?? 0) > 500 ? 'Alamat maksimal 500 karakter' : null,
             ),
+            gap,
+            SwitchListTile(
+              key: const Key('giveaway_geo_restricted'),
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Batasi tukar kode ke area giveaway ini'),
+              subtitle: Text('Peserta harus berada dalam radius dari lokasi giveaway saat menukar kode.', style: theme.textTheme.bodySmall?.copyWith(color: context.colors.muted)),
+              value: _geoRestricted,
+              onChanged: (v) => setState(() => _geoRestricted = v),
+            ),
+            if (_submitted && _geoSwitchError() != null)
+              Text(_geoSwitchError()!, key: const Key('geo_switch_error'), style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.error)),
             const SizedBox(height: Spacing.sectionGap),
             if (_error != null) ...[
               InlineMessage(_error!),

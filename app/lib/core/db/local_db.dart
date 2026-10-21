@@ -26,7 +26,7 @@ class LocalDb implements CacheStore, RateCache, SettingsStore, ChatStore {
   }
 
   static const String dbName = 'code2ticket.db';
-  static const int dbVersion = 4;
+  static const int dbVersion = 5;
 
   Future<Database> _initDb() async {
     final dbPath = await getDatabasesPath();
@@ -74,12 +74,12 @@ class LocalDb implements CacheStore, RateCache, SettingsStore, ChatStore {
   }
 
   /// v2: riwayat percakapan Asisten. v3: nilai hadiah rupiah (prize_value_idr menggantikan prize_value_usd).
-  /// v4: kolom how_to_participate dan organizer_url.
+  /// v4: kolom how_to_participate dan organizer_url. v5: kolom redeem_geo_restricted.
   static Future<void> upgradeTables(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) await _createChatTable(db);
     // Kartu giveaway di riwayat Asisten menyimpan kolom USD lama: kartunya dikosongkan, teks percakapan tetap.
     if (oldVersion < 3) await db.execute('UPDATE chat_messages SET related_json = NULL WHERE related_json IS NOT NULL');
-    if (oldVersion < 4) {
+    if (oldVersion < 5) {
       // Cache giveaway hanya salinan server (diisi ulang saat online), jadi dibuang dan dibuat ulang.
       await db.execute('DROP TABLE IF EXISTS cached_giveaways');
       await _createGiveawaysTable(db);
@@ -92,7 +92,7 @@ class LocalDb implements CacheStore, RateCache, SettingsStore, ChatStore {
         id TEXT PRIMARY KEY, title TEXT NOT NULL, description TEXT, organizer TEXT, category TEXT,
         prize_name TEXT, prize_value_idr INTEGER, how_to_participate TEXT, organizer_url TEXT, latitude REAL, longitude REAL, address TEXT, radius_km REAL,
         start_at TEXT, end_at TEXT, draw_at TEXT, winner_count INTEGER, ticket_count INTEGER,
-        status TEXT, seed_hash TEXT, cached_at TEXT NOT NULL
+        status TEXT, seed_hash TEXT, redeem_geo_restricted INTEGER NOT NULL DEFAULT 0, cached_at TEXT NOT NULL
       )
     ''');
     await db.execute('CREATE INDEX idx_cg_category ON cached_giveaways(category)');

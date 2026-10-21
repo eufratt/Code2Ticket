@@ -25,6 +25,7 @@ class Giveaway {
     this.ticketCount = 0,
     this.status = '',
     this.distanceKm,
+    this.redeemGeoRestricted = false,
   });
 
   final String id, title, description, organizer, category, prizeName, status;
@@ -38,6 +39,9 @@ class Giveaway {
   final String? howToParticipate, organizerUrl;
   final DateTime? startAt, endAt, drawAt;
   final int winnerCount, ticketCount;
+
+  /// true = kode hanya bisa ditukar dalam [radiusKm] dari ([latitude], [longitude]) giveaway (server tetap penentu).
+  final bool redeemGeoRestricted;
 
   /// null bila id/judul tidak ada (elemen rusak dilewati oleh parseList).
   static Giveaway? tryParse(dynamic raw) {
@@ -66,6 +70,7 @@ class Giveaway {
       ticketCount: asInt(j['ticket_count']),
       status: asString(j['status']) ?? '',
       distanceKm: asDouble(j['distance_km']),
+      redeemGeoRestricted: j['redeem_geo_restricted'] == true || j['redeem_geo_restricted'] == 1,
     );
   }
 
@@ -75,6 +80,7 @@ class Giveaway {
         prizeName: prizeName, prizeValueIdr: prizeValueIdr, howToParticipate: howToParticipate, organizerUrl: organizerUrl, latitude: latitude, longitude: longitude,
         address: address, radiusKm: radiusKm, startAt: startAt, endAt: endAt, drawAt: drawAt,
         winnerCount: winnerCount, ticketCount: ticketCount, status: status, distanceKm: km,
+        redeemGeoRestricted: redeemGeoRestricted,
       );
 
   bool get hasCoordinates => latitude != null && longitude != null;
@@ -86,7 +92,7 @@ class Giveaway {
         'prize_name': prizeName, 'prize_value_idr': prizeValueIdr, 'how_to_participate': howToParticipate, 'organizer_url': organizerUrl, 'latitude': latitude, 'longitude': longitude,
         'address': address, 'radius_km': radiusKm, 'start_at': startAt?.toUtc().toIso8601String(),
         'end_at': endAt?.toUtc().toIso8601String(), 'draw_at': drawAt?.toUtc().toIso8601String(),
-        'winner_count': winnerCount, 'ticket_count': ticketCount, 'status': status,
+        'winner_count': winnerCount, 'ticket_count': ticketCount, 'status': status, 'redeem_geo_restricted': redeemGeoRestricted ? 1 : 0,
         'cached_at': cachedAt.toUtc().toIso8601String(),
       };
 

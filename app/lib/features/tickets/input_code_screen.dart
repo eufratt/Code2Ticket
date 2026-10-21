@@ -177,7 +177,7 @@ class _InputCodeScreenState extends State<InputCodeScreen> {
             const SizedBox(width: Spacing.s8),
             Expanded(
               child: Text(
-                'Lokasi hanya dipakai untuk memeriksa area kode berbatas lokasi dan tidak disimpan.',
+                'Lokasi hanya dipakai untuk memeriksa area giveaway berbatas lokasi dan tidak disimpan.',
                 style: theme.textTheme.bodySmall?.copyWith(color: c.muted),
               ),
             ),

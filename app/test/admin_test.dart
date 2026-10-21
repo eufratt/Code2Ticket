@@ -170,7 +170,6 @@ void main() {
           };
       final r = await c.listCodes(gid);
       expect(r!.data!.map((x) => (x.code, x.isUsed)), [('AAAA-BBBB-CCCC', false), ('DDDD-EEEE-FFFF', true)]);
-      expect(r.data![1].geoRadiusKm, 5);
       expect(api.calls.single.method, 'GET');
       handler = (m, p, b) async => throw ForbiddenException();
       expect((await c.listCodes(gid))!.error, startsWith('Akses ditolak'));
@@ -274,6 +273,43 @@ void main() {
       await tester.tap(find.byKey(const Key('submit_giveaway')));
       await tester.pumpAndSettle();
     }
+
+    testWidgets('saklar batas lokasi: tanpa lintang/bujur/radius ditolak di klien dengan pesan jelas', (tester) async {
+      await pumpWith(tester, (_) => const CreateGiveawayScreen());
+      await fillValid(tester);
+      await tester.ensureVisible(find.byKey(const Key('giveaway_geo_restricted')));
+      await tester.tap(find.byKey(const Key('giveaway_geo_restricted')));
+      await tester.pumpAndSettle();
+      expect(find.text('Peserta harus berada dalam radius dari lokasi giveaway saat menukar kode.'), findsOneWidget);
+      await submit(tester);
+      expect(find.text('Isi lintang, bujur, dan radius dulu untuk membatasi lokasi tukar kode.'), findsOneWidget);
+      expect(api.calls.where((x) => x.method == 'POST'), isEmpty);
+    });
+
+    testWidgets('saklar batas lokasi: lengkap -> redeem_geo_restricted true terkirim; mati -> false', (tester) async {
+      handler = (m, p, b) async => m == 'POST' ? {'ok': true, 'giveaway_id': gid} : {'ok': true, 'data': []};
+      await pumpWith(tester, (_) => const CreateGiveawayScreen());
+      await fillValid(tester);
+      await tester.enterText(find.byKey(const Key('giveaway_lat')), '-6.2');
+      await tester.enterText(find.byKey(const Key('giveaway_lng')), '106.8');
+      await tester.enterText(find.byKey(const Key('giveaway_radius')), '5');
+      await tester.ensureVisible(find.byKey(const Key('giveaway_geo_restricted')));
+      await tester.tap(find.byKey(const Key('giveaway_geo_restricted')));
+      await tester.pumpAndSettle();
+      await submit(tester);
+      final body = api.calls.singleWhere((x) => x.method == 'POST').body as Map<String, dynamic>;
+      expect(body['redeem_geo_restricted'], true);
+      expect(body['radius_km'], 5);
+    });
+
+    testWidgets('saklar mati (bawaan): redeem_geo_restricted false', (tester) async {
+      handler = (m, p, b) async => m == 'POST' ? {'ok': true, 'giveaway_id': gid} : {'ok': true, 'data': []};
+      await pumpWith(tester, (_) => const CreateGiveawayScreen());
+      await fillValid(tester);
+      await submit(tester);
+      final body = api.calls.singleWhere((x) => x.method == 'POST').body as Map<String, dynamic>;
+      expect(body['redeem_geo_restricted'], false);
+    });
 
     testWidgets('kosong: pesan validasi, tidak ada permintaan', (tester) async {
       await pumpWith(tester, (_) => const CreateGiveawayScreen());
@@ -506,6 +542,17 @@ void main() {
       expect(find.text('Belum dipakai'), findsOneWidget);
       expect(find.text('Dipakai'), findsOneWidget);
       expect(find.text('2 kode, 1 dipakai'), findsOneWidget);
+    });
+
+    testWidgets('Daftar Kode: tidak ada chip radius per kode (data lama dengan geo_radius_km diabaikan)', (tester) async {
+      handler = (m, p, b) async => {
+            'ok': true,
+            'data': [
+              {'code': 'AAAA-BBBB-CCCC', 'is_used': false, 'geo_radius_km': '5.00'},
+            ],
+          };
+      await pumpWith(tester, (_) => const CodesListScreen(giveawayId: gid));
+      expect(find.textContaining('Radius'), findsNothing);
     });
 
     testWidgets('Daftar Kode: 403 -> "Akses ditolak"', (tester) async {

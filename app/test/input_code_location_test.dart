@@ -78,7 +78,7 @@ void main() {
     await pump(tester, (m, p, b) async => {'ok': false, 'error': 'location_required'});
     await submit(tester);
     await tester.pumpAndSettle();
-    expect(find.textContaining('butuh lokasimu'), findsOneWidget);
+    expect(find.textContaining('Giveaway ini hanya berlaku di area tertentu dan butuh lokasimu'), findsOneWidget);
     expect(find.textContaining('Aktifkan layanan lokasi'), findsOneWidget);
     await tester.tap(find.byKey(const Key('enable_location')));
     await tester.pumpAndSettle();
@@ -91,8 +91,8 @@ void main() {
     await pump(tester, (m, p, b) async => {'ok': false, 'error': 'out_of_area'});
     await submit(tester);
     await tester.pumpAndSettle();
-    expect(find.textContaining('di luar area kode ini'), findsOneWidget);
-    expect(find.textContaining('lokasi aktif dan akurat'), findsOneWidget);
+    expect(find.text('Kamu berada di luar area giveaway ini. Datang ke lokasi giveaway untuk menukar kode.'), findsOneWidget);
+    expect(find.textContaining('kode ini'), findsNothing);
     expect(find.byKey(const Key('enable_location')), findsOneWidget);
     expect(redeemBody()!['lat'], isNotNull); // lokasi ikut terkirim karena izin ada
   });

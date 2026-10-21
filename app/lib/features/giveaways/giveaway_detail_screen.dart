@@ -163,6 +163,10 @@ class _Body extends StatelessWidget {
             if (g.address != null && g.address!.isNotEmpty) _InfoRow('Lokasi', g.address!),
           ]),
         ),
+        if (g.redeemGeoRestricted) ...[
+          const SizedBox(height: Spacing.s12),
+          _GeoNotice(giveaway: g),
+        ],
         if (g.drawAt != null) _OtherZones(drawAt: g.drawAt!),
         const SizedBox(height: Spacing.sectionGap),
         const SectionHeader('Cara mendapatkan kode'),
@@ -208,6 +212,44 @@ class _PrizeBlock extends StatelessWidget {
                 if (giveaway.prizeName.isNotEmpty) Text(giveaway.prizeName, style: theme.textTheme.bodyMedium),
                 const SizedBox(height: Spacing.s4),
                 const RateNote(),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Pemberitahuan sebelum mencoba: kode hanya bisa ditukar di area giveaway (server tetap penentu).
+class _GeoNotice extends StatelessWidget {
+  const _GeoNotice({required this.giveaway});
+  final Giveaway giveaway;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final r = giveaway.radiusKm;
+    final radius = r == null ? '' : ' (radius ${r.toStringAsFixed(r % 1 == 0 ? 0 : 1)} km)';
+    final address = giveaway.address;
+    return SurfaceCard(
+      key: const Key('redeem_geo_notice'),
+      padding: const EdgeInsets.all(Spacing.s16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.location_on_outlined, size: 20, color: context.colors.muted),
+          const SizedBox(width: Spacing.s12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Kode hanya dapat ditukar di area giveaway$radius', style: theme.textTheme.bodyMedium),
+                if (address != null && address.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: Spacing.s4),
+                    child: Text(address, style: theme.textTheme.bodySmall?.copyWith(color: context.colors.muted)),
+                  ),
               ],
             ),
           ),

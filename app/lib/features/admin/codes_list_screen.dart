@@ -103,8 +103,6 @@ class _CodeRow extends StatelessWidget {
                 Text(code.code, style: AppTypography.mono(theme.textTheme.titleMedium!).copyWith(letterSpacing: 1)),
                 if (code.isUsed && code.usedAt != null)
                   Text('Dipakai ${context.when(code.usedAt!)}', style: theme.textTheme.bodySmall?.copyWith(color: context.colors.muted)),
-                if (code.geoRadiusKm != null)
-                  Text('Radius ${code.geoRadiusKm!.toStringAsFixed(code.geoRadiusKm! % 1 == 0 ? 0 : 1)} km', style: theme.textTheme.bodySmall?.copyWith(color: context.colors.muted)),
               ],
             ),
           ),
