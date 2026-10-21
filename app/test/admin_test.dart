@@ -40,7 +40,7 @@ GiveawayDraft draft({int? max, double? lat}) => GiveawayDraft(
       description: '',
       category: 'gaming',
       prizeName: 'Laptop',
-      prizeValueUsd: 1200,
+      prizeValueIdr: 20000000,
       winnerCount: 2,
       maxTicketsPerUser: max,
       startAt: DateTime.utc(2026, 10, 19, 3, 0),
@@ -78,7 +78,8 @@ void main() {
       expect(post.retry, isFalse);
       final body = post.body as Map<String, dynamic>;
       expect(body['draw_at'], '2026-10-19T04:00:00.000Z');
-      expect(body['prize_value_usd'], 1200);
+      expect(body['prize_value_idr'], 20000000);
+      expect(body.containsKey('prize_value_usd'), isFalse);
       expect(body.containsKey('max_tickets_per_user'), isFalse);
       expect(body.containsKey('latitude'), isFalse);
       expect(body.containsKey('address'), isFalse);
@@ -257,7 +258,7 @@ void main() {
       await tester.enterText(find.byKey(const Key('giveaway_title')), 'Giveaway Uji');
       await tester.enterText(find.byKey(const Key('giveaway_organizer')), 'Penyelenggara');
       await tester.enterText(find.byKey(const Key('giveaway_prize')), 'Laptop');
-      await tester.enterText(find.byKey(const Key('giveaway_value')), '1200,5');
+      await tester.enterText(find.byKey(const Key('giveaway_value')), '5000000');
       await tester.tap(find.byKey(const Key('giveaway_category')));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Gaming').last);
@@ -276,20 +277,20 @@ void main() {
       expect(find.text('Penyelenggara wajib diisi'), findsOneWidget);
       expect(find.text('Nama hadiah wajib diisi'), findsOneWidget);
       expect(find.text('Pilih kategori'), findsOneWidget);
-      expect(find.text('Isi angka, mis. 1200 atau 99,5'), findsOneWidget);
+      expect(find.text('Nilai hadiah harus berupa angka positif.'), findsOneWidget);
       expect(api.calls.where((x) => x.method == 'POST'), isEmpty);
     });
 
-    testWidgets('nilai di luar batas: pemenang 0, judul > 120, nilai negatif', (tester) async {
+    testWidgets('nilai di luar batas: pemenang 0, judul > 120, nilai hadiah nol', (tester) async {
       await pumpWith(tester, (_) => const CreateGiveawayScreen());
       await fillValid(tester);
       await tester.enterText(find.byKey(const Key('giveaway_winners')), '0');
       await tester.enterText(find.byKey(const Key('giveaway_title')), 'x' * 121);
-      await tester.enterText(find.byKey(const Key('giveaway_value')), '-5');
+      await tester.enterText(find.byKey(const Key('giveaway_value')), '0');
       await submit(tester);
       expect(find.text('Isi bilangan 1 sampai 100'), findsOneWidget);
       expect(find.text('Judul maksimal 120 karakter'), findsOneWidget);
-      expect(find.text('Nilai hadiah tidak valid'), findsOneWidget);
+      expect(find.text('Nilai hadiah harus berupa angka positif.'), findsOneWidget);
       expect(api.calls.where((x) => x.method == 'POST'), isEmpty);
     });
 
@@ -327,6 +328,18 @@ void main() {
       expect(api.calls.where((x) => x.method == 'POST'), isEmpty);
     });
 
+    testWidgets('nilai hadiah rupiah: pemisah ribuan otomatis, label Rp, batas atas', (tester) async {
+      await pumpWith(tester, (_) => const CreateGiveawayScreen());
+      expect(find.text('Nilai hadiah (Rp)'), findsOneWidget);
+      final field = find.byKey(const Key('giveaway_value'));
+      await tester.enterText(field, '5000000');
+      expect(tester.widget<TextField>(find.descendant(of: field, matching: find.byType(TextField))).controller!.text, '5.000.000');
+      await tester.enterText(field, '999999999999'); // 12 digit: di atas Rp 100.000.000.000
+      await submit(tester);
+      expect(find.text('Nilai hadiah maksimal Rp 100.000.000.000.'), findsOneWidget);
+      expect(api.calls.where((x) => x.method == 'POST'), isEmpty);
+    });
+
     testWidgets('sukses: satu POST, kembali ke layar sebelumnya dengan konfirmasi', (tester) async {
       handler = (m, p, b) async => m == 'POST' ? {'ok': true, 'giveaway_id': gid} : {'ok': true, 'data': []};
       await pumpWith(tester, (_) => const CreateGiveawayScreen());
@@ -337,7 +350,8 @@ void main() {
       final body = posts.single.body as Map<String, dynamic>;
       expect(body['title'], 'Giveaway Uji');
       expect(body['category'], 'gaming');
-      expect(body['prize_value_usd'], 1200.5);
+      expect(body['prize_value_idr'], 5000000); // round-trip: Rp 5.000.000 persis, bilangan bulat
+      expect(body['prize_value_idr'], isA<int>());
       expect(body['winner_count'], 1);
       expect(find.text('Giveaway dibuat.'), findsOneWidget);
       expect(find.byType(CreateGiveawayScreen), findsNothing);

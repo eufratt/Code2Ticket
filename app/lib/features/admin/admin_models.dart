@@ -4,7 +4,7 @@ import '../../core/json.dart';
 const giveawayCategories = ['tech', 'gaming', 'travel', 'fashion', 'food', 'lifestyle', 'other'];
 
 /// Isi form Buat Giveaway; bentuk JSON mengikuti POST /admin/giveaways (tanpa `id` = buat).
-/// Kontrak backend: satu `prize_name` + `winner_count` (bukan daftar hadiah); waktu wajib memakai zona (kirim UTC "Z").
+/// `prizeValueIdr` = rupiah bulat (mata uang dasar). Kontrak backend: satu `prize_name` + `winner_count` (bukan daftar hadiah); waktu wajib memakai zona (kirim UTC "Z").
 class GiveawayDraft {
   const GiveawayDraft({
     required this.title,
@@ -12,7 +12,7 @@ class GiveawayDraft {
     required this.description,
     required this.category,
     required this.prizeName,
-    required this.prizeValueUsd,
+    required this.prizeValueIdr,
     required this.winnerCount,
     required this.startAt,
     required this.endAt,
@@ -25,7 +25,7 @@ class GiveawayDraft {
   });
 
   final String title, organizer, description, category, prizeName;
-  final double prizeValueUsd;
+  final int prizeValueIdr;
   final int winnerCount;
   final int? maxTicketsPerUser;
   final DateTime startAt, endAt, drawAt;
@@ -38,7 +38,7 @@ class GiveawayDraft {
         'description': description,
         'category': category,
         'prize_name': prizeName,
-        'prize_value_usd': prizeValueUsd,
+        'prize_value_idr': prizeValueIdr,
         'winner_count': winnerCount,
         'start_at': startAt.toUtc().toIso8601String(),
         'end_at': endAt.toUtc().toIso8601String(),
@@ -111,7 +111,7 @@ String adminErrorMessage(String? code, {String? field}) {
         'description' => 'Deskripsi maksimal 5000 karakter.',
         'category' => 'Kategori tidak valid.',
         'prize_name' => 'Nama hadiah wajib diisi (maksimal 200 karakter).',
-        'prize_value_usd' => 'Nilai hadiah tidak valid.',
+        'prize_value_idr' => 'Nilai hadiah harus berupa angka positif (maksimal Rp 100.000.000.000).',
         'latitude' || 'longitude' || 'geo' || 'geo_lat' || 'geo_lng' => 'Koordinat tidak valid.',
         'radius_km' || 'geo_radius_km' => 'Radius harus lebih dari 0 km.',
         'start_at' || 'end_at' || 'draw_at' => 'Waktu tidak valid.',

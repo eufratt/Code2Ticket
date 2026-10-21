@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/currency/currency.dart';
+import '../../core/rupiah_input.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/time/zones.dart';
@@ -137,7 +139,7 @@ class _CreateGiveawayScreenState extends State<CreateGiveawayScreen> {
       description: _description.text.trim(),
       category: _category!,
       prizeName: _prize.text.trim(),
-      prizeValueUsd: _num(_value.text)!,
+      prizeValueIdr: parseRupiah(_value.text)!,
       winnerCount: int.parse(_winners.text.trim()),
       maxTicketsPerUser: int.tryParse(_maxTickets.text.trim()),
       startAt: _startAt,
@@ -204,12 +206,13 @@ class _CreateGiveawayScreenState extends State<CreateGiveawayScreen> {
             TextFormField(
               key: const Key('giveaway_value'),
               controller: _value,
-              decoration: deco('Nilai hadiah (USD)', helper: 'Disimpan dalam USD; aplikasi mengonversi ke mata uang pilihan pengguna.'),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: deco('Nilai hadiah (Rp)', hint: '5.000.000', helper: 'Dalam rupiah, bilangan bulat. Aplikasi mengonversi ke mata uang pilihan pengguna.'),
+              keyboardType: TextInputType.number,
+              inputFormatters: const [RupiahInputFormatter()],
               validator: (v) {
-                final n = _num(v ?? '');
-                if (n == null) return 'Isi angka, mis. 1200 atau 99,5';
-                if (n < 0 || n >= 1e10) return 'Nilai hadiah tidak valid';
+                final n = parseRupiah(v ?? '');
+                if (n == null || n <= 0) return 'Nilai hadiah harus berupa angka positif.';
+                if (n > maxPrizeIdr) return 'Nilai hadiah maksimal ${formatMoney(maxPrizeIdr.toDouble(), 'IDR')}.';
                 return null;
               },
             ),
