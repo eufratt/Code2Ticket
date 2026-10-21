@@ -74,6 +74,7 @@ abstract final class AppTheme {
       textTheme: text,
       primaryTextTheme: text,
       splashFactory: InkSparkle.splashFactory,
+      iconTheme: IconThemeData(color: c.onBackground, size: 24),
       appBarTheme: AppBarTheme(
         backgroundColor: c.background,
         foregroundColor: c.onBackground,
@@ -95,10 +96,23 @@ abstract final class AppTheme {
       inputDecorationTheme: InputDecorationThemeData(
         filled: true,
         fillColor: c.surfaceVariant,
+        constraints: const BoxConstraints(minHeight: 56),
         contentPadding: const EdgeInsets.symmetric(horizontal: Spacing.s16, vertical: Spacing.s16),
-        labelStyle: text.bodyMedium?.copyWith(color: c.mutedOnVariant),
-        floatingLabelStyle: text.bodyMedium?.copyWith(color: c.primary),
-        hintStyle: text.bodyMedium?.copyWith(color: c.mutedOnVariant),
+        labelStyle: text.bodyLarge?.copyWith(color: c.isDark ? c.mutedOnVariant : c.muted),
+        floatingLabelStyle: WidgetStateTextStyle.resolveWith((states) {
+          if (states.contains(WidgetState.focused)) {
+            return text.titleSmall!.copyWith(fontSize: 14, color: c.primary, fontWeight: FontWeight.w600);
+          }
+          if (states.contains(WidgetState.error)) {
+            return text.titleSmall!.copyWith(fontSize: 14, color: c.error, fontWeight: FontWeight.w600);
+          }
+          return text.titleSmall!.copyWith(
+            fontSize: 14,
+            color: c.isDark ? c.mutedOnVariant : c.muted,
+            fontWeight: FontWeight.w600,
+          );
+        }),
+        hintStyle: text.bodyLarge?.copyWith(color: c.isDark ? c.mutedOnVariant : c.muted),
         helperStyle: text.bodySmall?.copyWith(color: c.muted),
         errorStyle: text.bodySmall?.copyWith(color: c.error),
         errorMaxLines: 3,
@@ -109,6 +123,13 @@ abstract final class AppTheme {
         focusedBorder: OutlineInputBorder(borderRadius: Radii.inputAll, borderSide: BorderSide(color: c.primary, width: 2)),
         errorBorder: OutlineInputBorder(borderRadius: Radii.inputAll, borderSide: BorderSide(color: c.error, width: 1.5)),
         focusedErrorBorder: OutlineInputBorder(borderRadius: Radii.inputAll, borderSide: BorderSide(color: c.error, width: 2)),
+      ),
+      dropdownMenuTheme: DropdownMenuThemeData(
+        textStyle: text.bodyLarge?.copyWith(color: c.onBackground),
+        inputDecorationTheme: InputDecorationThemeData(
+          constraints: const BoxConstraints(minHeight: 56),
+          contentPadding: const EdgeInsets.symmetric(horizontal: Spacing.s16, vertical: Spacing.s16),
+        ),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(

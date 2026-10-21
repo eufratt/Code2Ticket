@@ -80,4 +80,36 @@ void main() {
     expect(CategoryStyle.of(null).key, 'lainnya');
   });
 
+  for (final (name, theme) in [('terang', AppTheme.light()), ('gelap', AppTheme.dark())]) {
+    testWidgets('komponen form tema $name memenuhi ukuran minimum (tinggi >= 56 dp)', (tester) async {
+      expect(theme.inputDecorationTheme.constraints?.minHeight, greaterThanOrEqualTo(56.0));
+      final padding = theme.inputDecorationTheme.contentPadding?.vertical ?? 0;
+      expect(padding, greaterThanOrEqualTo(32.0)); // vertikal 16 dp atas + 16 dp bawah
+
+      await tester.pumpWidget(MaterialApp(
+        theme: theme,
+        home: Scaffold(
+          body: Column(
+            children: [
+              const TextField(key: Key('tf'), decoration: InputDecoration(labelText: 'Label')),
+              DropdownButtonFormField<String>(
+                key: const Key('dd'),
+                isExpanded: true,
+                initialValue: 'A',
+                decoration: const InputDecoration(labelText: 'Dropdown'),
+                items: const [DropdownMenuItem(value: 'A', child: Text('Opsi A'))],
+                onChanged: (_) {},
+              ),
+            ],
+          ),
+        ),
+      ));
+      await tester.pumpAndSettle();
+
+      final tfSize = tester.getSize(find.byKey(const Key('tf')));
+      final ddSize = tester.getSize(find.byKey(const Key('dd')));
+      expect(tfSize.height, greaterThanOrEqualTo(56.0));
+      expect(ddSize.height, greaterThanOrEqualTo(56.0));
+    });
+  }
 }

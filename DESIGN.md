@@ -71,6 +71,7 @@ Dukung skala font sistem sampai 1,3x tanpa overflow (pakai `Flexible`/`Wrap`, bu
 ### 3.5 Jarak, bentuk, bayangan, gerak
 - Jarak (dp): 4, 8, 12, 16, 24, 32 (kelipatan 4/8). Padding layar 16. Jarak antar kartu 12. Jarak antar bagian 24.
 - Radius: 8 (chip kecil, input), 12 (tombol), 16 (kartu), 24 (sheet atas), penuh (avatar, ikon bulat).
+- Komponen form (input & dropdown): tinggi minimal 56 dp, contentPadding vertikal 16 dp (horizontal 16 dp). Teks isi 16 sp, floating label 14 sp (kontras tinggi, tidak menempel di tepi atas). Border 1 px `outline` saat diam (kontras non-teks >= 3:1), border aksen `primary` 2 px saat fokus, border `error` 1,5/2 px saat galat. Dropdown: area ketuk penuh selebar kolom, ikon panah jelas 24 dp.
 - Bayangan: kartu `0 2 8 rgba(15,23,42,0.06)`; kartu terangkat `0 6 16 rgba(15,23,42,0.10)`; logo merek `0 8 20 rgba(79,70,229,0.35)`. Mode gelap: kurangi bayangan, andalkan beda warna surface.
 - Gerak: 150-250 ms, kurva ease-out; transisi layar standar; animasi hanya untuk memberi makna (sukses tiket, hitung mundur, skeleton). Hormati "kurangi animasi" sistem.
 - Tap target >= 48x48 dp.
