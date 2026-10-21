@@ -55,7 +55,7 @@ class GiveawaysController extends ChangeNotifier with OfflineRetry {
     }
     try {
       final r = await _api.get('/giveaways?limit=50');
-      if (r['ok'] == false) throw NetworkException('Gagal memuat giveaway (${r['error']}).');
+      if (r['ok'] == false) throw ServerFaultException('Gagal memuat giveaway (${r['error']}).');
       items = parseList(r['data'], Giveaway.tryParse);
       state = LoadState.loaded;
       offline = false;
@@ -69,8 +69,9 @@ class GiveawaysController extends ChangeNotifier with OfflineRetry {
       final now = DateTime.now();
       final all = (await bestEffort(_cache.loadGiveaways)) ?? const <Giveaway>[];
       final cached = all.where((g) => g.phaseAt(now) == GiveawayPhase.active).toList();
-      // Cache ada tetapi semuanya sudah berakhir: tampilkan daftar kosong + banner offline, bukan galat "Coba lagi".
-      if (all.isNotEmpty) {
+      // Cache kosong atau semuanya sudah berakhir bukan galat: daftar kosong + banner offline. Layar "Coba lagi" hanya
+      // untuk jawaban server yang rusak saat sesi online.
+      if (all.isNotEmpty || showsOffline(e, offlineSession: _auth.offlineSession)) {
         items = cached;
         offline = true;
         cachedAt = await bestEffort(_cache.giveawaysUpdatedAt);

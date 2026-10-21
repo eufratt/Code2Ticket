@@ -4,6 +4,7 @@ import 'package:code2ticket/core/api/api_client.dart';
 import 'package:code2ticket/core/api/authed_api.dart';
 import 'package:code2ticket/core/geocoding/geocoder.dart';
 import 'package:code2ticket/core/location/location_service.dart';
+import 'package:code2ticket/core/widgets/offline_banner.dart';
 import 'package:code2ticket/core/widgets/widgets.dart' show SkeletonLoader;
 import 'package:code2ticket/features/auth/auth_controller.dart';
 import 'package:code2ticket/features/auth/auth_models.dart';
@@ -242,14 +243,15 @@ void main() {
       c.dispose();
     });
 
-    test('offline tanpa cache -> error; cache rusak tidak membuat crash', () async {
+    test('offline tanpa cache -> daftar kosong + offline (bukan error); cache rusak tidak membuat crash', () async {
       final c = make();
       online = false;
       await c.search();
-      expect(c.state, LoadState.error);
+      expect((c.state, c.offline), (LoadState.loaded, true));
+      expect(c.items, isEmpty);
       cache.failing = true;
       await c.search();
-      expect(c.state, LoadState.error);
+      expect((c.state, c.offline), (LoadState.loaded, true));
       c.dispose();
     });
 
@@ -332,15 +334,24 @@ void main() {
       expect(find.textContaining('Tidak ada giveaway yang cocok'), findsOneWidget);
     });
 
-    testWidgets('error jaringan tanpa cache: pesan + Coba lagi memuat ulang', (tester) async {
+    testWidgets('jaringan gagal tanpa cache: daftar kosong + banner offline, bukan galat', (tester) async {
+      api = FakeApi((m, p, b) async => throw NetworkException('Koneksi terlalu lama. Coba lagi.'));
+      await pump(tester);
+      await tester.pumpAndSettle();
+      expect(find.text('Coba lagi'), findsNothing);
+      expect(find.byType(OfflineBanner), findsOneWidget);
+      expect(find.textContaining('Belum ada giveaway'), findsOneWidget);
+    });
+
+    testWidgets('galat server tak terduga tanpa cache: pesan + Coba lagi memuat ulang', (tester) async {
       var fail = true;
       api = FakeApi((m, p, b) async {
-        if (fail) throw NetworkException('Koneksi terlalu lama. Coba lagi.');
+        if (fail) throw ServerFaultException('Server menolak permintaan (500).');
         return {'ok': true, 'data': [json(giveawayJson)]};
       });
       await pump(tester);
       await tester.pumpAndSettle();
-      expect(find.text('Koneksi terlalu lama. Coba lagi.'), findsOneWidget);
+      expect(find.text('Server menolak permintaan (500).'), findsOneWidget);
       fail = false;
       await tester.tap(find.text('Coba lagi'));
       await tester.pumpAndSettle();

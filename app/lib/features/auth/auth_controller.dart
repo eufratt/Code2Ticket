@@ -143,6 +143,14 @@ class AuthController extends ChangeNotifier {
     return _revalidating ??= _revalidate().whenComplete(() => _revalidating = null);
   }
 
+  /// Jaringan gagal pada sesi yang tampak online (resume, tarik untuk menyegarkan): jadikan sesi offline. GET berikutnya gagal
+  /// cepat dan aksi tulis ditolak sampai [revalidate] berhasil; bukan logout, token dan data tetap.
+  void markOffline() {
+    if (offlineSession || _token == null || status == AuthStatus.signedOut) return;
+    offlineSession = true;
+    notifyListeners();
+  }
+
   Future<void> _revalidate() async {
     final t = _token;
     try {

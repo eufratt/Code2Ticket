@@ -180,7 +180,7 @@ class DiscoverController extends ChangeNotifier with OfflineRetry {
     try {
       final r = await _api.get(_path(_query()));
       if (seq != _seq) return;
-      if (r['ok'] == false) throw NetworkException('Gagal memuat giveaway (${r['error']}).');
+      if (r['ok'] == false) throw ServerFaultException('Gagal memuat giveaway (${r['error']}).');
       items = parseList(r['data'], Giveaway.tryParse);
       hasMore = items.length >= pageSize;
       state = LoadState.loaded;
@@ -194,7 +194,7 @@ class DiscoverController extends ChangeNotifier with OfflineRetry {
       if (seq != _seq) return;
       if (silent) return;
       final cached = (await bestEffort(_cache.loadGiveaways)) ?? const <Giveaway>[];
-      if (cached.isEmpty) {
+      if (cached.isEmpty && !showsOffline(e, offlineSession: _auth.offlineSession)) {
         error = e.message;
         state = LoadState.error;
       } else {
@@ -217,7 +217,7 @@ class DiscoverController extends ChangeNotifier with OfflineRetry {
     try {
       final r = await _api.get(_path(_query(offset: items.length)));
       if (seq != _seq) return;
-      if (r['ok'] == false) throw NetworkException('Gagal memuat giveaway (${r['error']}).');
+      if (r['ok'] == false) throw ServerFaultException('Gagal memuat giveaway (${r['error']}).');
       final page = parseList(r['data'], Giveaway.tryParse);
       final seen = items.map((g) => g.id).toSet();
       items = [...items, ...page.where((g) => !seen.contains(g.id))];

@@ -11,7 +11,8 @@ class AuthedApi {
   final ApiClient _api;
   final AuthController _auth;
 
-  Future<Map<String, dynamic>> get(String path) => _run((t) => _api.get(path, token: t, retry: !_auth.offlineSession)); // sesi offline: gagal cepat, tanpa jeda ulang 3+6 dtk
+  Future<Map<String, dynamic>> get(String path) =>
+      _run((t) => _api.get(path, token: t, retry: !_auth.offlineSession), isRead: true); // sesi offline: gagal cepat, tanpa jeda ulang 3+6 dtk
 
   Future<Map<String, dynamic>> post(String path, {dynamic body, bool retry = true}) =>
       _write((t) => _api.post(path, body: body, token: t, retry: retry));
@@ -31,7 +32,7 @@ class AuthedApi {
     return _run(call);
   }
 
-  Future<Map<String, dynamic>> _run(Future<Map<String, dynamic>> Function(String token) call) async {
+  Future<Map<String, dynamic>> _run(Future<Map<String, dynamic>> Function(String token) call, {bool isRead = false}) async {
     final token = _auth.token;
     if (token == null) throw InvalidSessionException();
     try {
@@ -40,6 +41,11 @@ class AuthedApi {
       return r;
     } on InvalidSessionException {
       await _auth.handleInvalidSession();
+      rethrow;
+    } on ServerFaultException {
+      rethrow; // server menjawab: koneksi ada
+    } on NetworkException {
+      if (isRead) _auth.markOffline();
       rethrow;
     }
   }

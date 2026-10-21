@@ -26,6 +26,12 @@ class NetworkException implements Exception {
   String toString() => message;
 }
 
+/// Server menjawab tetapi jawabannya tak bisa dipakai (5xx, bukan JSON, `ok:false`): bukan masalah koneksi.
+/// Pada sesi online ini yang boleh memunculkan layar galat + "Coba lagi"; galat koneksi murni tidak (lihat [showsOffline]).
+class ServerFaultException extends NetworkException {
+  ServerFaultException(super.message);
+}
+
 /// Aksi tulis ditolak lebih dulu karena sesi sedang offline (permintaan tidak dikirim).
 class OfflineRequiredException extends NetworkException {
   OfflineRequiredException() : super('Butuh koneksi internet.');
@@ -208,19 +214,19 @@ class ApiClient {
     try {
       decoded = jsonDecode(utf8.decode(res.bodyBytes));
     } catch (_) {
-      throw NetworkException('Respons server tidak valid (${res.statusCode}).');
+      throw ServerFaultException('Respons server tidak valid (${res.statusCode}).');
     }
 
     if (res.statusCode >= 200 && res.statusCode < 300) {
       if (decoded is Map<String, dynamic>) return decoded;
       if (decoded is List) return {'ok': true, 'data': decoded};
-      throw NetworkException('Respons server tidak valid.');
+      throw ServerFaultException('Respons server tidak valid.');
     }
 
     if (decoded is Map<String, dynamic> && decoded.containsKey('ok')) {
       return decoded;
     }
 
-    throw NetworkException('Server menolak permintaan (${res.statusCode}).');
+    throw ServerFaultException('Server menolak permintaan (${res.statusCode}).');
   }
 }

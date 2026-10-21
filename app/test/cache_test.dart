@@ -238,13 +238,34 @@ void main() {
       expect(c.items.map((g) => g.id), ['aktif']);
     });
 
-    test('offline tanpa cache: state error dengan pesan, bukan daftar kosong', () async {
+    test('offline tanpa cache: daftar kosong + offline (bukan error), muat ulang berkala', () async {
       final c = make();
       online = false;
       await c.load();
+      expect(c.state, LoadState.loaded);
+      expect(c.items, isEmpty);
+      expect(c.offline, isTrue);
+      expect(c.error, isNull);
+    });
+
+    test('offline dengan cache rusak: tetap daftar kosong + offline, tidak melempar', () async {
+      final c = make();
+      cache.failing = true;
+      online = false;
+      await c.load();
+      expect((c.state, c.offline), (LoadState.loaded, true));
+    });
+
+    test('galat server tak terduga tanpa cache: error + Coba lagi hanya saat sesi online', () async {
+      api = FakeApi((m, p, b) async => throw ServerFaultException('Server menolak permintaan (500).'));
+      final c = make();
+      await c.load();
       expect(c.state, LoadState.error);
-      expect(c.error, 'Tidak ada koneksi internet.');
+      expect(c.error, 'Server menolak permintaan (500).');
       expect(c.offline, isFalse);
+      auth.offlineSession = true; // sesi offline: apa pun galatnya, tampilan offline
+      await c.load();
+      expect((c.state, c.offline), (LoadState.loaded, true));
     });
 
     test('cache rusak tidak mengganggu pemuatan online', () async {
@@ -358,8 +379,15 @@ void main() {
       cache.tickets['u2'] = [tk('x', 'g')];
       online = false;
       await c.load();
-      expect(c.state, LoadState.error);
       expect(c.items, isEmpty);
+      expect((c.state, c.offline), (LoadState.loaded, true)); // tanpa tiket milik sendiri: kosong + offline, bukan error
+    });
+
+    test('galat server tak terduga tanpa cache: error saat sesi online', () async {
+      api = FakeApi((m, p, b) async => throw ServerFaultException('Server menolak permintaan (500).'));
+      final c = make();
+      await c.load();
+      expect((c.state, c.offline), (LoadState.error, false));
     });
 
     test('logout mengosongkan data di memori', () async {

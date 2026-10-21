@@ -377,4 +377,42 @@ void main() {
     await expectLater(authed.get('/tickets'), throwsA(isA<NetworkException>()));
     expect(auth.status, equals(AuthStatus.signedIn));
   });
+
+  test('sesi online: GET gagal jaringan -> sesi offline (bukan logout); 5xx dan aksi tulis tidak; GET sukses -> online lagi', () async {
+    FlutterSecureStorage.setMockInitialValues({'c2t_token': 'tok'});
+    var mode = 'online';
+    final api = apiWith((r) async {
+      if (r.url.path == '/auth/me') return validUserResponse();
+      return switch (mode) {
+        'down' => throw http.ClientException('no internet'),
+        '500' => http.Response('boom', 500),
+        _ => http.Response('{"ok":true,"data":[]}', 200),
+      };
+    });
+    final auth = AuthController(api, SessionStore(), db: localDb, biometric: FakeBiometricService());
+    await auth.restore();
+    expect(auth.offlineSession, isFalse);
+    final authed = AuthedApi(api, auth);
+    var reloaded = 0;
+    auth.backOnline.add(() => reloaded++);
+
+    mode = '500';
+    await expectLater(authed.get('/tickets'), throwsA(isA<ServerFaultException>()));
+    expect(auth.offlineSession, isFalse); // server menjawab: koneksi ada
+
+    mode = 'down';
+    await expectLater(authed.post('/codes/redeem', body: {'code': 'X'}, retry: false), throwsA(isA<NetworkException>()));
+    expect(auth.offlineSession, isFalse); // gagal tulis tidak mengubah status sesi
+
+    await expectLater(authed.get('/tickets'), throwsA(isA<NetworkException>()));
+    expect(auth.offlineSession, isTrue);
+    expect(auth.status, equals(AuthStatus.signedIn));
+    expect(auth.token, 'tok');
+
+    mode = 'online';
+    await authed.get('/tickets'); // jawaban sukses memicu validasi ulang
+    await auth.revalidate();
+    expect(auth.offlineSession, isFalse);
+    expect(reloaded, 1);
+  });
 }

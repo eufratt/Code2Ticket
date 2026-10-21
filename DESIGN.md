@@ -8,7 +8,7 @@ Bila dokumen ini dan kode berbeda, perbarui salah satunya di commit yang sama.
 1. **Terpercaya.** Undian harus terasa adil dan transparan: status jelas, waktu jelas, bukti (hash/verifikasi) mudah dicapai.
 2. **Satu aksi utama per layar.** Tombol utama selalu terlihat dan hanya satu.
 3. **Tiket adalah objek utama.** Tiket tampil sebagai kartu tiket (lekukan sobekan), bukan baris tabel.
-4. **Selalu ada keadaan.** Setiap daftar punya loading (skeleton), kosong, error (dengan coba lagi), dan offline.
+4. **Selalu ada keadaan.** Setiap daftar punya loading (skeleton), kosong, error (dengan coba lagi), dan offline. Jaringan gagal (tanpa koneksi, timeout) bukan galat: daftar tampil dari cache, atau kosong bila cache kosong, dengan banner offline. Error + coba lagi hanya untuk jawaban server yang rusak saat sesi online.
 5. **Ringan dan konsisten.** Jarak, radius, dan font dari token; tidak ada angka ajaib di widget.
 
 ## 2. Acuan pola (pola umum, bukan salinan aplikasi)

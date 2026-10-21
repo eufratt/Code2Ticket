@@ -63,7 +63,7 @@ class TicketsController extends ChangeNotifier with OfflineRetry {
     try {
       final r = await _api.get('/tickets');
       if (r['ok'] == false) {
-        throw NetworkException('Gagal memuat tiket (${r['error']}).');
+        throw ServerFaultException('Gagal memuat tiket (${r['error']}).');
       }
       items = parseList(r['data'], Ticket.tryParse);
       state = LoadState.loaded;
@@ -76,10 +76,11 @@ class TicketsController extends ChangeNotifier with OfflineRetry {
     } on NetworkException catch (e) {
       if (silent) return;
       final cached = uid == null ? null : await bestEffort(() => _cache.loadTickets(uid));
-      if (cached != null && cached.isNotEmpty) {
-        items = cached;
+      // Tanpa tiket tersimpan tetap daftar kosong + banner offline; "Coba lagi" hanya untuk jawaban server yang rusak saat online.
+      if (uid != null && ((cached?.isNotEmpty ?? false) || showsOffline(e, offlineSession: _auth.offlineSession))) {
+        items = cached ?? const [];
         offline = true;
-        cachedAt = await bestEffort(() => _cache.ticketsUpdatedAt(uid!));
+        cachedAt = await bestEffort(() => _cache.ticketsUpdatedAt(uid));
         state = LoadState.loaded;
         scheduleRetry();
       } else {
