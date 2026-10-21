@@ -275,6 +275,8 @@ void main() {
     await tester.scrollUntilVisible(find.text('Jadwal draw di zona lain'), 200, scrollable: find.byType(Scrollable).first);
     await tester.ensureVisible(find.text('Jadwal draw di zona lain'));
     await tester.pumpAndSettle();
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, 200)); // baris Draw ada di atas judul zona
+    await tester.pumpAndSettle();
     expect(find.text('19 Okt 2026, 03.29 WIB'), findsOneWidget); // draw 20:29Z di zona pilihan (WIB)
     await tester.tap(find.text('Jadwal draw di zona lain')); // tiga zona lain dapat dibuka
     await tester.pumpAndSettle();

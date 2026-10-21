@@ -70,6 +70,8 @@ Map<String, dynamic> sampleGiveaway(String id, String category, {String? title, 
     'category': category,
     'prize_name': 'Hadiah utama berupa paket lengkap berukuran besar',
     'prize_value_idr': 20000000,
+    'how_to_participate': 'Ikuti akun penyelenggara lalu cari kode di unggahan terbaru.\nKode juga dibagikan di stan saat acara berlangsung, jadi datang lebih awal supaya tidak kehabisan.',
+    'organizer_url': 'https://www.penyelenggara-contoh.co.id/giveaway/halaman-yang-cukup-panjang',
     'latitude': -6.2,
     'longitude': 106.8,
     'address': 'Jalan Panjang Sekali Nomor 123, Kecamatan Contoh, Kota Contoh, Indonesia',
@@ -168,7 +170,7 @@ class SampleEnv {
       }
       if (p.endsWith('/winners')) return {'ok': true, 'drawn': true, 'winners': [for (var i = 0; i < drawWinners.length; i++) {'rank': i + 1, 'ticket_number': drawWinners[i], 'name': 'pe***${i + 1}'}]};
       if (p.endsWith('/verification')) return {'ok': true, ...drawVerification};
-      if (p.startsWith('/giveaways/')) return {...sampleGiveaways().first, 'status': giveawayStatus};
+      if (p.startsWith('/giveaways/')) return {...sampleGiveaways().first, 'status': giveawayStatus, ...giveawayExtra};
       if (p.startsWith('/giveaways')) return {'ok': true, 'data': sampleGiveaways()};
       if (p.startsWith('/tickets')) return {'ok': true, 'data': List.of(tickets)};
       if (p.startsWith('/admin/giveaways/')) {
@@ -200,6 +202,9 @@ class SampleEnv {
   }
   /// Isi GET /me/affinity ({kategori: skor}); kosong = tanpa "Untuk kamu".
   Map<String, dynamic> affinity = {};
+
+  /// Field tambahan/penimpa untuk jawaban GET /giveaways/:id (mis. cara ikut kosong).
+  Map<String, dynamic> giveawayExtra = {};
 
   /// Status giveaway yang dijawab GET /giveaways/:id (tes boleh mengubahnya sebelum layar dibuka).
   String giveawayStatus = 'active';

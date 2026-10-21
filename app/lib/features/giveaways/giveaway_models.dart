@@ -12,6 +12,8 @@ class Giveaway {
     this.category = 'other',
     this.prizeName = '',
     this.prizeValueIdr,
+    this.howToParticipate,
+    this.organizerUrl,
     this.latitude,
     this.longitude,
     this.address,
@@ -31,6 +33,9 @@ class Giveaway {
   /// Nilai hadiah dalam rupiah bulat (mata uang dasar); null bila server tidak mengirimnya (mis. backend lama).
   final int? prizeValueIdr;
   final String? address;
+
+  /// Cara mendapatkan kode dari penyelenggara dan tautan https opsional; null untuk giveaway lama (atau daftar, tanpa teks cara ikut).
+  final String? howToParticipate, organizerUrl;
   final DateTime? startAt, endAt, drawAt;
   final int winnerCount, ticketCount;
 
@@ -48,6 +53,8 @@ class Giveaway {
       category: asString(j['category']) ?? 'other',
       prizeName: asString(j['prize_name']) ?? '',
       prizeValueIdr: asIntOrNull(j['prize_value_idr']),
+      howToParticipate: asString(j['how_to_participate']),
+      organizerUrl: asString(j['organizer_url']),
       latitude: asDouble(j['latitude']),
       longitude: asDouble(j['longitude']),
       address: asString(j['address']),
@@ -65,7 +72,7 @@ class Giveaway {
   /// Salinan dengan jarak baru (mis. dihitung lokal dari data cache).
   Giveaway withDistance(double? km) => Giveaway(
         id: id, title: title, description: description, organizer: organizer, category: category,
-        prizeName: prizeName, prizeValueIdr: prizeValueIdr, latitude: latitude, longitude: longitude,
+        prizeName: prizeName, prizeValueIdr: prizeValueIdr, howToParticipate: howToParticipate, organizerUrl: organizerUrl, latitude: latitude, longitude: longitude,
         address: address, radiusKm: radiusKm, startAt: startAt, endAt: endAt, drawAt: drawAt,
         winnerCount: winnerCount, ticketCount: ticketCount, status: status, distanceKm: km,
       );
@@ -76,7 +83,7 @@ class Giveaway {
   /// Jarak tidak disimpan: bergantung pada posisi pengguna, dan lokasi tidak boleh disimpan.
   Map<String, Object?> toRow(DateTime cachedAt) => {
         'id': id, 'title': title, 'description': description, 'organizer': organizer, 'category': category,
-        'prize_name': prizeName, 'prize_value_idr': prizeValueIdr, 'latitude': latitude, 'longitude': longitude,
+        'prize_name': prizeName, 'prize_value_idr': prizeValueIdr, 'how_to_participate': howToParticipate, 'organizer_url': organizerUrl, 'latitude': latitude, 'longitude': longitude,
         'address': address, 'radius_km': radiusKm, 'start_at': startAt?.toUtc().toIso8601String(),
         'end_at': endAt?.toUtc().toIso8601String(), 'draw_at': drawAt?.toUtc().toIso8601String(),
         'winner_count': winnerCount, 'ticket_count': ticketCount, 'status': status,

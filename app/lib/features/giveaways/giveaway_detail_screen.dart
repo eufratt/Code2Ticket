@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../core/activity.dart';
 import '../../core/api/authed_api.dart';
 import '../../core/display.dart';
+import '../../core/open_link.dart';
 import '../../core/settings/settings_controller.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_tokens.dart';
@@ -164,6 +165,9 @@ class _Body extends StatelessWidget {
         ),
         if (g.drawAt != null) _OtherZones(drawAt: g.drawAt!),
         const SizedBox(height: Spacing.sectionGap),
+        const SectionHeader('Cara mendapatkan kode'),
+        _GetCode(giveaway: g),
+        const SizedBox(height: Spacing.sectionGap),
         const SectionHeader('Cara ikut'),
         const _HowToJoin(),
       ],
@@ -262,6 +266,76 @@ class _OtherZones extends StatelessWidget {
               KeyedSubtree(key: Key('zone_${z.name}'), child: _InfoRow(z.title, formatInZone(drawAt, z))),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Cara mendapatkan kode dari penyelenggara (teks dapat dipilih/disalin) + tombol ke halaman penyelenggara
+/// (dialog konfirmasi, hanya https, dibuka di browser eksternal).
+class _GetCode extends StatelessWidget {
+  const _GetCode({required this.giveaway});
+  final Giveaway giveaway;
+
+  Future<void> _open(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final uri = parseHttpsUrl(giveaway.organizerUrl);
+    if (uri == null) {
+      messenger.showSnackBar(const SnackBar(content: Text('Tautan tidak valid.')));
+      return;
+    }
+    final go = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Buka tautan penyelenggara?'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Kamu akan membuka tautan dari penyelenggara di browser. Code2Ticket tidak mengelola giveaway di luar aplikasi.'),
+            const SizedBox(height: Spacing.s12),
+            Text('Tujuan: ${uri.host}', key: const Key('link_domain'), style: Theme.of(ctx).textTheme.titleSmall),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Batal')),
+          FilledButton(key: const Key('confirm_open_link'), onPressed: () => Navigator.pop(ctx, true), child: const Text('Buka')),
+        ],
+      ),
+    );
+    if (go != true) return;
+    var opened = false;
+    try {
+      opened = await openExternal(uri);
+    } catch (_) {}
+    if (!opened) messenger.showSnackBar(const SnackBar(content: Text('Tidak bisa membuka tautan.')));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final c = context.colors;
+    final how = giveaway.howToParticipate?.trim() ?? '';
+    final url = giveaway.organizerUrl?.trim() ?? '';
+    return SurfaceCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (how.isEmpty)
+            Text('Penyelenggara belum menambahkan cara mendapatkan kode.', key: const Key('how_to_empty'), style: theme.textTheme.bodyMedium?.copyWith(color: c.muted))
+          else
+            SelectableText(how, key: const Key('how_to_text'), style: theme.textTheme.bodyMedium),
+          if (url.isNotEmpty) ...[
+            const SizedBox(height: Spacing.s12),
+            PrimaryButton(
+              key: const Key('open_organizer_link'),
+              label: 'Buka halaman penyelenggara',
+              icon: Icons.open_in_new,
+              variant: ButtonVariant.secondary,
+              onPressed: () => _open(context),
+            ),
+          ],
+        ],
       ),
     );
   }

@@ -26,7 +26,7 @@ class LocalDb implements CacheStore, RateCache, SettingsStore, ChatStore {
   }
 
   static const String dbName = 'code2ticket.db';
-  static const int dbVersion = 3;
+  static const int dbVersion = 4;
 
   Future<Database> _initDb() async {
     final dbPath = await getDatabasesPath();
@@ -74,14 +74,15 @@ class LocalDb implements CacheStore, RateCache, SettingsStore, ChatStore {
   }
 
   /// v2: riwayat percakapan Asisten. v3: nilai hadiah rupiah (prize_value_idr menggantikan prize_value_usd).
+  /// v4: kolom how_to_participate dan organizer_url.
   static Future<void> upgradeTables(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) await _createChatTable(db);
-    if (oldVersion < 3) {
+    // Kartu giveaway di riwayat Asisten menyimpan kolom USD lama: kartunya dikosongkan, teks percakapan tetap.
+    if (oldVersion < 3) await db.execute('UPDATE chat_messages SET related_json = NULL WHERE related_json IS NOT NULL');
+    if (oldVersion < 4) {
       // Cache giveaway hanya salinan server (diisi ulang saat online), jadi dibuang dan dibuat ulang.
-      // Kartu giveaway di riwayat Asisten menyimpan kolom USD lama: kartunya dikosongkan, teks percakapan tetap.
       await db.execute('DROP TABLE IF EXISTS cached_giveaways');
       await _createGiveawaysTable(db);
-      await db.execute('UPDATE chat_messages SET related_json = NULL WHERE related_json IS NOT NULL');
     }
   }
 
@@ -89,7 +90,7 @@ class LocalDb implements CacheStore, RateCache, SettingsStore, ChatStore {
     await db.execute('''
       CREATE TABLE cached_giveaways (
         id TEXT PRIMARY KEY, title TEXT NOT NULL, description TEXT, organizer TEXT, category TEXT,
-        prize_name TEXT, prize_value_idr INTEGER, latitude REAL, longitude REAL, address TEXT, radius_km REAL,
+        prize_name TEXT, prize_value_idr INTEGER, how_to_participate TEXT, organizer_url TEXT, latitude REAL, longitude REAL, address TEXT, radius_km REAL,
         start_at TEXT, end_at TEXT, draw_at TEXT, winner_count INTEGER, ticket_count INTEGER,
         status TEXT, seed_hash TEXT, cached_at TEXT NOT NULL
       )

@@ -285,7 +285,7 @@ void main() {
     });
   });
 
-  group('migrasi SQLite lokal v3', () {
+  group('migrasi SQLite lokal v3 dan v4', () {
     Future<Database> openV2() async {
       final db = await databaseFactoryFfi.openDatabase(inMemoryDatabasePath);
       // Skema v2 lama (APK sebelum nilai hadiah rupiah).
@@ -305,9 +305,9 @@ void main() {
       return db;
     }
 
-    test('v2 -> v3: cache giveaway dibuat ulang dengan prize_value_idr, percakapan tetap, kartu lama dikosongkan', () async {
+    test('v2 -> v4: cache giveaway dibuat ulang dengan prize_value_idr, percakapan tetap, kartu lama dikosongkan', () async {
       final db = await openV2();
-      await LocalDb.upgradeTables(db, 2, 3);
+      await LocalDb.upgradeTables(db, 2, 4);
       final cols = (await db.rawQuery('PRAGMA table_info(cached_giveaways)')).map((r) => r['name']).toList();
       expect(cols, contains('prize_value_idr'));
       expect(cols, isNot(contains('prize_value_usd')));
@@ -326,17 +326,17 @@ void main() {
       await db.close();
     });
 
-    test('v1 -> v3 (APK paling lama) tidak crash: tabel chat dibuat dulu, lalu dibersihkan', () async {
+    test('v1 -> v4 (APK paling lama) tidak crash: tabel chat dibuat dulu, lalu dibersihkan', () async {
       final db = await databaseFactoryFfi.openDatabase(inMemoryDatabasePath);
       await db.execute('CREATE TABLE cached_giveaways (id TEXT PRIMARY KEY, title TEXT NOT NULL, prize_value_usd REAL, cached_at TEXT NOT NULL)');
-      await LocalDb.upgradeTables(db, 1, 3);
+      await LocalDb.upgradeTables(db, 1, 4);
       expect((await db.rawQuery('PRAGMA table_info(cached_giveaways)')).map((r) => r['name']), contains('prize_value_idr'));
       expect(await db.query('chat_messages'), isEmpty);
       await db.close();
     });
 
-    test('pemasangan baru: dbVersion 3 dan kolom prize_value_idr', () async {
-      expect(LocalDb.dbVersion, 3);
+    test('pemasangan baru: dbVersion 4 dan kolom prize_value_idr', () async {
+      expect(LocalDb.dbVersion, 4);
       final db = await databaseFactoryFfi.openDatabase(
         inMemoryDatabasePath,
         options: OpenDatabaseOptions(version: LocalDb.dbVersion, onCreate: LocalDb.createTables),

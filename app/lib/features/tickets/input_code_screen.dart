@@ -149,6 +149,10 @@ class _InputCodeScreenState extends State<InputCodeScreen> {
         ),
         const SizedBox(height: Spacing.s24),
         PrimaryButton(key: const Key('submit_code'), label: 'Tukar kode', loading: busy, onPressed: busy ? null : _submit),
+        Padding(
+          padding: const EdgeInsets.only(top: Spacing.s8),
+          child: Text('Belum punya kode? Lihat cara mendapatkannya di detail giveaway.', key: const Key('code_help'), textAlign: TextAlign.center, style: theme.textTheme.bodySmall?.copyWith(color: c.muted)),
+        ),
         if (busy) const WakingUpNotice(),
         if (_errorCode == 'location_required' || _errorCode == 'out_of_area') ...[
           const SizedBox(height: Spacing.s12),
