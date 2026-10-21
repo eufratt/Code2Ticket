@@ -144,7 +144,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             const SizedBox(height: Spacing.s12),
             Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              Flexible(child: Text(u?.fullName ?? '-', key: const Key('profile_name'), style: theme.textTheme.titleLarge, textAlign: TextAlign.center)),
+              const SizedBox(width: 48), // penyeimbang pensil: teks nama tepat di tengah
+              Flexible(child: Text(u?.fullName ?? '-', key: const Key('profile_name'), style: theme.textTheme.titleLarge, textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis)),
               IconButton(key: const Key('edit_name'), tooltip: 'Ubah nama', icon: const Icon(Icons.edit, size: 18), onPressed: _profile.saving ? null : _editName),
             ]),
             Center(child: Text('@${u?.username ?? '-'}', style: theme.textTheme.bodyMedium)),
