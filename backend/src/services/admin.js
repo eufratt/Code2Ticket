@@ -13,6 +13,21 @@ const INPUT_ERROR_CODES = new Set(['23514', '23502', '22P02', '22008', '22007', 
 // Nilai hadiah: rupiah bulat positif (mata uang dasar), batas atas sama dengan CHECK di 08_prize_value_idr.sql.
 export const MAX_PRIZE_IDR = 100_000_000_000;
 const prizeIdr = z.number().int().min(1).max(MAX_PRIZE_IDR);
+// Cara mendapatkan kode: wajib untuk giveaway baru, 10..2000 karakter setelah trim.
+const howTo = z.string().transform((s) => s.trim()).refine((s) => cpLen(s) >= 10 && cpLen(s) <= 2000);
+// Tautan penyelenggara: hanya https absolut, maks. 500, tanpa kredensial/spasi/karakter kontrol, host domain valid.
+const HOST_RE = /^([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$/i;
+export function isHttpsUrl(s) {
+  if (s.length > 500 || /[\s\x00-\x1f\x7f]/.test(s) || !/^https:\/\//i.test(s)) return false;
+  try {
+    const u = new URL(s);
+    return u.protocol === 'https:' && !u.username && !u.password && HOST_RE.test(u.hostname);
+  } catch {
+    return false;
+  }
+}
+// '' / null = tidak ada (di ubah: mengosongkan). Nilai lain di-trim lalu harus lolos isHttpsUrl.
+const orgUrl = z.union([z.literal(''), z.null(), z.string().transform((s) => s.trim()).refine(isHttpsUrl)]);
 const numLike = z.union([z.number().finite(), z.string().regex(/^-?\d+(\.\d+)?$/)]);
 // Waktu wajib menyertakan zona (Z atau +hh[:mm]) supaya tidak bergantung pada zona sesi database.
 const ts = z.string().max(64).regex(/(Z|[+-]\d{2}(:?\d{2})?)$/i);
@@ -33,6 +48,8 @@ const fields = {
   draw_at: ts,
   winner_count: z.number().int().min(1).max(100),
   max_tickets_per_user: z.number().int().min(1),
+  how_to_participate: howTo,
+  organizer_url: orgUrl,
 };
 const idField = z.union([z.uuid(), z.literal(''), z.null()]).optional();
 
@@ -43,6 +60,7 @@ const createSchema = z.object({
   latitude: fields.latitude.optional(), longitude: fields.longitude.optional(), address: fields.address.optional(),
   radius_km: fields.radius_km.optional(), start_at: fields.start_at, end_at: fields.end_at, draw_at: fields.draw_at,
   winner_count: fields.winner_count, max_tickets_per_user: fields.max_tickets_per_user.nullish(),
+  how_to_participate: fields.how_to_participate, organizer_url: fields.organizer_url.optional(),
 });
 
 // Ubah: semua field opsional; null/absen = pertahankan (coalesce), kecuali lokasi/alamat/radius
@@ -54,6 +72,7 @@ const updateSchema = z.object({
   latitude: fields.latitude.optional(), longitude: fields.longitude.optional(), address: fields.address.optional(),
   radius_km: fields.radius_km.optional(), start_at: ts.nullish(), end_at: ts.nullish(), draw_at: ts.nullish(),
   winner_count: fields.winner_count.nullish(), max_tickets_per_user: fields.max_tickets_per_user.nullish(),
+  how_to_participate: fields.how_to_participate.nullish(), organizer_url: fields.organizer_url.optional(),
 });
 
 export async function upsertGiveaway(pool, admin, body) {
@@ -77,16 +96,16 @@ async function createGiveaway(c, admin, d) {
   const g = await c.query(
     `insert into giveaways(title, description, organizer, category, prize_name, prize_value_idr,
         latitude, longitude, address, radius_km, start_at, end_at, draw_at, winner_count,
-        max_tickets_per_user, seed_hash, status, created_by)
+        max_tickets_per_user, seed_hash, status, created_by, how_to_participate, organizer_url)
      values ($1, coalesce($2::text, ''), coalesce($3::text, ''), $4, $5, $6::numeric,
         $7::float8, $8::float8, $9::text, $10::numeric, $11::timestamptz, $12::timestamptz, $13::timestamptz, $14::int,
         coalesce($15::int, 10), $16,
         case when now() < $11::timestamptz then 'upcoming' when now() < $12::timestamptz then 'active' else 'waiting_draw' end,
-        $17)
+        $17, $18::text, $19::text)
      returning id`,
     [d.title, d.description ?? null, d.organizer ?? null, d.category, d.prize_name, d.prize_value_idr,
       d.latitude ?? null, d.longitude ?? null, d.address ?? null, d.radius_km ?? null, d.start_at, d.end_at, d.draw_at,
-      d.winner_count, d.max_tickets_per_user ?? null, seedHash, admin.id],
+      d.winner_count, d.max_tickets_per_user ?? null, seedHash, admin.id, d.how_to_participate, d.organizer_url || null],
   );
   const id = g.rows[0].id;
   await c.query('insert into giveaway_secrets(giveaway_id, seed) values ($1, $2)', [id, seed]);
@@ -124,13 +143,16 @@ async function updateGiveaway(c, d, raw) {
         draw_at = coalesce($18::timestamptz, draw_at),
         winner_count = coalesce($19::int, winner_count),
         max_tickets_per_user = coalesce($20::int, max_tickets_per_user),
+        how_to_participate = coalesce($21::text, how_to_participate),
+        organizer_url = case when $22::boolean then $23::text else organizer_url end,
         status = case when now() < coalesce($16::timestamptz, start_at) then 'upcoming'
                       when now() < coalesce($17::timestamptz, end_at) then 'active' else 'waiting_draw' end
       where id = $1`,
     [d.id, d.title ?? null, d.description ?? null, d.organizer ?? null, d.category ?? null, d.prize_name ?? null,
       d.prize_value_idr ?? null, has('latitude'), d.latitude ?? null, has('longitude'), d.longitude ?? null,
       has('address'), d.address ?? null, has('radius_km'), d.radius_km ?? null, d.start_at ?? null, d.end_at ?? null,
-      d.draw_at ?? null, d.winner_count ?? null, d.max_tickets_per_user ?? null],
+      d.draw_at ?? null, d.winner_count ?? null, d.max_tickets_per_user ?? null, d.how_to_participate ?? null,
+      has('organizer_url'), d.organizer_url || null],
   );
   return ok({ giveaway_id: g.id, created: false });
 }

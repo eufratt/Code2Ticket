@@ -30,7 +30,7 @@ export async function searchGiveaways(pool, query) {
 
   const r = await pool.query(
     `with base as (
-       select g.id, g.title, g.description, g.organizer, g.category, g.prize_name, g.prize_value_idr,
+       select g.id, g.title, g.description, g.organizer, g.category, g.prize_name, g.prize_value_idr, g.organizer_url,
               g.latitude, g.longitude, g.address, g.radius_km, g.start_at, g.end_at, g.draw_at,
               g.winner_count, g.ticket_counter as ticket_count, ${effectiveStatus('g')} as status,
               case when $5::float8 is not null and $6::float8 is not null and g.latitude is not null
@@ -60,7 +60,7 @@ export async function searchGiveaways(pool, query) {
                          f.end_at asc, f.id) as rn
          from filtered f
      )
-     select id, title, description, organizer, category, prize_name, prize_value_idr, latitude, longitude, address,
+     select id, title, description, organizer, category, prize_name, prize_value_idr, organizer_url, latitude, longitude, address,
             radius_km, start_at, end_at, draw_at, winner_count, ticket_count, status, distance_km
        from ranked where rn > $12::int and rn <= $12::int + $11::int order by rn`,
     [q, a.category ?? null, a.min_value ?? null, a.max_value ?? null, a.lat ?? null, a.lng ?? null,
@@ -69,11 +69,11 @@ export async function searchGiveaways(pool, query) {
   return r.rows;
 }
 
-// Satu giveaway (publik), bentuk sama dengan item daftar. Semua status, termasuk yang sudah di-draw.
+// Satu giveaway (publik), bentuk sama dengan item daftar ditambah how_to_participate (hanya di detail, hemat payload daftar). Semua status, termasuk yang sudah di-draw.
 // distance_km selalu null (jarak hanya dihitung di daftar saat lat/lng diberikan). null bila tidak ada.
 export async function getGiveaway(pool, id) {
   const r = await pool.query(
-    `select id, title, description, organizer, category, prize_name, prize_value_idr, latitude, longitude, address,
+    `select id, title, description, organizer, category, prize_name, prize_value_idr, organizer_url, how_to_participate, latitude, longitude, address,
             radius_km, start_at, end_at, draw_at, winner_count, ticket_counter as ticket_count, ${effectiveStatus('g')} as status,
             null::numeric as distance_km
        from giveaways g where id = $1`,

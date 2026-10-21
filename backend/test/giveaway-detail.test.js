@@ -24,8 +24,9 @@ describe('GET /giveaways/:id dan pengurutan daftar', () => {
   it('bentuk sama dengan item daftar (distance_km null)', async () => {
     const list = await api.get('/giveaways');
     const one = await api.get(`/giveaways/${ids.mid}`);
-    expect(one).toEqual({ ...list.find((g) => g.id === ids.mid), distance_km: null });
-    expect(Object.keys(one).sort()).toEqual(Object.keys(list[0]).sort());
+    expect(one).toEqual({ ...list.find((g) => g.id === ids.mid), distance_km: null, how_to_participate: expect.any(String) });
+    expect(Object.keys(one).sort()).toEqual([...Object.keys(list[0]), 'how_to_participate'].sort());
+    expect(list[0]).not.toHaveProperty('how_to_participate'); // hemat payload daftar
   });
 
   it('publik: tanpa token; giveaway yang sudah di-draw tetap bisa dibaca', async () => {

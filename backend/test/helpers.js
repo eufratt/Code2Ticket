@@ -12,6 +12,7 @@ export const SCHEMA_DIR = process.env.DB_SCHEMA_DIR ?? path.resolve(HERE, '../db
 export const BACKEND_SQL = path.resolve(HERE, '../db/06_backend.sql');
 export const PHOTOS_SQL = path.resolve(HERE, '../db/07_user_photos.sql');
 export const PRIZE_IDR_SQL = path.resolve(HERE, '../db/08_prize_value_idr.sql');
+export const PARTICIPATION_SQL = path.resolve(HERE, '../db/09_giveaway_participation.sql');
 const BASE_URL = process.env.TEST_PG_URL ?? 'postgres://postgres@127.0.0.1:54329';
 
 export const sha = (s) => crypto.createHash('sha256').update(s, 'utf8').digest('hex');
@@ -19,7 +20,7 @@ export const sha = (s) => crypto.createHash('sha256').update(s, 'utf8').digest('
 export const clientHash = (password, salt) => crypto.pbkdf2Sync(password, salt, 10_000, 32, 'sha256').toString('hex');
 
 // Database uji baru per file tes: shim role Supabase + 01_schema.sql + 06_backend.sql + 07 + 08.
-export async function createTestDb(name, migrations = [BACKEND_SQL, PHOTOS_SQL, PRIZE_IDR_SQL]) {
+export async function createTestDb(name, migrations = [BACKEND_SQL, PHOTOS_SQL, PRIZE_IDR_SQL, PARTICIPATION_SQL]) {
   const dbName = `c2t_node_${name}`;
   const admin = new pg.Client({ connectionString: `${BASE_URL}/postgres` });
   await admin.connect();
@@ -103,7 +104,7 @@ export function giveawayBody({
   category = 'tech', lat = -6.2, lng = 106.8, ...extra
 } = {}) {
   return {
-    title, category, prize_name: 'Laptop', prize_value_idr: 5_000_000, latitude: lat, longitude: lng,
+    title, category, prize_name: 'Laptop', prize_value_idr: 5_000_000, how_to_participate: 'Ikuti akun penyelenggara dan cari kode di unggahan.', latitude: lat, longitude: lng,
     organizer: 'Acme', description: 'desc', start_at: iso(start), end_at: iso(end), draw_at: iso(draw),
     winner_count: winners, max_tickets_per_user: maxTickets, ...extra,
   };
