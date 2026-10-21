@@ -76,17 +76,32 @@ void main() {
       expect(result(tester), 'US\$1,00');
     });
 
-    testWidgets('masukan tidak valid: pesan, tanpa hasil; koma desimal diterima', (tester) async {
+    testWidgets('masukan bukan angka disaring formatter; koma desimal dan format ribuan diterima', (tester) async {
       await pumpConverter(tester, await ratesWith());
+      String field() => tester.widget<TextField>(find.byKey(const Key('amount_field'))).controller!.text;
       await tester.enterText(find.byKey(const Key('amount_field')), 'abc');
       await tester.pump();
-      expect(find.text('Masukkan angka yang valid.'), findsOneWidget);
-      await tester.enterText(find.byKey(const Key('amount_field')), '-5');
-      await tester.pump();
-      expect(find.text('Masukkan angka yang valid.'), findsOneWidget);
+      expect(field(), '');
       await tester.enterText(find.byKey(const Key('amount_field')), '0,5');
       await tester.pump();
       expect(result(tester), 'Rp 8.995'); // 0,5 USD (8994,5 dibulatkan)
+      await tester.enterText(find.byKey(const Key('amount_field')), '1000');
+      await tester.pump();
+      expect(field(), '1.000');
+      expect(result(tester), 'Rp 17.989.000');
+    });
+
+    testWidgets('Jumlah berformat: 1000000 -> 1.000.000 dan 1234,56 -> 1.234,56, hasil konversi benar', (tester) async {
+      await pumpConverter(tester, await ratesWith());
+      await tester.enterText(find.byKey(const Key('amount_field')), '1000000');
+      await tester.pump();
+      expect(tester.widget<TextField>(find.byKey(const Key('amount_field'))).controller!.text, '1.000.000');
+      expect(find.text('US\$1.000.000,00 ='), findsOneWidget);
+      expect(result(tester), 'Rp 17.989.000.000');
+      await tester.enterText(find.byKey(const Key('amount_field')), '1234,56');
+      await tester.pump();
+      expect(find.text('US\$1.234,56 ='), findsOneWidget);
+      expect(find.text('Masukkan angka yang valid.'), findsNothing);
     });
 
     testWidgets('offline dengan kurs tersimpan: tetap menghitung dan memberi label offline', (tester) async {

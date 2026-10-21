@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/currency/currency.dart';
 import '../../core/format.dart' show parseIdNumber;
+import '../../core/rupiah_input.dart' show DecimalInputFormatter;
 import '../../core/currency/rates_controller.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_tokens.dart';
@@ -109,6 +110,7 @@ class _CurrencyConverterState extends State<CurrencyConverter> {
           key: const Key('amount_field'),
           controller: _amount,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          inputFormatters: const [DecimalInputFormatter()],
           decoration: InputDecoration(labelText: 'Jumlah', errorText: invalid ? 'Masukkan angka yang valid.' : null),
           onChanged: (_) => setState(() {}),
         ),
