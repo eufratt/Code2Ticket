@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:code2ticket/core/api/api_client.dart';
 import 'package:code2ticket/core/api/authed_api.dart';
+import 'package:code2ticket/core/db/cache_store.dart';
 import 'package:code2ticket/core/db/rate_cache.dart' show SettingsStore;
 import 'package:code2ticket/core/theme/app_theme.dart';
 import 'package:code2ticket/core/verify/chain_verifier.dart';
@@ -12,6 +13,8 @@ import 'package:code2ticket/features/draw/draw_controller.dart';
 import 'package:code2ticket/features/draw/draw_result_screen.dart';
 import 'package:code2ticket/features/draw/draw_verify_screen.dart';
 import 'package:code2ticket/features/draw/shake.dart';
+import 'package:code2ticket/core/widgets/offline_banner.dart';
+import 'package:code2ticket/core/widgets/empty_state.dart';
 import 'package:code2ticket/features/giveaways/giveaways_controller.dart' show LoadState;
 import 'package:code2ticket/features/tickets/tickets_controller.dart';
 import 'package:flutter/material.dart';
@@ -173,11 +176,20 @@ void main() {
       expect(c.error, 'Giveaway tidak ditemukan.');
     });
 
-    test('jaringan putus -> state error', () async {
+    test('jaringan putus tanpa cache -> keadaan "belum tersimpan", bukan error', () async {
       handler = (m, p, b) async => throw NetworkException('Tidak ada koneksi internet.');
       await c.load();
+      expect(c.state, LoadState.loaded);
+      expect(c.notCached, isTrue);
+      expect(c.error, isNull);
+    });
+
+    test('galat server (5xx) saat online -> error, bukan offline', () async {
+      handler = (m, p, b) async => throw ServerFaultException('Server error.');
+      await c.load();
       expect(c.state, LoadState.error);
-      expect(c.error, 'Tidak ada koneksi internet.');
+      expect(c.notCached, isFalse);
+      expect(c.error, 'Server error.');
     });
 
     test('401 invalid_session: logout, tanpa galat', () async {
@@ -212,6 +224,7 @@ void main() {
     late FakeApi api;
     late FakeAuth auth;
     late MemorySettings settings;
+    late MemoryCacheStore cache;
     late StreamController<void> shakes;
     Map<String, dynamic> verification = {};
     Map<String, dynamic> winners = {};
@@ -224,6 +237,7 @@ void main() {
       tickets = [];
       failWith = null;
       settings = MemorySettings();
+      cache = MemoryCacheStore();
       shakes = StreamController<void>.broadcast();
       addTearDown(shakes.close);
       api = FakeApi((m, p, b) async {
@@ -243,8 +257,9 @@ void main() {
           ChangeNotifierProvider<AuthController>.value(value: auth),
           Provider<AuthedApi>.value(value: authed),
           Provider<SettingsStore>.value(value: settings),
+          Provider<CacheStore>.value(value: cache),
           ...displayProviders(),
-          ChangeNotifierProvider(create: (_) => TicketsController(authed, auth, MemoryCacheStore(), retryInterval: null)),
+          ChangeNotifierProvider(create: (_) => TicketsController(authed, auth, cache, retryInterval: null)),
         ],
         child: MaterialApp(theme: AppTheme.light(), darkTheme: AppTheme.dark(), home: screen),
       ));
@@ -356,14 +371,91 @@ void main() {
       expect(find.byKey(const Key('shake_gate')), findsNothing);
     });
 
-    testWidgets('galat jaringan: ErrorState; "Coba lagi" memuat ulang', (tester) async {
-      failWith = NetworkException('Tidak ada koneksi internet.');
+    testWidgets('galat server (5xx) saat online: ErrorState; "Coba lagi" memuat ulang', (tester) async {
+      failWith = ServerFaultException('Server sedang bermasalah.');
       await pump(tester, result());
-      expect(find.text('Tidak ada koneksi internet.'), findsOneWidget);
+      expect(find.byType(ErrorState), findsOneWidget);
+      expect(find.text('Server sedang bermasalah.'), findsOneWidget);
       failWith = null;
       await tester.tap(find.text('Coba lagi'));
       await settle(tester);
       expect(find.text('Daftar pemenang'), findsOneWidget);
+    });
+
+    // ---------------------------------------------------------- cache offline
+    testWidgets('online: hasil dimuat lalu disimpan ke cache (tanpa seed)', (tester) async {
+      await pump(tester, result());
+      final saved = cache.draws['u1']![gid]!;
+      expect(saved.winners.map((w) => w.ticketNumber), winnersOf(verification));
+      expect(saved.totalTickets, 12);
+      expect(saved.drawnAtMs, isNotNull);
+      expect(find.byType(OfflineBanner), findsNothing);
+    });
+
+    testWidgets('online tetapi belum diundi: tidak ada yang disimpan', (tester) async {
+      verification = scen('belum diundi');
+      winners = winnersJson([], drawn: false);
+      await pump(tester, result());
+      expect(find.text('Belum diundi'), findsOneWidget);
+      expect(cache.draws, isEmpty);
+    });
+
+    testWidgets('offline dengan cache: hasil tampil dengan label "Data offline"', (tester) async {
+      await pump(tester, result());
+      await tester.pumpWidget(const SizedBox());
+      failWith = NetworkException('Tidak ada koneksi internet.');
+      await pump(tester, result());
+      expect(find.byType(ErrorState), findsNothing);
+      expect(find.byType(OfflineBanner), findsOneWidget);
+      expect(find.textContaining('Data offline'), findsOneWidget);
+      expect(find.text('Daftar pemenang'), findsOneWidget);
+      for (final n in winnersOf(verification)) {
+        expect(find.byKey(Key('result_winner_$n')), findsOneWidget);
+      }
+      expect(find.text('Tiket yang ikut'), findsOneWidget);
+    });
+
+    testWidgets('offline tanpa cache: keadaan kosong yang jelas, bukan ErrorState', (tester) async {
+      failWith = NetworkException('Tidak ada koneksi internet.');
+      await pump(tester, result());
+      expect(find.byType(ErrorState), findsNothing);
+      expect(find.text('Gagal memuat'), findsNothing);
+      expect(find.text('Hasil draw belum tersimpan di perangkat. Buka layar ini saat online sekali untuk menyimpannya.'), findsOneWidget);
+    });
+
+    testWidgets('offline, cache ada, peserta bertiket: gerbang goyang tetap tampil dan hasil belum bocor', (tester) async {
+      final mine = winnersOf(verification).first;
+      tickets = [ticketJson(mine, 'winner')];
+      await pump(tester, result());
+      await tester.pumpWidget(const SizedBox());
+      failWith = NetworkException('Tidak ada koneksi internet.');
+      await pump(tester, result());
+      expect(find.byKey(const Key('shake_gate')), findsOneWidget);
+      expect(find.byType(OfflineBanner), findsNothing);
+      expect(find.byKey(const Key('result_outcome')), findsNothing);
+      expect(find.text('Daftar pemenang'), findsNothing);
+      await tester.tap(find.byKey(const Key('reveal_button')));
+      await settle(tester);
+      expect(find.text('Tiketmu menang!'), findsOneWidget);
+      expect(find.byType(OfflineBanner), findsOneWidget);
+    });
+
+    testWidgets('cache milik pengguna lain tidak dipakai', (tester) async {
+      await pump(tester, result());
+      cache.draws['u2'] = cache.draws.remove('u1')!;
+      await tester.pumpWidget(const SizedBox());
+      failWith = NetworkException('Tidak ada koneksi internet.');
+      await pump(tester, result());
+      expect(find.text('Daftar pemenang'), findsNothing);
+      expect(find.textContaining('belum tersimpan'), findsWidgets);
+    });
+
+    testWidgets('sesi offline + cache rusak: tetap keadaan kosong, tidak crash', (tester) async {
+      failWith = NetworkException('Tidak ada koneksi internet.');
+      cache.failing = true;
+      await pump(tester, result());
+      expect(find.byType(ErrorState), findsNothing);
+      expect(find.textContaining('belum tersimpan'), findsWidgets);
     });
 
     testWidgets('animasi dikurangi: reveal tetap bekerja tanpa konfeti', (tester) async {
@@ -437,11 +529,22 @@ void main() {
       expect(copied.single, commitHash);
     });
 
-    testWidgets('Cek keaslian: galat jaringan -> ErrorState', (tester) async {
+    testWidgets('Cek keaslian: galat server -> ErrorState', (tester) async {
+      failWith = ServerFaultException('Server sedang bermasalah.');
+      await pump(tester, DrawVerifyScreen(giveawayId: gid, runner: syncRunner));
+      expect(find.text('Server sedang bermasalah.'), findsOneWidget);
+      expect(find.text('Coba lagi'), findsOneWidget);
+    });
+
+    testWidgets('Cek keaslian offline: pesan butuh koneksi, tanpa crash dan tanpa memakai cache', (tester) async {
+      await pump(tester, result()); // simpan cache dulu
+      await tester.pumpWidget(const SizedBox());
       failWith = NetworkException('Tidak ada koneksi internet.');
       await pump(tester, DrawVerifyScreen(giveawayId: gid, runner: syncRunner));
-      expect(find.text('Tidak ada koneksi internet.'), findsOneWidget);
+      expect(find.text('Butuh koneksi internet untuk memeriksa keaslian.'), findsOneWidget);
       expect(find.text('Coba lagi'), findsOneWidget);
+      expect(find.byKey(const Key('verify_summary')), findsNothing);
+      expect(tester.takeException(), isNull);
     });
 
     test('shortHash: memotong yang panjang, membiarkan yang pendek', () {

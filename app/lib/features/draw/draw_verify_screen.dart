@@ -48,7 +48,7 @@ class DrawVerifyScreen extends StatefulWidget {
 }
 
 class _DrawVerifyScreenState extends State<DrawVerifyScreen> {
-  late final DrawController _draw = DrawController(context.read<AuthedApi>(), widget.giveawayId, runner: widget.runner);
+  late final DrawController _draw = DrawController(context.read<AuthedApi>(), widget.giveawayId, runner: widget.runner, verifyOnly: true);
 
   @override
   void initState() {
@@ -72,7 +72,11 @@ class _DrawVerifyScreenState extends State<DrawVerifyScreen> {
           appBar: AppBar(title: const Text('Cek Keaslian')),
           body: switch (d.state) {
             LoadState.idle || LoadState.loading => const SkeletonLoader(shape: SkeletonShape.ticket, count: 4),
-            LoadState.error => ErrorState(message: d.error ?? 'Gagal memuat.', onRetry: d.load),
+            LoadState.error => ErrorState(
+                title: d.error == verifyOfflineMessage ? 'Sedang offline' : 'Gagal memuat',
+                message: d.error ?? 'Gagal memuat.',
+                onRetry: d.load,
+              ),
             LoadState.loaded => _Steps(report: d.report!),
           },
         );

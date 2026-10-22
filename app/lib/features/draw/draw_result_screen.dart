@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/api/authed_api.dart';
+import '../../core/db/cache_store.dart';
 import '../../core/db/rate_cache.dart' show SettingsStore;
 import '../../core/display.dart';
 import '../../core/format.dart';
@@ -40,7 +41,8 @@ class DrawResultScreen extends StatefulWidget {
 }
 
 class _DrawResultScreenState extends State<DrawResultScreen> {
-  late final DrawController _draw = DrawController(context.read<AuthedApi>(), widget.giveawayId, runner: widget.runner);
+  late final DrawController _draw = DrawController(context.read<AuthedApi>(), widget.giveawayId,
+      runner: widget.runner, cache: context.read<CacheStore?>(), auth: context.read<AuthController?>());
   late final DrawSeenStore _seenStore =
       DrawSeenStore(context.read<SettingsStore?>(), context.read<AuthController?>()?.user?.id ?? '');
   late final NotificationService? _notif = context.read<NotificationService?>();
@@ -95,6 +97,15 @@ class _DrawResultScreenState extends State<DrawResultScreen> {
           body = const SkeletonLoader(key: ValueKey('loading'), shape: SkeletonShape.ticket, count: 3);
         } else if (d.state == LoadState.error) {
           body = ErrorState(key: const ValueKey('error'), message: d.error ?? 'Gagal memuat.', onRetry: d.load);
+        } else if (d.notCached) {
+          body = EmptyState(
+            key: const ValueKey('not_cached'),
+            icon: Icons.cloud_off,
+            title: 'Hasil draw belum tersimpan',
+            message: 'Hasil draw belum tersimpan di perangkat. Buka layar ini saat online sekali untuk menyimpannya.',
+            actionLabel: 'Coba lagi',
+            onAction: d.load,
+          );
         } else if (!d.drawn) {
           body = const EmptyState(
             key: ValueKey('undrawn'),
@@ -105,7 +116,10 @@ class _DrawResultScreenState extends State<DrawResultScreen> {
         } else if (mine.isNotEmpty && !_seen && !_revealed) {
           body = _ShakeGate(key: const ValueKey('gate'), shakes: widget.shakes, onReveal: _reveal);
         } else {
-          body = _Results(key: const ValueKey('results'), draw: d, mine: mine, celebrate: _revealed);
+          final results = _Results(key: const ValueKey('results'), draw: d, mine: mine, celebrate: _revealed);
+          body = d.offline
+              ? Column(key: const ValueKey('results_offline'), children: [OfflineBanner(cachedAt: d.cachedAt), Expanded(child: results)])
+              : results;
         }
         return Scaffold(
           appBar: AppBar(title: const Text('Hasil Draw')),
@@ -212,7 +226,6 @@ class _Results extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final c = context.colors;
-    final rep = draw.report!;
     final winnerNumbers = {for (final w in draw.winners) w.ticketNumber};
     final mineNumbers = {for (final t in mine) t.ticketNumber};
     final won = mine.any((t) => t.result == TicketResult.winner) || mineNumbers.any(winnerNumbers.contains);
@@ -259,8 +272,8 @@ class _Results extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (rep.drawnAtMs != null) _Info(icon: Icons.event_available, label: 'Diundi', value: context.when(DateTime.fromMillisecondsSinceEpoch(rep.drawnAtMs!))),
-              if (rep.totalTickets != null) _Info(icon: Icons.confirmation_number_outlined, label: 'Tiket yang ikut', value: '${rep.totalTickets}'),
+              if (draw.drawnAtMs != null) _Info(icon: Icons.event_available, label: 'Diundi', value: context.when(DateTime.fromMillisecondsSinceEpoch(draw.drawnAtMs!))),
+              if (draw.totalTickets != null) _Info(icon: Icons.confirmation_number_outlined, label: 'Tiket yang ikut', value: '${draw.totalTickets}'),
               _Info(icon: Icons.emoji_events_outlined, label: 'Pemenang', value: '${draw.winners.length}'),
             ],
           ),
