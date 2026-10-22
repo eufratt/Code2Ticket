@@ -53,6 +53,14 @@ npm start
 
 - **Status giveaway** (`status` di `GET /giveaways`, `GET /giveaways/:id`, `GET /tickets` > `giveaway_status`, dan konteks Asisten) dihitung dari waktu
   saat dibaca: `upcoming` / `active` / `waiting_draw`, `drawn` bila sudah diundi. Kolom `giveaways.status` hanya dipakai internal dan baru disegarkan scheduler.
+- **Cakupan status `GET /giveaways` (Discover)**: tanpa `status` dan tanpa `q` = `active` + `upcoming`; tanpa `status` dengan `q` = semua status.
+  `status` eksplisit dipatuhi persis: `active`, `upcoming`, `waiting_draw`, `drawn`, `finished` (= `waiting_draw` + `drawn`), `all`, atau
+  beberapa dipisah koma (`active,upcoming`); nilai tak dikenal -> `invalid_input` field `status` (dulu diam-diam berarti semua).
+  Hasil selalu dikelompokkan: aktif, akan datang, menunggu draw, selesai; di dalam kelompok mengikuti `sort`. `sort=deadline` (bawaan):
+  aktif = `end_at` terdekat, akan datang = `start_at` terdekat, menunggu draw/selesai = `end_at` terbaru dulu. Paginasi tetap (`limit` bawaan 20,
+  dijepit 1..50; `offset`) di atas urutan berkelompok itu. Endpoint tetap publik dan hanya memuat kolom publik yang sama (tidak ada giveaway
+  non-publik di skema); `GET /admin/giveaways` tetap khusus admin, semua status, terbaru dulu tanpa kelompok.
+  Home memanggil `GET /giveaways?status=active&limit=50` supaya tidak ikut berubah.
 - **Draw terjadwal yang gagal `seed_mismatch`** dicoba sekali lalu dilewati scheduler (event `draw_seed_mismatch` di `system_events` dicatat sekali; `draw_chain` tidak disentuh).
   Draw manual admin tetap bisa dicoba. Setelah penyebabnya diperbaiki, buka lagi untuk scheduler dengan menghapus event itu:
   `delete from system_events where event = 'draw_seed_mismatch' and details->>'giveaway_id' = '<id>';`
@@ -162,7 +170,7 @@ Token dikirim lewat `Authorization: Bearer <token>`.
 | `PATCH /me` | session | `rpc_update_profile` |
 | `PUT /me/photo` (badan JPEG biner, `Content-Type: image/jpeg`, maks. 150 KB; 413 bila lebih besar; segmen APP1 (EXIF/GPS, XMP) dibuang sebelum disimpan, struktur JPEG rusak -> `invalid_input`) | session | (baru) |
 | `GET /users/:id/photo` (publik, `Cache-Control` + `ETag`; 404 bila tidak ada) | - | (baru) |
-| `GET /giveaways` (`q,category,min_value,max_value,lat,lng,radius_km,deadline_days,status,sort,limit,offset`; `offset` maks. 10000 dan `deadline_days` maks. 3650, nilai lebih besar dijepit) | - | `rpc_search_giveaways` |
+| `GET /giveaways` (`q,category,min_value,max_value,lat,lng,radius_km,deadline_days,status,sort,limit,offset`; `offset` maks. 10000 dan `deadline_days` maks. 3650, nilai lebih besar dijepit; cakupan `status` bawaan lihat "Perilaku yang perlu diketahui") | - | `rpc_search_giveaways` |
 | `GET /giveaways/:id` (404 `not_found` bila tidak ada) | - | (baru, tanpa padanan RPC) |
 | `GET /app-config/organizer` (`{ok,email,note}`; hanya kunci `organizer_contact_email` / `organizer_contact_note`) | - | (baru) |
 | `GET /giveaways/:id/winners`, `/giveaways/:id/verification` | - | `rpc_get_winners`, `rpc_get_verification_data` |
@@ -176,7 +184,7 @@ Token dikirim lewat `Authorization: Bearer <token>`.
 | `POST /feedback` (`suggestion,impression`), `GET /feedback` | session | `rpc_submit_feedback`, `rpc_get_my_feedback` |
 | `POST /admin/giveaways` (tanpa `id` = buat, dengan `id` = ubah) | admin | `rpc_admin_upsert_giveaway` |
 | `POST /admin/giveaways/:id/codes` (`count`; `geo_*` per kode ditolak `invalid_input` field `geo`), `GET` daftar | admin | `rpc_admin_generate_codes`, `rpc_admin_list_codes` |
-| `GET /admin/giveaways` (`limit`, `offset`; semua status, terbaru dulu; `GET /giveaways` publik bawaannya hanya `active`) | admin | (baru) |
+| `GET /admin/giveaways` (`limit`, `offset`; semua status, terbaru dulu; `GET /giveaways` publik bawaannya `active` + `upcoming`, dengan `q` semua status) | admin | (baru) |
 | `POST /admin/giveaways/:id/draw` | admin | `rpc_admin_run_draw` |
 | `POST /internal/tick` | `X-Tick-Secret` | `fn_run_due_draws` |
 
