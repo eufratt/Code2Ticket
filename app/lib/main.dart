@@ -25,6 +25,7 @@ import 'features/discover/discover_controller.dart';
 import 'features/game/game_controller.dart';
 import 'features/giveaways/affinity_controller.dart';
 import 'features/giveaways/giveaways_controller.dart';
+import 'features/organizer/organizer_contact.dart';
 import 'features/notifications/notification_bridge.dart';
 import 'features/notifications/notifications_controller.dart';
 import 'features/tickets/tickets_controller.dart';
@@ -114,6 +115,7 @@ class _Code2TicketAppState extends State<Code2TicketApp> with WidgetsBindingObse
         ChangeNotifierProvider<SettingsController>.value(value: _settings),
         ChangeNotifierProvider<RatesController>.value(value: _rates),
         ChangeNotifierProvider<NotificationService>.value(value: _notifService),
+        ChangeNotifierProvider(create: (_) => OrganizerContactController(_authed, _db)),
         ChangeNotifierProvider(create: (_) => GiveawaysController(_authed, _auth, _db)),
         ChangeNotifierProvider(create: (_) => TicketsController(_authed, _auth, _db)),
         ChangeNotifierProvider(create: (_) => NotificationsController(_authed, _auth)),

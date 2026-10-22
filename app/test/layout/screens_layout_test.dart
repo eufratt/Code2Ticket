@@ -39,6 +39,8 @@ import 'package:code2ticket/features/giveaways/giveaway_models.dart';
 import 'package:code2ticket/features/giveaways/giveaways_controller.dart';
 import 'package:code2ticket/features/giveaways/home_screen.dart';
 import 'package:code2ticket/features/notifications/notifications_controller.dart';
+import 'package:code2ticket/features/organizer/organizer_contact.dart';
+import 'package:code2ticket/features/organizer/organizer_screen.dart';
 import 'package:code2ticket/features/notifications/notifications_screen.dart';
 import 'package:code2ticket/features/profile/profile_screen.dart';
 import 'package:code2ticket/features/profile/settings_screen.dart';
@@ -153,6 +155,8 @@ class SampleAuth extends FakeAuth {
 class SampleEnv {
   SampleEnv() {
     api = FakeApi((m, p, b) async {
+      await beforeResponse?.call(p);
+      if (p.startsWith('/app-config/organizer')) return {...organizer};
       if (p.startsWith('/me/affinity')) return {...affinity};
       if (p.startsWith('/game/leaderboard')) {
         return {
@@ -200,6 +204,12 @@ class SampleEnv {
     auth = SampleAuth(api)..user = sampleUser();
     authed = AuthedApi(api, auth);
   }
+  /// Isi GET /app-config/organizer; tes boleh mengubahnya sebelum layar dibuka.
+  Map<String, dynamic> organizer = {'ok': true, 'email': 'admin@example.test', 'note': null};
+
+  /// Dipanggil sebelum tiap jawaban API (tes boleh menahan atau melempar galat untuk jalur tertentu).
+  Future<void> Function(String path)? beforeResponse;
+
   /// Isi GET /me/affinity ({kategori: skor}); kosong = tanpa "Untuk kamu".
   Map<String, dynamic> affinity = {};
 
@@ -231,6 +241,7 @@ class SampleEnv {
           Provider<SettingsStore>.value(value: settings),
           Provider<LocationService>.value(value: LocationService(FakeGateway())),
           ...displayProviders(),
+          ChangeNotifierProvider(create: (_) => OrganizerContactController(authed, settings)),
           ChangeNotifierProvider(create: (_) => GiveawaysController(authed, auth, MemoryCacheStore(), retryInterval: null)),
           ChangeNotifierProvider(create: (_) => TicketsController(authed, auth, MemoryCacheStore(), retryInterval: null)),
           ChangeNotifierProvider(create: (_) => NotificationsController(authed, auth)),
@@ -285,6 +296,7 @@ void main() {
     'Kunci biometric': (() => const BiometricLockScreen(), 'Aplikasi Terkunci'),
     'Konverter': (() => const ConverterScreen(), 'Mata Uang'),
     'Pengaturan': (() => const SettingsScreen(), 'Mata uang default'),
+    'Untuk Penyelenggara': (() => const OrganizerScreen(), 'Cara kerjanya'),
     'Saran & Kesan': (() => const FeedbackScreen(), 'Riwayat kirimanmu'),
     'Discover': (() => const DiscoverScreen(), 'Terdekat'),
     'Input Code': (() => const InputCodeScreen(), 'Tukar kode'),
