@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/location/location_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/widgets.dart';
@@ -29,22 +30,66 @@ class MapScreen extends StatefulWidget {
   State<MapScreen> createState() => _MapScreenState();
 }
 
-class _MapScreenState extends State<MapScreen> {
+class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   String? _selectedId;
   final _map = MapController();
   bool _fitted = false;
 
+  /// Posisi dan masalah lokasi milik layar Peta saja (tidak mengubah mode Terdekat di Discover).
+  LatLng? _here;
+  LocationStatus? _problem;
+  bool _locating = false;
+
+  /// Dialog izin sistem diminta otomatis paling banyak sekali per pembukaan layar.
+  bool _asked = false;
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     final c = context.read<DiscoverController>();
     Future.microtask(c.ensureLoaded);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _asked) return;
+      _asked = true;
+      _locate(prompt: true);
+    });
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _map.dispose();
     super.dispose();
+  }
+
+  /// Kembali dari pengaturan sistem: perbarui status tanpa dialog izin.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _problem != null) _locate(prompt: false);
+  }
+
+  Future<void> _locate({required bool prompt}) async {
+    final service = context.read<LocationService?>();
+    if (service == null || _locating) return;
+    setState(() => _locating = true);
+    final fix = await service.locate(prompt: prompt);
+    if (!mounted) return;
+    setState(() {
+      _locating = false;
+      _problem = fix.ok ? null : fix.status;
+      if (fix.ok) _here = LatLng(fix.lat!, fix.lng!);
+    });
+    if (fix.ok && _fitted) _map.move(_here!, 14);
+  }
+
+  void _onBannerAction() {
+    final p = _problem!;
+    if (p == LocationStatus.deniedForever || p == LocationStatus.serviceOff) {
+      context.read<LocationService?>()?.openSettingsFor(p);
+    } else {
+      _locate(prompt: true);
+    }
   }
 
   @override
@@ -52,7 +97,7 @@ class _MapScreenState extends State<MapScreen> {
     final c = context.watch<DiscoverController>();
     final placed = c.items.where((g) => g.hasCoordinates).toList();
     final selected = placed.where((g) => g.id == _selectedId).firstOrNull;
-    final me = c.position == null ? null : LatLng(c.position!.lat, c.position!.lng);
+    final me = _here ?? (c.position == null ? null : LatLng(c.position!.lat, c.position!.lng));
     final points = [for (final g in placed) LatLng(g.latitude!, g.longitude!), ?me];
 
     // Kamera disesuaikan sekali, saat penanda pertama kali ada. Ganti filter sesudahnya tidak menggeser peta.
@@ -73,6 +118,7 @@ class _MapScreenState extends State<MapScreen> {
       body: Column(
         children: [
           if (c.offline) OfflineBanner(cachedAt: c.cachedAt),
+          if (_problem != null) _MapLocationBanner(status: _problem!, onAction: _onBannerAction),
           Expanded(
             child: Stack(
               children: [
@@ -167,10 +213,10 @@ class _MapScreenState extends State<MapScreen> {
                     child: IconButton(
                       key: const Key('my_location'),
                       tooltip: 'Lokasi saya',
-                      icon: c.locating
+                      icon: c.locating || _locating
                           ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
                           : const Icon(Icons.my_location),
-                      onPressed: c.locating ? null : () => me != null ? _map.move(me, 14) : c.enableNearby(),
+                      onPressed: c.locating || _locating ? null : () => me != null ? _map.move(me, 14) : _locate(prompt: true),
                     ),
                   ),
                 ),
@@ -197,6 +243,36 @@ class _MapScreenState extends State<MapScreen> {
     return missing == 0
         ? '$placed giveaway di peta'
         : '$placed giveaway di peta ($missing tanpa lokasi)';
+  }
+}
+
+/// Alasan posisi tidak tersedia di Peta + satu tombol aksi (izinkan / buka pengaturan). Peta tetap tampil di bawahnya.
+class _MapLocationBanner extends StatelessWidget {
+  const _MapLocationBanner({required this.status, required this.onAction});
+  final LocationStatus status;
+  final VoidCallback onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    final sc = context.colors.statusWarning;
+    return Container(
+      key: const Key('map_location_banner'),
+      width: double.infinity,
+      color: sc.bg,
+      padding: const EdgeInsets.fromLTRB(Spacing.screen, Spacing.s8, Spacing.screen, Spacing.s4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(locationStatusMessage(status), style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: sc.fg)),
+          TextButton(
+            key: const Key('map_location_action'),
+            style: TextButton.styleFrom(minimumSize: const Size(kMinTap, kMinTap)),
+            onPressed: onAction,
+            child: Text(locationActionLabel(status)),
+          ),
+        ],
+      ),
+    );
   }
 }
 
