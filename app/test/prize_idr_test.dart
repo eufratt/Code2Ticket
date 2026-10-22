@@ -323,8 +323,8 @@ void main() {
       await db.close();
     });
 
-    test('pemasangan baru: dbVersion 5 dan kolom prize_value_idr', () async {
-      expect(LocalDb.dbVersion, 5);
+    test('pemasangan baru: dbVersion 6 dan kolom prize_value_idr', () async {
+      expect(LocalDb.dbVersion, 6);
       final db = await databaseFactoryFfi.openDatabase(
         inMemoryDatabasePath,
         options: OpenDatabaseOptions(version: LocalDb.dbVersion, onCreate: LocalDb.createTables),

@@ -2,6 +2,7 @@ import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 
 import '../../features/assistant/assistant_models.dart';
+import '../../features/draw/draw_models.dart';
 import '../../features/giveaways/giveaway_models.dart';
 import '../../features/tickets/ticket_models.dart';
 import 'cache_store.dart';
@@ -26,7 +27,7 @@ class LocalDb implements CacheStore, RateCache, SettingsStore, ChatStore {
   }
 
   static const String dbName = 'code2ticket.db';
-  static const int dbVersion = 5;
+  static const int dbVersion = 6;
 
   Future<Database> _initDb() async {
     final dbPath = await getDatabasesPath();
@@ -71,10 +72,11 @@ class LocalDb implements CacheStore, RateCache, SettingsStore, ChatStore {
       )
     ''');
     await _createChatTable(db);
+    await _createDrawResultsTable(db);
   }
 
   /// v2: riwayat percakapan Asisten. v3: nilai hadiah rupiah (prize_value_idr menggantikan prize_value_usd).
-  /// v4: kolom how_to_participate dan organizer_url. v5: kolom redeem_geo_restricted.
+  /// v4: kolom how_to_participate dan organizer_url. v5: kolom redeem_geo_restricted. v6: tabel cached_draw_results (tabel baru; data lama tidak disentuh).
   static Future<void> upgradeTables(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) await _createChatTable(db);
     // Kartu giveaway di riwayat Asisten menyimpan kolom USD lama: kartunya dikosongkan, teks percakapan tetap.
@@ -84,6 +86,17 @@ class LocalDb implements CacheStore, RateCache, SettingsStore, ChatStore {
       await db.execute('DROP TABLE IF EXISTS cached_giveaways');
       await _createGiveawaysTable(db);
     }
+    if (oldVersion < 6) await _createDrawResultsTable(db);
+  }
+
+  static Future<void> _createDrawResultsTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS cached_draw_results (
+        giveaway_id TEXT NOT NULL, user_id TEXT NOT NULL, status TEXT NOT NULL, drawn_at_ms INTEGER, total_tickets INTEGER,
+        winner_count INTEGER NOT NULL, winners_json TEXT NOT NULL, cached_at TEXT NOT NULL,
+        PRIMARY KEY (user_id, giveaway_id)
+      )
+    ''');
   }
 
   static Future<void> _createGiveawaysTable(Database db) async {
@@ -207,6 +220,30 @@ class LocalDb implements CacheStore, RateCache, SettingsStore, ChatStore {
     return DateTime.tryParse(r.first['t'] as String? ?? '')?.toLocal();
   }
 
+  // ---------------------------------------------------------------- cache hasil draw
+
+  static const drawKeep = 50;
+
+  @override
+  Future<void> saveDrawResult(String userId, CachedDrawResult result) async {
+    final db = await database;
+    await db.transaction((txn) async {
+      await txn.insert('cached_draw_results', result.toRow(userId, DateTime.now()), conflictAlgorithm: ConflictAlgorithm.replace);
+      await txn.rawDelete(
+        'DELETE FROM cached_draw_results WHERE user_id = ? AND rowid NOT IN '
+        '(SELECT rowid FROM cached_draw_results WHERE user_id = ? ORDER BY cached_at DESC, rowid DESC LIMIT $drawKeep)',
+        [userId, userId],
+      );
+    });
+  }
+
+  @override
+  Future<CachedDrawResult?> loadDrawResult(String userId, String giveawayId) async {
+    final db = await database;
+    final rows = await db.query('cached_draw_results', where: 'user_id = ? AND giveaway_id = ?', whereArgs: [userId, giveawayId], limit: 1);
+    return rows.isEmpty ? null : CachedDrawResult.tryParse(rows.first);
+  }
+
   // ---------------------------------------------------------------- riwayat pencarian
 
   @override
@@ -252,6 +289,7 @@ class LocalDb implements CacheStore, RateCache, SettingsStore, ChatStore {
     final db = await database;
     await db.delete('cached_giveaways');
     await db.delete('cached_tickets');
+    await db.delete('cached_draw_results');
     if (userId != null) {
       await clearSearches(userId);
       await clearChat(userId);

@@ -1,4 +1,5 @@
 import 'package:code2ticket/core/db/cache_store.dart';
+import 'package:code2ticket/features/draw/draw_models.dart';
 import 'package:code2ticket/features/giveaways/giveaway_models.dart';
 import 'package:code2ticket/features/tickets/ticket_models.dart';
 
@@ -9,6 +10,7 @@ class MemoryCacheStore implements CacheStore {
   final Map<String, List<Ticket>> tickets = {};
   final Map<String, DateTime> ticketsAt = {};
   final Map<String, List<String>> searches = {};
+  final Map<String, Map<String, CachedDrawResult>> draws = {};
   bool failing = false; // simulasi cache rusak: semua operasi melempar
 
   void _check() {
@@ -56,6 +58,19 @@ class MemoryCacheStore implements CacheStore {
   Future<DateTime?> ticketsUpdatedAt(String userId) async => ticketsAt[userId];
 
   @override
+  Future<void> saveDrawResult(String userId, CachedDrawResult r) async {
+    _check();
+    draws.putIfAbsent(userId, () => {})[r.giveawayId] = CachedDrawResult(
+        giveawayId: r.giveawayId, winners: r.winners, drawnAtMs: r.drawnAtMs, totalTickets: r.totalTickets, cachedAt: DateTime.now());
+  }
+
+  @override
+  Future<CachedDrawResult?> loadDrawResult(String userId, String giveawayId) async {
+    _check();
+    return draws[userId]?[giveawayId];
+  }
+
+  @override
   Future<List<String>> recentSearches(String userId, {int limit = 10}) async =>
       (searches[userId] ?? []).take(limit).toList();
 
@@ -81,6 +96,7 @@ class MemoryCacheStore implements CacheStore {
     giveawaysAt = null;
     tickets.clear();
     ticketsAt.clear();
+    draws.clear();
     if (userId != null) {
       searches.remove(userId);
     } else {
