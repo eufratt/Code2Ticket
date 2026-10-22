@@ -15,6 +15,7 @@ psql "$DATABASE_URL" -f db/07_user_photos.sql   # foto profil (Supabase: tempel 
 psql "$DATABASE_URL" -f db/08_prize_value_idr.sql   # nilai hadiah dalam rupiah (lihat "Nilai hadiah" di bawah)
 psql "$DATABASE_URL" -f db/09_giveaway_participation.sql   # cara mendapatkan kode + tautan penyelenggara
 psql "$DATABASE_URL" -f db/10_redeem_geo_restricted.sql     # batas lokasi tukar kode per giveaway
+psql "$DATABASE_URL" -f db/11_organizer_contact.sql          # baris kontak admin untuk penyelenggara (kosong; lihat "Kontak penyelenggara")
 ADMIN_PASSWORD='...' npm run create-admin -- namamu email@kamu.com "Nama Lengkap"
 npm start
 ```
@@ -115,6 +116,19 @@ Perilaku:
 - Log hanya `CHAT upstream status=<n> type=<jenis>` / `timeout` / `network`. Isi pesan, kunci, dan pesan galat upstream tidak dicatat. Aktivitas `chat` dicatat ke `user_activity` tanpa isi pesan.
 - Batas pemakaian dihitung di MEMORI proses (tanpa perubahan skema): hilang saat server restart dan tidak dibagi antar instance. Cukup untuk satu instance Render; untuk beberapa instance butuh tabel (belum ada).
 
+## Kontak penyelenggara
+
+Penyelenggara yang ingin membuat giveaway menghubungi admin lewat email (layar "Untuk Penyelenggara" di app; tidak ada peran penyelenggara). Alamat TIDAK ada di repo (publik): hanya di tabel `app_config`, kunci `organizer_contact_email` dan `organizer_contact_note` (opsional). `db/11_organizer_contact.sql` hanya menyisipkan dua baris kosong (`on conflict do nothing`, idempotent). Isi lewat Supabase SQL Editor:
+
+```sql
+update public.app_config set value = '<alamat-email-admin>' where key = 'organizer_contact_email';
+update public.app_config set value = '<catatan singkat, opsional>' where key = 'organizer_contact_note';
+```
+
+`GET /app-config/organizer` (publik, tanpa session, hanya limiter global) menjawab `{"ok":true,"email":<string|null>,"note":<string|null>}`. Hanya dua kunci itu yang dibaca (kunci lain, mis. `demo_draw_enabled`, tidak pernah dikirim). Validasi di server: email format valid maks. 254 karakter; catatan maks. 300 karakter tanpa karakter kontrol; nilai tidak valid, kosong, atau baris tidak ada = `null`.
+
+Urutan deploy: (1) jalankan `11_organizer_contact.sql`, (2) isi nilai email lewat `update`, (3) push backend, (4) APK baru. Urutan terbalik tidak crash: backend baru sebelum migrasi/isi = kontak `null`; APK baru dengan backend lama (404) = "Kontak admin belum tersedia. Coba lagi nanti." tanpa tombol.
+
 ## Tes
 
 Butuh Postgres dengan ekstensi `pgcrypto` dan `pg_trgm`, serta Python 3 (tes kontrak memuat
@@ -150,6 +164,7 @@ Token dikirim lewat `Authorization: Bearer <token>`.
 | `GET /users/:id/photo` (publik, `Cache-Control` + `ETag`; 404 bila tidak ada) | - | (baru) |
 | `GET /giveaways` (`q,category,min_value,max_value,lat,lng,radius_km,deadline_days,status,sort,limit,offset`; `offset` maks. 10000 dan `deadline_days` maks. 3650, nilai lebih besar dijepit) | - | `rpc_search_giveaways` |
 | `GET /giveaways/:id` (404 `not_found` bila tidak ada) | - | (baru, tanpa padanan RPC) |
+| `GET /app-config/organizer` (`{ok,email,note}`; hanya kunci `organizer_contact_email` / `organizer_contact_note`) | - | (baru) |
 | `GET /giveaways/:id/winners`, `/giveaways/:id/verification` | - | `rpc_get_winners`, `rpc_get_verification_data` |
 | `POST /codes/redeem` (`code,lat,lng`) | session | `rpc_redeem_code` |
 | `GET /tickets` | session | `rpc_get_my_tickets` |
