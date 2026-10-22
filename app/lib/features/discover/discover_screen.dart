@@ -111,6 +111,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
               },
             ),
           ),
+          _StatusBar(controller: c),
           _SortBar(controller: c),
           if (c.locationProblem != null) _LocationBanner(controller: c),
           if (c.offline) OfflineBanner(cachedAt: c.cachedAt),
@@ -127,6 +128,39 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
       builder: (_) => FilterSheet(initial: c.filters),
     );
     if (result != null) await c.setFilters(result);
+  }
+}
+
+/// Status di bawah kolom cari, sinkron dengan sheet filter (sumbernya sama: `filters.status`). "Semua" = bawaan:
+/// tanpa kata kunci aktif + akan datang, dengan kata kunci semua status. Terpilih = centang + warna.
+class _StatusBar extends StatelessWidget {
+  const _StatusBar({required this.controller});
+  final DiscoverController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final f = controller.filters;
+    return SizedBox(
+      height: kMinTap + Spacing.s8,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: Spacing.screen, vertical: Spacing.s4),
+        child: Row(
+          children: [
+            for (final s in <GiveawayStatusFilter?>[null, ...GiveawayStatusFilter.values]) ...[
+              if (s != null) const SizedBox(width: Spacing.s8),
+              ChoiceChip(
+                key: Key('status_chip_${s?.name ?? 'all'}'),
+                label: Text(s?.label ?? 'Semua'),
+                showCheckmark: true,
+                selected: f.status == s,
+                onSelected: (_) => controller.setFilters(f.copyWith(status: s)),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -308,10 +342,12 @@ class _Results extends StatelessWidget {
                         title: 'Belum ada giveaway',
                         message: 'Tarik ke bawah untuk memuat ulang.',
                       )
-                    : const EmptyState(
+                    : EmptyState(
                         icon: Icons.search_off,
                         title: 'Tidak ada giveaway yang cocok',
-                        message: 'Coba kata kunci atau filter lain.',
+                        message: c.filters.status == null
+                            ? 'Coba kata kunci atau filter lain.'
+                            : 'Coba kata kunci atau filter lain.\nCoba pilih status lain.',
                       ),
               ),
             ])
@@ -477,9 +513,10 @@ class _FilterSheetState extends State<FilterSheet> {
                 section(
                   'Status',
                   Wrap(spacing: 8, children: [
-                    for (final s in GiveawayStatusFilter.values)
+                    for (final s in <GiveawayStatusFilter?>[null, ...GiveawayStatusFilter.values])
                       ChoiceChip(
-                        label: Text(s.label),
+                        key: Key('sheet_status_${s?.name ?? 'all'}'),
+                        label: Text(s?.label ?? 'Semua'),
                         selected: _f.status == s,
                         onSelected: (_) => setState(() => _f = _f.copyWith(status: s)),
                       ),
@@ -504,7 +541,7 @@ class _FilterSheetState extends State<FilterSheet> {
               context,
               widget.initial.copyWith(
                 category: null, minValueIdr: null, maxValueIdr: null, deadlineDays: null,
-                status: GiveawayStatusFilter.active,
+                status: null,
               ),
             ),
           ),

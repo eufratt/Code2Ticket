@@ -68,6 +68,19 @@ void main() {
     expect(find.text('2 giveaway di peta (1 tanpa lokasi)'), findsOneWidget);
   });
 
+  testWidgets('status bawaan Discover: Peta tetap hanya menampilkan giveaway aktif', (tester) async {
+    final now = DateTime.now();
+    await pump(tester, [
+      gw('a', title: 'Jakarta', lat: -6.2, lng: 106.8),
+      gw('u', title: 'Segera', lat: -6.9, lng: 107.6, start: now.add(const Duration(hours: 2)), end: now.add(const Duration(hours: 5))),
+      gw('f', title: 'Selesai', lat: -7.2, lng: 112.7, status: 'drawn'),
+    ]);
+    expect(find.byKey(const Key('marker_a')), findsOneWidget);
+    expect(find.byKey(const Key('marker_u')), findsNothing);
+    expect(find.byKey(const Key('marker_f')), findsNothing);
+    expect(find.text('1 giveaway di peta'), findsOneWidget);
+  });
+
   testWidgets('atribusi "© OpenStreetMap contributors" terlihat; tile memakai OSM + userAgentPackageName', (tester) async {
     await pump(tester, [gw('a', title: 'Jakarta', lat: -6.2, lng: 106.8)]);
     expect(find.text('© OpenStreetMap contributors'), findsOneWidget);

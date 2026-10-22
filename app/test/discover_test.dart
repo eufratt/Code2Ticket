@@ -11,6 +11,7 @@ import 'package:code2ticket/features/auth/auth_models.dart';
 import 'package:code2ticket/features/discover/discover_controller.dart';
 import 'package:code2ticket/features/discover/discover_filters.dart';
 import 'package:code2ticket/features/discover/discover_screen.dart';
+import 'package:code2ticket/features/giveaways/giveaway_card.dart';
 import 'package:code2ticket/features/giveaways/giveaway_models.dart';
 import 'package:code2ticket/features/giveaways/giveaways_controller.dart';
 import 'package:flutter/material.dart';
@@ -35,7 +36,7 @@ Map<String, dynamic> listOf(List<Giveaway> gs, {double? distance}) => {
             'prize_value_idr': g.prizeValueIdr, 'latitude': g.latitude, 'longitude': g.longitude,
             'start_at': g.startAt!.toUtc().toIso8601String(), 'end_at': g.endAt!.toUtc().toIso8601String(),
             'draw_at': g.drawAt!.toUtc().toIso8601String(), 'winner_count': 1, 'ticket_count': 0,
-            'status': 'active', 'distance_km': distance,
+            'status': g.status, 'distance_km': distance,
           },
       ],
     };
@@ -44,8 +45,10 @@ Map<String, String> queryOf(String path) => Uri.parse(path).queryParameters;
 
 void main() {
   group('DiscoverFilters.toQuery', () {
-    test('bawaan: status aktif + urutan deadline, tanpa q dan tanpa posisi', () {
-      expect(const DiscoverFilters().toQuery(), {'status': 'active', 'sort': 'deadline', 'limit': '20'});
+    test('bawaan: tanpa status (server: aktif + akan datang / semua bila ada q), urutan deadline', () {
+      expect(const DiscoverFilters().toQuery(), {'sort': 'deadline', 'limit': '20'});
+      expect(const DiscoverFilters(query: 'kamera').toQuery(), {'q': 'kamera', 'sort': 'deadline', 'limit': '20'});
+      expect(const DiscoverFilters(query: 'kamera', status: GiveawayStatusFilter.finished).toQuery()['status'], 'finished');
     });
 
     test('semua filter dipetakan ke parameter backend', () {
@@ -80,6 +83,10 @@ void main() {
       expect(f.copyWith(category: null).category, isNull);
       expect(f.copyWith(minValueIdr: null).minValueIdr, isNull);
       expect(f.activeFilterCount, 2); // kategori + rentang nilai
+      final s = f.copyWith(status: GiveawayStatusFilter.active);
+      expect([s.status, s.activeFilterCount], [GiveawayStatusFilter.active, 3]); // status eksplisit ikut dihitung
+      expect(s.copyWith(query: 'x').status, GiveawayStatusFilter.active);
+      expect(s.copyWith(status: null).status, isNull);
     });
   });
 
@@ -94,11 +101,23 @@ void main() {
     final c = gw('c', title: 'Kopi', end: now.add(const Duration(hours: 1)));
     final upcoming = gw('u', title: 'Besok', start: now.add(const Duration(hours: 2)), end: now.add(const Duration(hours: 9)));
     final finished = gw('f', title: 'Selesai', status: 'drawn');
-    final all = [a, b, c, upcoming, finished];
+    final waiting = gw('w', title: 'Tunggu', start: now.subtract(const Duration(hours: 3)), end: now.subtract(const Duration(hours: 1)));
+    final all = [a, b, c, upcoming, finished, waiting];
     List<String> ids(DiscoverFilters f, {double? lat, double? lng}) =>
         f.applyLocal(all, lat: lat, lng: lng, now: now).map((g) => g.id).toList();
 
-    test('bawaan: hanya aktif, urut deadline', () => expect(ids(const DiscoverFilters()), ['c', 'a', 'b']));
+    test('bawaan: aktif (deadline terdekat) lalu akan datang; selesai/menunggu draw tidak ikut',
+        () => expect(ids(const DiscoverFilters()), ['c', 'a', 'b', 'u']));
+    test('ada kata kunci tanpa status: semua status, urut aktif, akan datang, menunggu draw, selesai', () {
+      expect(ids(const DiscoverFilters(query: 'hadiah')), ['c', 'a', 'u', 'w', 'f']);
+      expect(ids(const DiscoverFilters(query: 'selesai')), ['f']);
+      // kelompok status tetap di depan, sort lain hanya berlaku di dalam kelompok
+      expect(ids(const DiscoverFilters(query: 'hadiah', sort: GiveawaySort.newest)).sublist(2), ['u', 'w', 'f']);
+    });
+    test('status eksplisit menimpa aturan bawaan dan kata kunci', () {
+      expect(ids(const DiscoverFilters(query: 'hadiah', status: GiveawayStatusFilter.active)), ['c', 'a']);
+      expect(ids(const DiscoverFilters(status: GiveawayStatusFilter.active)), ['c', 'a', 'b']);
+    });
     test('kata kunci di judul, hadiah, atau penyelenggara (tak peka huruf besar)', () {
       expect(ids(const DiscoverFilters(query: 'LAPTOP')), ['a']);
       expect(ids(const DiscoverFilters(query: 'biro')), ['b']);
@@ -108,19 +127,19 @@ void main() {
     test('kategori dan rentang nilai', () {
       expect(ids(const DiscoverFilters(category: 'travel')), ['b']);
       expect(ids(const DiscoverFilters(minValueIdr: 10000000)), ['b']);
-      expect(ids(const DiscoverFilters(maxValueIdr: 5000000)), ['c', 'a']);
+      expect(ids(const DiscoverFilters(maxValueIdr: 5000000)), ['c', 'a', 'u']);
     });
-    test('deadline dalam N hari', () => expect(ids(const DiscoverFilters(deadlineDays: 1)), ['c', 'a']));
+    test('deadline dalam N hari', () => expect(ids(const DiscoverFilters(deadlineDays: 1)), ['c', 'a', 'u']));
     test('status akan datang dan selesai', () {
       expect(ids(const DiscoverFilters(status: GiveawayStatusFilter.upcoming)), ['u']);
-      expect(ids(const DiscoverFilters(status: GiveawayStatusFilter.finished)), ['f']);
+      expect(ids(const DiscoverFilters(status: GiveawayStatusFilter.finished)), ['w', 'f']); // menunggu draw dulu
     });
     test('urutan nilai dan terbaru', () {
-      expect(ids(const DiscoverFilters(sort: GiveawaySort.value)), ['b', 'c', 'a']);
+      expect(ids(const DiscoverFilters(sort: GiveawaySort.value)), ['b', 'c', 'a', 'u']);
     });
     test('terdekat: jarak dihitung lokal, tanpa koordinat di akhir, radius menyaring', () {
       const near = DiscoverFilters(sort: GiveawaySort.nearest);
-      expect(ids(near, lat: -6.2, lng: 106.8), ['a', 'b', 'c']);
+      expect(ids(near, lat: -6.2, lng: 106.8), ['a', 'b', 'c', 'u']);
       final first = near.applyLocal(all, lat: -6.2, lng: 106.8, now: now).first;
       expect(first.distanceKm, 0);
       expect(ids(const DiscoverFilters(sort: GiveawaySort.nearest, nearbyRadiusKm: 25), lat: -6.2, lng: 106.8), ['a']);
@@ -209,6 +228,59 @@ void main() {
       auth.user = AppUser(id: 'u2', username: 'b', email: 'b@x.id', fullName: 'B', role: 'user', xp: 0, level: 1);
       await c.loadHistory();
       expect(c.history, ['milik u2']);
+      c.dispose();
+    });
+
+    test('status: bawaan tanpa parameter status; pilihan eksplisit dikirim; null kembali ke bawaan', () async {
+      final c = make();
+      await c.search();
+      expect(requests.last.containsKey('status'), isFalse);
+      await c.setFilters(c.filters.copyWith(status: GiveawayStatusFilter.finished));
+      expect(requests.last['status'], 'finished');
+      await c.submitQuery('laptop');
+      expect([requests.last['q'], requests.last['status']], ['laptop', 'finished']);
+      await c.setFilters(c.filters.copyWith(status: null));
+      expect(requests.last.containsKey('status'), isFalse);
+      c.dispose();
+    });
+
+    test('activeByDefault (Peta, Terdekat di Home): status bawaan tetap hanya yang aktif', () async {
+      final now = DateTime.now();
+      api = FakeApi((m, p, b) async => listOf([
+            gw('a', title: 'Aktif'),
+            gw('u', title: 'Segera', start: now.add(const Duration(hours: 2)), end: now.add(const Duration(hours: 5))),
+            gw('f', title: 'Selesai', status: 'drawn'),
+          ]));
+      final c = make();
+      await c.search();
+      expect(c.items.map((g) => g.id), ['a', 'u', 'f']);
+      expect(c.activeByDefault.map((g) => g.id), ['a']);
+      await c.setFilters(c.filters.copyWith(status: GiveawayStatusFilter.upcoming));
+      expect(c.activeByDefault.map((g) => g.id), ['a', 'u', 'f']); // status eksplisit: apa adanya
+      c.dispose();
+    });
+
+    test('offline: cache mengikuti aturan status yang sama (bawaan aktif + akan datang, kata kunci semua status)', () async {
+      final now = DateTime.now();
+      api = FakeApi((m, p, b) async {
+        if (!online) throw NetworkException('Tidak ada koneksi internet.');
+        return listOf([
+          gw('a', title: 'Kamera Aktif'),
+          gw('u', title: 'Kamera Segera', start: now.add(const Duration(hours: 2)), end: now.add(const Duration(hours: 5))),
+          gw('f', title: 'Kamera Selesai', status: 'drawn'),
+        ]);
+      });
+      final c = make();
+      await c.setFilters(c.filters.copyWith(status: GiveawayStatusFilter.finished)); // cache terisi ketiganya
+      await c.setFilters(c.filters.copyWith(status: null));
+      online = false;
+      await c.search();
+      expect(c.offline, isTrue);
+      expect(c.items.map((g) => g.id), ['a', 'u']);
+      await c.submitQuery('kamera');
+      expect(c.items.map((g) => g.id), ['a', 'u', 'f']);
+      await c.setFilters(c.filters.copyWith(status: GiveawayStatusFilter.finished));
+      expect(c.items.map((g) => g.id), ['f']);
       c.dispose();
     });
 
@@ -436,6 +508,82 @@ void main() {
       expect([queries.last['category'], queries.last['min_value'], queries.last['max_value']], ['gaming', '1000000', '9000000']);
       expect(find.text('2'), findsOneWidget); // lencana: kategori + nilai
       expect(find.widgetWithText(InputChip, 'Gaming'), findsOneWidget);
+    });
+
+    testWidgets('chip status di bawah kolom cari: Semua terpilih bawaan, >= 48 dp, sinkron dengan sheet dan lencana', (tester) async {
+      final queries = <Map<String, String>>[];
+      api = FakeApi((m, p, b) async {
+        queries.add(queryOf(p));
+        return {'ok': true, 'data': []};
+      });
+      await pump(tester);
+      await tester.pumpAndSettle();
+      ChoiceChip chip(String k) => tester.widget<ChoiceChip>(find.byKey(Key(k)));
+      for (final k in ['all', 'active', 'upcoming', 'finished']) {
+        expect(tester.getSize(find.byKey(Key('status_chip_$k'))).height, greaterThanOrEqualTo(48));
+        expect(chip('status_chip_$k').showCheckmark, isTrue); // terpilih ditandai centang, bukan hanya warna
+      }
+      expect(find.text('Semua'), findsOneWidget);
+      expect(find.text('Akan datang'), findsOneWidget);
+      expect(chip('status_chip_all').selected, isTrue);
+      expect(queries.last.containsKey('status'), isFalse);
+
+      await tester.tap(find.byKey(const Key('status_chip_finished')));
+      await tester.pumpAndSettle();
+      expect(queries.last['status'], 'finished');
+      expect([chip('status_chip_finished').selected, chip('status_chip_all').selected], [true, false]);
+      expect(find.text('1'), findsOneWidget); // lencana filter
+      expect(find.text('Coba kata kunci atau filter lain.\nCoba pilih status lain.'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('open_filter')));
+      await tester.pumpAndSettle();
+      expect(chip('sheet_status_finished').selected, isTrue);
+      await tester.tap(find.byKey(const Key('sheet_status_upcoming')));
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('apply_filter')));
+      await tester.pumpAndSettle();
+      expect(queries.last['status'], 'upcoming');
+      expect(chip('status_chip_upcoming').selected, isTrue);
+
+      await tester.tap(find.byKey(const Key('open_filter')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('reset_filter')));
+      await tester.pumpAndSettle();
+      expect(queries.last.containsKey('status'), isFalse);
+      expect(chip('status_chip_all').selected, isTrue);
+      expect(find.text('1'), findsNothing);
+      expect(find.textContaining('Coba pilih status lain.'), findsNothing);
+    });
+
+    testWidgets('pencarian menampilkan giveaway selesai dengan lencana status berteks', (tester) async {
+      final now = DateTime.now();
+      api = FakeApi((m, p, b) async {
+        final q = queryOf(p);
+        return listOf([
+          gw('a', title: 'Kamera Aktif'),
+          gw('u', title: 'Kamera Segera', start: now.add(const Duration(hours: 2)), end: now.add(const Duration(hours: 5))),
+          if (q['q'] != null) ...[
+            gw('w', title: 'Kamera Tunggu', start: now.subtract(const Duration(hours: 3)), end: now.subtract(const Duration(hours: 1))),
+            gw('f', title: 'Kamera Lama', status: 'drawn'),
+          ],
+        ]);
+      });
+      tester.view.physicalSize = const Size(1080, 4000);
+      tester.view.devicePixelRatio = 2;
+      addTearDown(tester.view.reset);
+      await pump(tester);
+      await tester.pumpAndSettle();
+      Finder badge(String t) => find.descendant(of: find.byType(GiveawayCard), matching: find.text(t));
+      expect(find.text('Kamera Lama'), findsNothing);
+      expect(badge('Aktif'), findsOneWidget);
+      expect(badge('Segera dimulai'), findsOneWidget);
+      await tester.enterText(find.byKey(const Key('search_field')), 'kamera');
+      await tester.pump(const Duration(milliseconds: 450));
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(find.text('Kamera Lama'), 200, scrollable: find.byType(Scrollable).last);
+      expect(find.text('Kamera Lama'), findsOneWidget);
+      expect(badge('Selesai'), findsOneWidget);
+      expect(badge('Menunggu draw'), findsOneWidget);
     });
 
     testWidgets('mode offline: banner "Data offline" dan hasil dari cache', (tester) async {

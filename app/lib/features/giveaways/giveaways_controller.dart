@@ -54,7 +54,7 @@ class GiveawaysController extends ChangeNotifier with OfflineRetry {
       notifyListeners();
     }
     try {
-      final r = await _api.get('/giveaways?limit=50');
+      final r = await _api.get('/giveaways?status=active&limit=50');
       if (r['ok'] == false) throw ServerFaultException('Gagal memuat giveaway (${r['error']}).');
       items = parseList(r['data'], Giveaway.tryParse);
       state = LoadState.loaded;

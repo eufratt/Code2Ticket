@@ -110,7 +110,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     final discover = context.watch<DiscoverController?>();
     final nearby = discover == null || !discover.filters.nearby
         ? const <Giveaway>[]
-        : ([for (final g in discover.items) if (g.distanceKm != null && (selected == null || g.category == selected)) g]
+        : ([for (final g in discover.activeByDefault) if (g.distanceKm != null && (selected == null || g.category == selected)) g]
           ..sort((a, b) => a.distanceKm!.compareTo(b.distanceKm!)));
     final soon = soonestDraws(visible, now);
     final affinityScores = context.watch<AffinityController?>()?.scores ?? const {};

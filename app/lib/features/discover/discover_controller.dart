@@ -65,6 +65,14 @@ class DiscoverController extends ChangeNotifier with OfflineRetry {
 
   String? get _uid => _auth.user?.id;
 
+  /// Hasil untuk Peta dan "Terdekat" di Home: tanpa status eksplisit tetap hanya yang aktif (seperti sebelum Discover
+  /// menampilkan yang akan datang/selesai); status eksplisit dipakai apa adanya.
+  List<Giveaway> get activeByDefault {
+    if (filters.status != null) return items;
+    final now = DateTime.now();
+    return [for (final g in items) if (g.phaseAt(now) == GiveawayPhase.active) g];
+  }
+
   /// Jarak/urutan/radius hanya dikirim bila posisinya ada.
   Map<String, String> _query({int offset = 0}) =>
       filters.toQuery(lat: position?.lat, lng: position?.lng, limit: pageSize, offset: offset);

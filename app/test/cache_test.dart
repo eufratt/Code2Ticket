@@ -213,6 +213,8 @@ void main() {
       expect(c.state, LoadState.loaded);
       expect(c.offline, isFalse);
       expect(c.items, hasLength(1));
+      // Home tetap hanya yang aktif: status eksplisit, bukan bawaan baru Discover (aktif + akan datang)
+      expect(api.calls.last.path, '/giveaways?status=active&limit=50');
       expect(cache.giveaways.keys, ['5deb977d-ff30-4e4e-849d-ff389fe51e6a']);
     });
 

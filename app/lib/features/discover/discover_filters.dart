@@ -22,7 +22,8 @@ enum GiveawaySort {
   final String label;
 }
 
-/// Status giveaway untuk filter; nilai [api] = parameter `status`.
+/// Status giveaway pilihan eksplisit; nilai [api] = parameter `status`. Selesai = menunggu draw + sudah diundi.
+/// Tanpa pilihan (null = "Semua"): tanpa kata kunci aktif + akan datang, dengan kata kunci semua status.
 enum GiveawayStatusFilter {
   active('active', 'Aktif'),
   upcoming('upcoming', 'Akan datang'),
@@ -44,7 +45,7 @@ class DiscoverFilters {
     this.minValueIdr,
     this.maxValueIdr,
     this.deadlineDays,
-    this.status = GiveawayStatusFilter.active,
+    this.status,
     this.sort = GiveawaySort.deadline,
     this.nearbyRadiusKm,
   });
@@ -57,7 +58,8 @@ class DiscoverFilters {
 
   /// Deadline (end_at) dalam N hari ke depan; null = semua.
   final int? deadlineDays;
-  final GiveawayStatusFilter status;
+  /// null = perilaku bawaan (lihat [GiveawayStatusFilter]).
+  final GiveawayStatusFilter? status;
   final GiveawaySort sort;
 
   /// Mode "Terdekat": radius km dari posisi pengguna; null = nonaktif.
@@ -70,7 +72,7 @@ class DiscoverFilters {
       (category != null ? 1 : 0) +
       (minValueIdr != null || maxValueIdr != null ? 1 : 0) +
       (deadlineDays != null ? 1 : 0) +
-      (status != GiveawayStatusFilter.active ? 1 : 0);
+      (status != null ? 1 : 0);
 
   /// Nilai [Object?] bernilai _keep = tidak diubah; null = dikosongkan.
   DiscoverFilters copyWith({
@@ -79,7 +81,7 @@ class DiscoverFilters {
     Object? minValueIdr = _keep,
     Object? maxValueIdr = _keep,
     Object? deadlineDays = _keep,
-    GiveawayStatusFilter? status,
+    Object? status = _keep,
     GiveawaySort? sort,
     Object? nearbyRadiusKm = _keep,
   }) =>
@@ -89,7 +91,7 @@ class DiscoverFilters {
         minValueIdr: identical(minValueIdr, _keep) ? this.minValueIdr : minValueIdr as int?,
         maxValueIdr: identical(maxValueIdr, _keep) ? this.maxValueIdr : maxValueIdr as int?,
         deadlineDays: identical(deadlineDays, _keep) ? this.deadlineDays : deadlineDays as int?,
-        status: status ?? this.status,
+        status: identical(status, _keep) ? this.status : status as GiveawayStatusFilter?,
         sort: sort ?? this.sort,
         nearbyRadiusKm: identical(nearbyRadiusKm, _keep) ? this.nearbyRadiusKm : nearbyRadiusKm as int?,
       );
@@ -103,7 +105,7 @@ class DiscoverFilters {
       if (minValueIdr != null) 'min_value': '$minValueIdr',
       if (maxValueIdr != null) 'max_value': '$maxValueIdr',
       if (deadlineDays != null) 'deadline_days': '$deadlineDays',
-      'status': status.api,
+      'status': ?status?.api,
       'sort': sort.api,
       if (lat != null && lng != null) ...{
         'lat': '$lat',
@@ -124,6 +126,7 @@ class DiscoverFilters {
     bool statusOk(Giveaway g) {
       final p = g.phaseAt(at);
       return switch (status) {
+        null => q.isNotEmpty || p == GiveawayPhase.active || p == GiveawayPhase.upcoming,
         GiveawayStatusFilter.active => p == GiveawayPhase.active,
         GiveawayStatusFilter.upcoming => p == GiveawayPhase.upcoming,
         GiveawayStatusFilter.finished => p == GiveawayPhase.drawn || p == GiveawayPhase.waitingDraw,
@@ -152,17 +155,33 @@ class DiscoverFilters {
       out.add(g.withDistance(km));
     }
 
-    int byEnd(Giveaway a, Giveaway b) =>
-        (a.endAt ?? DateTime(9999)).compareTo(b.endAt ?? DateTime(9999));
+    int asc(DateTime? a, DateTime? b) => (a ?? DateTime(9999)).compareTo(b ?? DateTime(9999));
+    // Deadline terdekat per kelompok: akan datang menurut mulai terdekat, yang sudah berakhir terbaru dulu.
+    int byDeadline(Giveaway a, Giveaway b, GiveawayPhase p) => switch (p) {
+          GiveawayPhase.upcoming => asc(a.startAt, b.startAt),
+          GiveawayPhase.waitingDraw || GiveawayPhase.drawn => (b.endAt ?? DateTime(0)).compareTo(a.endAt ?? DateTime(0)),
+          GiveawayPhase.active => asc(a.endAt, b.endAt),
+        };
     out.sort((a, b) {
+      final pa = a.phaseAt(at), pb = b.phaseAt(at);
+      final g = statusGroupRank(pa).compareTo(statusGroupRank(pb));
+      if (g != 0) return g;
       final c = switch (sort) {
         GiveawaySort.nearest => (a.distanceKm ?? double.infinity).compareTo(b.distanceKm ?? double.infinity),
         GiveawaySort.value => (b.prizeValueIdr ?? -1).compareTo(a.prizeValueIdr ?? -1),
         GiveawaySort.newest => (b.startAt ?? DateTime(0)).compareTo(a.startAt ?? DateTime(0)),
         GiveawaySort.deadline => 0,
       };
-      return c != 0 ? c : byEnd(a, b);
+      return c != 0 ? c : byDeadline(a, b, pa);
     });
     return out;
   }
 }
+
+/// Urutan kelompok hasil Discover (sama dengan backend): aktif, akan datang, menunggu draw, selesai.
+int statusGroupRank(GiveawayPhase p) => switch (p) {
+      GiveawayPhase.active => 0,
+      GiveawayPhase.upcoming => 1,
+      GiveawayPhase.waitingDraw => 2,
+      GiveawayPhase.drawn => 3,
+    };

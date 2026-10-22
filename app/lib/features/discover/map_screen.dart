@@ -95,7 +95,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     final c = context.watch<DiscoverController>();
-    final placed = c.items.where((g) => g.hasCoordinates).toList();
+    final placed = c.activeByDefault.where((g) => g.hasCoordinates).toList();
     final selected = placed.where((g) => g.id == _selectedId).firstOrNull;
     final me = _here ?? (c.position == null ? null : LatLng(c.position!.lat, c.position!.lng));
     final points = [for (final g in placed) LatLng(g.latitude!, g.longitude!), ?me];
@@ -237,9 +237,9 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   }
 
   String _summary(DiscoverController c, int placed) {
-    if (c.state == LoadState.loading && c.items.isEmpty) return 'Memuat giveaway...';
-    if (c.items.isEmpty) return 'Tidak ada giveaway untuk filter ini';
-    final missing = c.items.length - placed;
+    if (c.state == LoadState.loading && c.activeByDefault.isEmpty) return 'Memuat giveaway...';
+    if (c.activeByDefault.isEmpty) return 'Tidak ada giveaway untuk filter ini';
+    final missing = c.activeByDefault.length - placed;
     return missing == 0
         ? '$placed giveaway di peta'
         : '$placed giveaway di peta ($missing tanpa lokasi)';
