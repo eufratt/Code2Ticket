@@ -32,9 +32,9 @@ describe('GET /admin/giveaways', () => {
     });
   });
 
-  it('GET /giveaways publik tetap hanya yang aktif', async () => {
+  it('GET /giveaways publik bawaannya aktif + akan datang (tanpa yang selesai)', async () => {
     const list = await api.get('/giveaways');
-    expect(list.map((g) => g.id)).toEqual([ids.active]);
+    expect(list.map((g) => g.id)).toEqual([ids.active, ids.upcoming]);
   });
 
   it('non-admin 403, tanpa sesi 401', async () => {

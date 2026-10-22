@@ -6,11 +6,11 @@ export function searchSection(ctx) {
   const { api, s } = ctx;
 
   describe('6. Search', () => {
-    it('search default: hanya giveaway aktif', async () => {
+    it('search default: aktif + akan datang', async () => {
       await mkGiveaway(api, s.adm, { title: 'Gaming Mouse Giveaway', category: 'gaming', lat: -6.9175, lng: 107.6191, winners: 1 }); // Bandung
       const r = await api.get('/giveaways');
       expect(r.length).toBeGreaterThanOrEqual(4);
-      expect(r.every((x) => x.status !== 'drawn')).toBe(true);
+      expect(r.every((x) => x.status === 'active' || x.status === 'upcoming')).toBe(true);
       expect(Object.keys(r[0]).sort()).toEqual([
         'address', 'category', 'description', 'distance_km', 'draw_at', 'end_at', 'id', 'latitude', 'longitude', 'organizer',
         'organizer_url', 'prize_name', 'prize_value_idr', 'radius_km', 'redeem_geo_restricted', 'start_at', 'status', 'ticket_count', 'title', 'winner_count',
@@ -41,8 +41,8 @@ export function searchSection(ctx) {
       expect(r.every((x) => x.distance_km <= 10)).toBe(true);
       expect(r.some((x) => x.category === 'gaming')).toBe(false);
     });
-    it('sort terdekat menaik, tanpa koordinat di urutan akhir', async () => {
-      const r = await api.get('/giveaways', { query: { lat: -6.2, lng: 106.8, sort: 'nearest' } });
+    it('sort terdekat menaik (dalam satu kelompok status), tanpa koordinat di urutan akhir', async () => {
+      const r = await api.get('/giveaways', { query: { lat: -6.2, lng: 106.8, sort: 'nearest', status: 'active' } });
       const d = r.map((x) => x.distance_km);
       const known = d.filter((x) => x !== null);
       expect(known).toEqual([...known].sort((a, b) => a - b));

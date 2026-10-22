@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { fail, ok, parseInput, pgTrim } from '../lib/util.js';
+import { fail, invalid, ok, parseInput, pgTrim } from '../lib/util.js';
 import { maskName } from '../lib/geo.js';
 import { ownerKey } from '../lib/chain.js';
 import { effectiveStatus } from '../lib/sql.js';
@@ -16,13 +16,35 @@ const searchSchema = z.object({
 
 export const uuidSchema = z.uuid();
 
+// Status efektif (lib/sql.js effectiveStatus) dalam urutan kelompok hasil Discover.
+const STATUSES = ['active', 'upcoming', 'waiting_draw', 'drawn'];
+const STATUS_ALIASES = { all: STATUSES, finished: ['waiting_draw', 'drawn'] };
+
+// Parameter `status`: satu nilai atau beberapa dipisah koma (active, upcoming, waiting_draw, drawn, finished, all).
+// Tanpa status: tanpa kata kunci = aktif + akan datang; dengan kata kunci = semua status. null = nilai tak dikenal.
+function statusSet(raw, hasQuery) {
+  if (raw == null) return hasQuery ? STATUSES : ['active', 'upcoming'];
+  const out = new Set();
+  for (const t of raw.split(',')) {
+    const s = t.trim();
+    const v = STATUS_ALIASES[s] ?? (STATUSES.includes(s) ? [s] : null);
+    if (!v) return null;
+    v.forEach((x) => out.add(x));
+  }
+  return [...out];
+}
+
 // Pencarian publik (Discover). Filter, radius, dan urutan dilakukan di database.
 // min_value / max_value dan sort=value bekerja pada rupiah (prize_value_idr); klien mengonversi masukan pengguna ke IDR.
-export async function searchGiveaways(pool, query) {
+// Hasil dikelompokkan per status (aktif, akan datang, menunggu draw, selesai), lalu menurut `sort`; [grouped] false
+// hanya untuk daftar admin (terbaru dulu tanpa kelompok).
+export async function searchGiveaways(pool, query, { grouped = true } = {}) {
   const p = parseInput(searchSchema, query);
   if (p.error) return p.error;
   const a = p.data;
   let q = a.q == null ? null : pgTrim(a.q) || null;
+  const statuses = statusSet(a.status, q !== null);
+  if (!statuses) return invalid('status');
   if (q !== null) q = '%' + q.replace(/\\/g, '\\\\').replace(/%/g, '\\%').replace(/_/g, '\\_') + '%';
   const limit = Math.min(Math.max(a.limit ?? 20, 1), 50);
   const offset = Math.min(Math.max(a.offset ?? 0, 0), 10_000); // di atas batas int4 SQL akan 500
@@ -44,19 +66,19 @@ export async function searchGiveaways(pool, query) {
           and ($3::numeric is null or g.prize_value_idr >= $3)
           and ($4::numeric is null or g.prize_value_idr <= $4)
           and ($8::int is null or g.end_at <= now() + make_interval(days => $8::int))
-          and case coalesce($9::text, 'active')
-                when 'active'   then g.status <> 'drawn' and now() >= g.start_at and now() < g.end_at
-                when 'upcoming' then g.status <> 'drawn' and now() < g.start_at
-                when 'finished' then g.status = 'drawn' or now() >= g.end_at
-                else true end
+          and ${effectiveStatus('g')} = any($9::text[])
      ), filtered as (
        select * from base
         where $7::numeric is null or (distance_km is not null and distance_km <= $7::numeric)
      ), ranked as (
        select f.*, row_number() over (
-                order by (case when $10::text = 'nearest' then f.distance_km end) asc nulls last,
+                order by (case when $13::bool then array_position($14::text[], f.status) end) asc,
+                         (case when $10::text = 'nearest' then f.distance_km end) asc nulls last,
                          (case when $10::text = 'value'   then f.prize_value_idr end) desc nulls last,
                          (case when $10::text = 'newest'  then f.start_at end) desc nulls last,
+                         -- deadline terdekat: akan datang menurut mulai terdekat, yang sudah berakhir terbaru dulu
+                         (case when f.status = 'upcoming' then f.start_at end) asc nulls last,
+                         (case when f.status in ('waiting_draw', 'drawn') then f.end_at end) desc nulls last,
                          f.end_at asc, f.id) as rn
          from filtered f
      )
@@ -64,7 +86,7 @@ export async function searchGiveaways(pool, query) {
             radius_km, start_at, end_at, draw_at, winner_count, ticket_count, redeem_geo_restricted, status, distance_km
        from ranked where rn > $12::int and rn <= $12::int + $11::int order by rn`,
     [q, a.category ?? null, a.min_value ?? null, a.max_value ?? null, a.lat ?? null, a.lng ?? null,
-      a.radius_km ?? null, deadlineDays, a.status ?? null, a.sort ?? null, limit, offset],
+      a.radius_km ?? null, deadlineDays, statuses, a.sort ?? null, limit, offset, grouped, STATUSES],
   );
   return r.rows;
 }

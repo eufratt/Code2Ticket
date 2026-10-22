@@ -12,7 +12,7 @@ export default function adminRoutes({ pool }) {
   // Semua status (upcoming, active, waiting_draw, drawn), terbaru dulu; GET /giveaways publik hanya yang aktif.
   r.get('/giveaways', async (req, res) => {
     const { limit, offset } = req.query;
-    res.json(await searchGiveaways(pool, { limit, offset, status: 'all', sort: 'newest' }));
+    res.json(await searchGiveaways(pool, { limit, offset, status: 'all', sort: 'newest' }, { grouped: false }));
   });
   // Buat (tanpa id) atau ubah (dengan id) giveaway, seperti rpc_admin_upsert_giveaway.
   r.post('/giveaways', async (req, res) => res.json(await upsertGiveaway(pool, req.user, req.body)));

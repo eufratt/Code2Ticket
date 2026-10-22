@@ -73,7 +73,8 @@ describe('keamanan HTTP', () => {
     await register(api, 'inject1', 'inject@example.com', 'Passw0rd!1', evil);
     const tok = (await login(api, 'inject1', 'Passw0rd!1')).token;
     expect((await api.get('/auth/me', { token: tok })).user.full_name).toBe(evil);
-    expect(await api.get('/giveaways', { query: { q: evil, category: evil, sort: evil, status: evil } })).toEqual([]);
+    expect(await api.get('/giveaways', { query: { q: evil, category: evil, sort: evil } })).toEqual([]);
+    expect(await api.get('/giveaways', { query: { q: evil, status: evil } })).toEqual({ ok: false, error: 'invalid_input', field: 'status' });
     expect((await real.su.query('select count(*)::int n from users')).rows[0].n).toBeGreaterThan(0);
   });
   it('log tidak memuat password hash, token, atau seed', async () => {
