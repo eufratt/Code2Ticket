@@ -174,16 +174,42 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           )
         else
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(Spacing.screen, Spacing.s8, Spacing.screen, Spacing.listBottom),
+            padding: const EdgeInsets.fromLTRB(Spacing.screen, Spacing.s8, Spacing.screen, 0),
             sliver: SliverList.separated(
               itemCount: visible.length,
               separatorBuilder: (_, _) => const SizedBox(height: Spacing.cardGap),
               itemBuilder: (_, i) => GiveawayCard(giveaway: visible[i], onTap: () => open(visible[i])),
             ),
           ),
+        // Hanya saat daftar sudah termuat tanpa galat, dan di bawah daftar supaya tidak mengganggunya.
+        if (c.state == LoadState.loaded) const SliverToBoxAdapter(child: _OrganizerCard()),
+        const SliverToBoxAdapter(child: SizedBox(height: Spacing.listBottom)),
       ],
     );
   }
+}
+
+/// Ajakan kecil untuk penyelenggara di bawah daftar giveaway (-> layar Untuk Penyelenggara).
+class _OrganizerCard extends StatelessWidget {
+  const _OrganizerCard();
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.fromLTRB(Spacing.screen, Spacing.sectionGap, Spacing.screen, 0),
+        child: SurfaceCard(
+          key: const Key('home_organizer_card'),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text('Punya giveaway? Jalankan drawnya di Code2Ticket.', style: Theme.of(context).textTheme.titleSmall),
+            const SizedBox(height: Spacing.s12),
+            PrimaryButton(
+              key: const Key('home_organizer_learn'),
+              label: 'Pelajari',
+              icon: Icons.campaign_outlined,
+              variant: ButtonVariant.secondary,
+              onPressed: () => context.push('/organizer'),
+            ),
+          ]),
+        ),
+      );
 }
 
 /// Sapaan + avatar kecil (ketuk -> Profil).

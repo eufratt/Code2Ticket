@@ -170,6 +170,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const Divider(indent: Spacing.s16, endIndent: Spacing.s16),
                   ListTile(key: const Key('open_theme'), leading: Icon(_themeOptions[s.themeMode]!.$2), title: const Text('Tema'), subtitle: Text(_themeOptions[s.themeMode]!.$1), trailing: const Icon(Icons.chevron_right), onTap: () => _pickTheme(context, s)),
                 ],
+                const Divider(indent: Spacing.s16, endIndent: Spacing.s16),
+                ListTile(key: const Key('open_organizer'), leading: const Icon(Icons.campaign_outlined), title: const Text('Untuk Penyelenggara'), subtitle: const Text('Cara menjalankan giveawaymu di sini'), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/organizer')),
               ]),
             ),
           ],
