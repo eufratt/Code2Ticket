@@ -5,6 +5,7 @@ import helmet from 'helmet';
 import { requireSession } from './middleware/auth.js';
 import { HttpError } from './lib/util.js';
 import adminRoutes from './routes/admin.js';
+import appConfigRoutes from './routes/appConfig.js';
 import authRoutes from './routes/auth.js';
 import chatRoutes from './routes/chat.js';
 import giveawayRoutes from './routes/giveaways.js';
@@ -44,6 +45,7 @@ export function createApp({ pool, config, log = defaultLog, fetchImpl }) {
 
   const deps = { pool, config, log, fetchImpl, session: requireSession(pool), uploadLimit: limiter(config.UPLOAD_RATE_LIMIT_MAX ?? 10) };
   app.use('/auth', limiter(config.AUTH_RATE_LIMIT_MAX), authRoutes(deps));
+  app.use('/app-config', appConfigRoutes(deps));
   app.use('/giveaways', giveawayRoutes(deps));
   app.use('/admin', adminRoutes(deps));
   app.use('/internal', internalRoutes(deps));

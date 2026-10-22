@@ -14,6 +14,7 @@ export const PHOTOS_SQL = path.resolve(HERE, '../db/07_user_photos.sql');
 export const PRIZE_IDR_SQL = path.resolve(HERE, '../db/08_prize_value_idr.sql');
 export const PARTICIPATION_SQL = path.resolve(HERE, '../db/09_giveaway_participation.sql');
 export const REDEEM_GEO_SQL = path.resolve(HERE, '../db/10_redeem_geo_restricted.sql');
+export const ORGANIZER_CONTACT_SQL = path.resolve(HERE, '../db/11_organizer_contact.sql');
 const BASE_URL = process.env.TEST_PG_URL ?? 'postgres://postgres@127.0.0.1:54329';
 
 export const sha = (s) => crypto.createHash('sha256').update(s, 'utf8').digest('hex');
@@ -21,7 +22,7 @@ export const sha = (s) => crypto.createHash('sha256').update(s, 'utf8').digest('
 export const clientHash = (password, salt) => crypto.pbkdf2Sync(password, salt, 10_000, 32, 'sha256').toString('hex');
 
 // Database uji baru per file tes: shim role Supabase + 01_schema.sql + 06_backend.sql + 07 + 08.
-export async function createTestDb(name, migrations = [BACKEND_SQL, PHOTOS_SQL, PRIZE_IDR_SQL, PARTICIPATION_SQL, REDEEM_GEO_SQL]) {
+export async function createTestDb(name, migrations = [BACKEND_SQL, PHOTOS_SQL, PRIZE_IDR_SQL, PARTICIPATION_SQL, REDEEM_GEO_SQL, ORGANIZER_CONTACT_SQL]) {
   const dbName = `c2t_node_${name}`;
   const admin = new pg.Client({ connectionString: `${BASE_URL}/postgres` });
   await admin.connect();
