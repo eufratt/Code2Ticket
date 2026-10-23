@@ -22,6 +22,14 @@ const schema = z.object({
   AI_DAILY_LIMIT_GLOBAL: z.coerce.number().int().min(1).default(300), // semua pengguna, per hari UTC, di memori proses
   AI_RATE_PER_MINUTE: z.coerce.number().int().min(1).default(8),
   OPENAI_TIMEOUT_MS: z.coerce.number().int().min(1000).max(60000).default(20000),
+  // Jangkar blockchain (services/anchor.js). Semua teks: nilai kurang/tidak valid = fitur mati, bukan crash.
+  // ANCHOR_PRIVATE_KEY dan ANCHOR_RPC_URL (bisa memuat API key) JANGAN pernah di-log atau dikirim ke klien.
+  ANCHOR_ENABLED: z.string().default('false'),
+  ANCHOR_RPC_URL: z.string().default(''),
+  ANCHOR_CHAIN_ID: z.string().default('80002'),
+  ANCHOR_PRIVATE_KEY: z.string().default(''),
+  ANCHOR_EXPLORER_TX_URL: z.string().default(''),
+  ANCHOR_PUBLIC_RPC_URL: z.string().default(''),
 });
 
 // Hanya mengembalikan nilai terurai; tidak pernah mencetak isi env.

@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { withTx } from '../db.js';
 import { appendBlock } from '../lib/chain.js';
+import { kickAnchor, queueAnchor } from './anchor.js';
 import { cpLen, fail, invalid, ok, parseInput, randomHex, sha256Hex } from '../lib/util.js';
 
 const CATEGORIES = ['tech', 'gaming', 'travel', 'fashion', 'food', 'lifestyle', 'other'];
@@ -87,7 +88,9 @@ export async function upsertGiveaway(pool, admin, body) {
   const p = parseInput(creating ? createSchema : updateSchema, b);
   if (p.error) return p.error;
   try {
-    return await withTx(pool, (c) => (creating ? createGiveaway(c, admin, p.data) : updateGiveaway(c, p.data, b)));
+    const out = await withTx(pool, (c) => (creating ? createGiveaway(c, admin, p.data) : updateGiveaway(c, p.data, b)));
+    if (creating && out.ok) kickAnchor();
+    return out;
   } catch (e) {
     if (INPUT_ERROR_CODES.has(e.code)) return fail('invalid_input');
     throw e;
@@ -117,7 +120,8 @@ async function createGiveaway(c, admin, d) {
   );
   const id = g.rows[0].id;
   await c.query('insert into giveaway_secrets(giveaway_id, seed) values ($1, $2)', [id, seed]);
-  await appendBlock(c, { block_type: 'commit', giveaway_id: id, seed_hash: seedHash, winner_count: d.winner_count });
+  const block = await appendBlock(c, { block_type: 'commit', giveaway_id: id, seed_hash: seedHash, winner_count: d.winner_count });
+  await queueAnchor(c, block);
   return ok({ giveaway_id: id, created: true });
 }
 

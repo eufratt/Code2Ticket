@@ -2,12 +2,18 @@ import { withTx } from '../db.js';
 import { ownerKey, pickWinners, appendBlock } from '../lib/chain.js';
 import { fail, ok, sha256Hex } from '../lib/util.js';
 import { notify } from './users.js';
+import { kickAnchor, queueAnchor } from './anchor.js';
 
 const pad6 = (n) => String(n).padStart(6, '0');
 
 // Satu transaksi per draw. Hasil gagal-bisnis (already_drawn, seed_mismatch, ...) dikembalikan dan di-commit
 // supaya system_events tetap tercatat; hanya exception yang me-rollback seluruh draw.
-export const executeDraw = (pool, giveawayId, trigger) => withTx(pool, (c) => drawInTx(c, giveawayId, trigger));
+// Jangkar blockchain dikirim setelah commit, tanpa ditunggu.
+export async function executeDraw(pool, giveawayId, trigger) {
+  const out = await withTx(pool, (c) => drawInTx(c, giveawayId, trigger));
+  if (out.ok) kickAnchor();
+  return out;
+}
 
 // Pemilihan pemenang commit-reveal. Aturan: hash-chain commit-reveal.
 async function drawInTx(c, giveawayId, trigger) {
@@ -60,6 +66,7 @@ async function drawInTx(c, giveawayId, trigger) {
     block_type: 'result', giveaway_id: g.id, draw_id: draw.id, seed, total_tickets: total,
     tickets_hash: ticketsHash, winning_tickets: winners.join(','),
   });
+  await queueAnchor(c, block);
   await c.query("update giveaways set status = 'drawn' where id = $1", [g.id]);
 
   // Notifikasi: pemenang, lalu peserta lain

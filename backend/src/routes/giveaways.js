@@ -1,8 +1,9 @@
 import { Router } from 'express';
 import { getGiveaway, getVerificationData, getWinners, searchGiveaways, uuidSchema } from '../services/giveaways.js';
+import { getAnchors } from '../services/anchor.js';
 import { invalid } from '../lib/util.js';
 
-export default function giveawayRoutes({ pool }) {
+export default function giveawayRoutes({ pool, config }) {
   const r = Router();
   // Publik (tanpa session), seperti rpc_search_giveaways / rpc_get_winners / rpc_get_verification_data.
   r.get('/', async (req, res) => res.json(await searchGiveaways(pool, req.query)));
@@ -20,6 +21,11 @@ export default function giveawayRoutes({ pool }) {
   r.get('/:id/verification', async (req, res) => {
     const id = uuidSchema.safeParse(req.params.id);
     res.json(id.success ? await getVerificationData(pool, id.data) : invalid('id'));
+  });
+  // Jangkar blockchain per blok (tx_hash, status, explorer_url, rpc_url publik tanpa key).
+  r.get('/:id/anchors', async (req, res) => {
+    const id = uuidSchema.safeParse(req.params.id);
+    res.json(id.success ? await getAnchors(pool, config, id.data) : invalid('id'));
   });
   return r;
 }

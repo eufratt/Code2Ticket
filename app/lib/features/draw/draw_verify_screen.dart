@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 
 import '../../core/api/authed_api.dart';
+import '../../core/open_link.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/theme/app_typography.dart';
+import '../../core/verify/anchor_checker.dart';
 import '../../core/verify/chain_verifier.dart';
 import '../../core/widgets/widgets.dart';
 import '../giveaways/giveaways_controller.dart' show LoadState;
@@ -32,23 +35,39 @@ const _stepTexts = <VerifyStepId, (String, String)>{
     'Pemenang dihitung ulang',
     'Dari seed dan daftar tiket, app menghitung sendiri pemenangnya di ponselmu, lalu membandingkannya dengan hasil server.',
   ),
+  VerifyStepId.anchor: (
+    'Jangkar blockchain',
+    'Hash blok Commit dan Hasil juga dicatat di blockchain publik. App mengambil transaksinya langsung dari jaringan dan mencocokkannya dengan hash di ponselmu.',
+  ),
 };
+
+/// Label + nada tiap keadaan jangkar (teks + ikon, bukan hanya warna).
+StatusChip anchorChip(AnchorState s) => switch (s) {
+      AnchorState.anchored => const StatusChip.custom(label: 'Cocok', tone: StatusTone.success, icon: Icons.check_circle),
+      AnchorState.mismatch => const StatusChip.custom(label: 'Tidak cocok', tone: StatusTone.error, icon: Icons.cancel),
+      AnchorState.pending => const StatusChip.custom(label: 'Menunggu penjangkaran', tone: StatusTone.warning, icon: Icons.hourglass_top),
+      AnchorState.notAnchored => const StatusChip.custom(label: 'Belum dijangkarkan', tone: StatusTone.neutral, icon: Icons.link_off),
+      AnchorState.unreachable => const StatusChip.custom(label: 'Tidak terhubung', tone: StatusTone.warning, icon: Icons.cloud_off),
+    };
 
 /// S-VERIFY "Cek keaslian": semua perhitungan hash dilakukan di perangkat dari data mentah server; tiap langkah
 /// berstatus Lulus / Gagal / Belum dicek (teks + ikon, bukan hanya warna), lalu ringkasan Terverifikasi / Tidak cocok.
 class DrawVerifyScreen extends StatefulWidget {
-  const DrawVerifyScreen({super.key, required this.giveawayId, this.runner});
+  const DrawVerifyScreen({super.key, required this.giveawayId, this.runner, this.rpcClient});
   final String giveawayId;
 
   /// Hanya untuk tes: pengganti isolate untuk perhitungan hash.
   final VerifyRunner? runner;
+
+  /// Hanya untuk tes: pengganti HTTP ke RPC publik blockchain.
+  final http.Client? rpcClient;
 
   @override
   State<DrawVerifyScreen> createState() => _DrawVerifyScreenState();
 }
 
 class _DrawVerifyScreenState extends State<DrawVerifyScreen> {
-  late final DrawController _draw = DrawController(context.read<AuthedApi>(), widget.giveawayId, runner: widget.runner, verifyOnly: true);
+  late final DrawController _draw = DrawController(context.read<AuthedApi>(), widget.giveawayId, runner: widget.runner, verifyOnly: true, rpcClient: widget.rpcClient);
 
   @override
   void initState() {
@@ -125,6 +144,7 @@ class _StepCard extends StatelessWidget {
       StepStatus.pass => const StatusChip.custom(label: 'Lulus', tone: StatusTone.success, icon: Icons.check_circle),
       StepStatus.fail => const StatusChip.custom(label: 'Gagal', tone: StatusTone.error, icon: Icons.cancel),
       StepStatus.skipped => const StatusChip.custom(label: 'Belum dicek', tone: StatusTone.neutral, icon: Icons.remove_circle_outline),
+      StepStatus.warning => anchorChip(dominantAnchorState(step.anchors)),
     };
     return SurfaceCard(
       key: Key('verify_step_${step.id.name}'),
@@ -151,6 +171,7 @@ class _StepCard extends StatelessWidget {
           const SizedBox(height: Spacing.s8),
           Semantics(liveRegion: true, child: Text(step.detail, style: theme.textTheme.bodyMedium)),
           for (final e in step.evidence) _HashRow(label: e.label, value: e.value, stepId: step.id),
+          for (final a in step.anchors) _AnchorRow(anchor: a),
         ],
       ),
     );
@@ -194,6 +215,69 @@ class _HashRow extends StatelessWidget {
   }
 }
 
+/// Satu blok di langkah 5: status jangkar, hash transaksi (salin), dan tautan "Lihat di blockchain" bila ada.
+class _AnchorRow extends StatelessWidget {
+  const _AnchorRow({required this.anchor});
+  final BlockAnchor anchor;
+
+  Future<void> _open(BuildContext context, Uri uri) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final go = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Buka penjelajah blockchain?'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Kamu akan membuka halaman transaksi jangkar di penjelajah blockchain publik lewat browser.'),
+            const SizedBox(height: Spacing.s12),
+            Text('Tujuan: ${uri.host}', key: const Key('anchor_link_domain'), style: Theme.of(ctx).textTheme.titleSmall),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Batal')),
+          FilledButton(key: const Key('confirm_open_anchor'), onPressed: () => Navigator.pop(ctx, true), child: const Text('Buka')),
+        ],
+      ),
+    );
+    if (go != true) return;
+    var opened = false;
+    try {
+      opened = await openExternal(uri);
+    } catch (_) {}
+    if (!opened) messenger.showSnackBar(const SnackBar(content: Text('Tidak bisa membuka tautan.')));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final name = anchor.blockType == 'commit' ? 'Blok Commit' : 'Blok Hasil';
+    final tx = anchor.txHash;
+    final link = anchor.explorer;
+    return Padding(
+      key: Key('anchor_${anchor.blockType}'),
+      padding: const EdgeInsets.only(top: Spacing.s12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(name, style: theme.textTheme.titleSmall),
+          const SizedBox(height: Spacing.s4),
+          anchorChip(anchor.state),
+          if (tx != null) _HashRow(label: 'Transaksi $name', value: tx, stepId: VerifyStepId.anchor),
+          if (link != null)
+            TextButton.icon(
+              key: Key('anchor_link_${anchor.blockType}'),
+              onPressed: () => _open(context, link),
+              icon: const Icon(Icons.open_in_new),
+              label: const Text('Lihat di blockchain'),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
 class _Summary extends StatelessWidget {
   const _Summary({required this.report});
   final VerificationReport report;
@@ -202,7 +286,12 @@ class _Summary extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final (chip, text) = report.verified
-        ? (const StatusChip(AppStatus.verified), 'Semua pemeriksaan lulus. Hasil draw ini tidak diubah sejak seed dikunci.')
+        ? (
+            const StatusChip(AppStatus.verified),
+            report.hasWarning
+                ? 'Pemeriksaan di ponselmu lulus: hasil draw ini tidak diubah sejak seed dikunci. Jangkar blockchain belum bisa dipastikan (lihat langkah 5).'
+                : 'Semua pemeriksaan lulus. Hasil draw ini tidak diubah sejak seed dikunci.'
+          )
         : report.mismatch
             ? (const StatusChip(AppStatus.mismatch), 'Ada pemeriksaan yang gagal, jadi hasil ini tidak bisa dipercaya. Laporkan lewat Saran & Kesan.')
             : (const StatusChip.custom(label: 'Belum diundi', tone: StatusTone.neutral, icon: Icons.hourglass_top), 'Draw belum berjalan, jadi seed dan pemenang belum bisa diperiksa. Rantai dan komitmen sudah lulus.');

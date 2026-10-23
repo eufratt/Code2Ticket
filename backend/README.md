@@ -16,6 +16,7 @@ psql "$DATABASE_URL" -f db/08_prize_value_idr.sql   # nilai hadiah dalam rupiah 
 psql "$DATABASE_URL" -f db/09_giveaway_participation.sql   # cara mendapatkan kode + tautan penyelenggara
 psql "$DATABASE_URL" -f db/10_redeem_geo_restricted.sql     # batas lokasi tukar kode per giveaway
 psql "$DATABASE_URL" -f db/11_organizer_contact.sql          # baris kontak admin untuk penyelenggara (kosong; lihat "Kontak penyelenggara")
+psql "$DATABASE_URL" -f db/12_chain_anchors.sql             # jangkar blockchain (lihat "Jangkar blockchain")
 ADMIN_PASSWORD='...' npm run create-admin -- namamu email@kamu.com "Nama Lengkap"
 npm start
 ```
@@ -137,6 +138,55 @@ update public.app_config set value = '<catatan singkat, opsional>' where key = '
 
 Urutan deploy: (1) jalankan `11_organizer_contact.sql`, (2) isi nilai email lewat `update`, (3) push backend, (4) APK baru. Urutan terbalik tidak crash: backend baru sebelum migrasi/isi = kontak `null`; APK baru dengan backend lama (404) = "Kontak admin belum tersedia. Coba lagi nanti." tanpa tombol.
 
+## Jangkar blockchain
+
+Hash blok Commit (saat giveaway dibuat) dan blok Hasil (saat draw) dijangkarkan ke blockchain publik testnet
+(bawaan Polygon Amoy, chain id 80002), supaya bukti tidak hanya ada di database kita. Tanpa smart contract: tiap blok =
+satu transaksi value 0 dari dompet backend ke alamatnya sendiri dengan data = hex UTF-8 `"C2T:" + block_hash`
+(`src/services/anchor.js`, tabel `chain_anchors` dari `db/12_chain_anchors.sql`). `draw_chain` tidak diubah.
+
+- **Tidak pernah memblokir.** Baris `pending` ditulis di dalam transaksi pembuatan blok lewat savepoint (tabel belum ada /
+  insert gagal = giveaway dan draw tetap sukses). Pengiriman berjalan setelah commit (tanpa ditunggu), lalu diulang oleh
+  putaran berkala tiap 60 detik di proses dan oleh `POST /internal/tick`. Redeem tetap hanya menunggu blok Commit di
+  `draw_chain`, tidak pernah menunggu jangkar.
+- **Idempoten.** Transaksi ditandatangani dulu, hash-nya disimpan dengan syarat `tx_hash is null` (hanya satu pekerja
+  yang menang), baru disiarkan. Transaksi yang belum ditambang dicek lewat receipt; dianggap hilang (lalu dikirim ulang
+  dengan nonce pending) hanya bila node tidak mengenalnya dan nonce-nya sudah dipakai transaksi lain atau sudah 5 menit.
+- **Retry.** Backoff 30 dtk, 1, 2, 4, 8 menit (maks. 1 jam), maksimum 6 percobaan kirim; setelah itu status `failed`.
+  Receipt sukses = `confirmed`.
+- **Rahasia.** `ANCHOR_PRIVATE_KEY` dan `ANCHOR_RPC_URL` (bisa memuat API key) tidak pernah masuk log, respons, atau
+  `last_error` (disensor `redact`). Klien hanya menerima `ANCHOR_PUBLIC_RPC_URL` (atau RPC publik bawaan tanpa key).
+
+Variabel environment (kosong / tidak valid = fitur mati dengan aman, server tetap jalan):
+
+| Variabel | Isi |
+|---|---|
+| `ANCHOR_ENABLED` | `true` untuk menyalakan; nilai lain = mati |
+| `ANCHOR_RPC_URL` | URL JSON-RPC untuk mengirim (boleh memuat API key; RAHASIA) |
+| `ANCHOR_CHAIN_ID` | bawaan `80002` (Polygon Amoy) |
+| `ANCHOR_PRIVATE_KEY` | kunci privat dompet testnet khusus (64 hex, boleh diawali 0x; RAHASIA) |
+| `ANCHOR_EXPLORER_TX_URL` | templat tautan explorer, mis. `https://amoy.polygonscan.com/tx/{tx}` (bawaan untuk 80002) |
+| `ANCHOR_PUBLIC_RPC_URL` | RPC https tanpa key yang boleh dilihat klien (bawaan 80002: `https://rpc-amoy.polygon.technology`) |
+
+Membuat dompet testnet tanpa menaruh kunci di repo (jalankan di `backend/`, keluaran hanya di terminal):
+
+```bash
+node -e "import('viem/accounts').then(({generatePrivateKey:g,privateKeyToAccount:a})=>{const k=g();console.log('ANCHOR_PRIVATE_KEY='+k);console.log('alamat '+a(k).address)})"
+```
+
+Salin `ANCHOR_PRIVATE_KEY` langsung ke env Render (atau `.env` lokal yang di-gitignore), jangan ke file lain. Isi alamatnya
+dengan POL testnet dari faucet Polygon Amoy. Pakai dompet khusus ini saja: jangan pernah memakai dompet yang memegang aset
+mainnet. Alamat dompet juga jangan ditulis di repo.
+
+`GET /giveaways/:id/anchors` (publik) menjawab `{"ok":true,"anchors":[{block_index, block_type, block_hash, tx_hash,
+chain_id, status, explorer_url, rpc_url}]}`; `status` = `pending` | `confirmed` | `failed` | `none` (belum
+dijangkarkan: giveaway lama, fitur mati, atau migrasi 12 belum dijalankan). Id bukan UUID = `invalid_input`, tidak ada =
+`not_found` (HTTP 200). App memeriksa sendiri transaksi lewat RPC publik (langkah 5 Cek Keaslian).
+
+Urutan deploy: (1) jalankan `db/12_chain_anchors.sql` di Supabase, (2) set env `ANCHOR_*` di Render, (3) `git push`
+backend, (4) APK baru. Urutan terbalik tidak crash: backend baru tanpa migrasi = jangkar dilewati (log), semua `none`;
+APK baru dengan backend lama = langkah 5 "Belum dijangkarkan".
+
 ## Tes
 
 Butuh Postgres dengan ekstensi `pgcrypto` dan `pg_trgm`, serta Python 3 (tes kontrak memuat
@@ -174,6 +224,7 @@ Token dikirim lewat `Authorization: Bearer <token>`.
 | `GET /giveaways/:id` (404 `not_found` bila tidak ada) | - | (baru, tanpa padanan RPC) |
 | `GET /app-config/organizer` (`{ok,email,note}`; hanya kunci `organizer_contact_email` / `organizer_contact_note`) | - | (baru) |
 | `GET /giveaways/:id/winners`, `/giveaways/:id/verification` | - | `rpc_get_winners`, `rpc_get_verification_data` |
+| `GET /giveaways/:id/anchors` (jangkar blockchain per blok; lihat "Jangkar blockchain") | - | (baru) |
 | `POST /codes/redeem` (`code,lat,lng`) | session | `rpc_redeem_code` |
 | `GET /tickets` | session | `rpc_get_my_tickets` |
 | `POST /activity` (`type,giveaway_id,category`) | session | `rpc_log_activity` |

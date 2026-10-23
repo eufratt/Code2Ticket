@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { runDueDraws, runMaintenance } from '../services/draw.js';
+import { kickAnchor } from '../services/anchor.js';
 import { timingSafeEqualStr } from '../lib/util.js';
 
 // Pemicu scheduler dari luar (cron host / layanan terjadwal). Dilindungi header X-Tick-Secret.
@@ -13,6 +14,7 @@ export default function internalRoutes({ pool, config }) {
     }
     const drawn = await runDueDraws(pool);
     await runMaintenance(pool).catch(() => {}); // gagal bersih-bersih tidak boleh menggagalkan tick
+    kickAnchor(); // Render bisa tertidur: tick juga membangunkan antrean jangkar (tidak ditunggu)
     res.json({ ok: true, drawn });
   });
   return r;

@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 
 import '../../core/api/api_client.dart';
 import '../../core/api/authed_api.dart';
@@ -7,6 +8,7 @@ import '../../core/db/rate_cache.dart' show SettingsStore;
 import '../../core/json.dart';
 import '../../core/offline.dart';
 import '../../core/notifications/draw_spoiler.dart';
+import '../../core/verify/anchor_checker.dart';
 import '../../core/verify/chain_verifier.dart';
 import '../auth/auth_controller.dart';
 import '../giveaways/giveaways_controller.dart' show LoadState;
@@ -31,8 +33,9 @@ String drawErrorMessage(String? code) => switch (code) {
 /// otomatis). Perhitungan hash dilakukan di perangkat dari data mentah server; tidak ada seed/token yang dicatat di log.
 /// Layar Hasil Draw (default) memakai cache: online -> simpan hasil final; jaringan gagal -> tampilkan cache, atau
 /// [notCached] bila belum ada. [verifyOnly] (Cek Keaslian) tidak memakai cache: offline hanya memberi [verifyOfflineMessage].
+/// Cek Keaslian juga menambah langkah 5 (jangkar blockchain): GET /giveaways/:id/anchors + RPC publik ([rpcClient] untuk tes).
 class DrawController extends ChangeNotifier {
-  DrawController(this._api, this.giveawayId, {VerifyRunner? runner, this.cache, this.auth, this.verifyOnly = false})
+  DrawController(this._api, this.giveawayId, {VerifyRunner? runner, this.cache, this.auth, this.verifyOnly = false, this.rpcClient})
       : _runner = runner ?? isolateRunner;
 
   final AuthedApi _api;
@@ -41,6 +44,7 @@ class DrawController extends ChangeNotifier {
   final CacheStore? cache;
   final AuthController? auth;
   final bool verifyOnly;
+  final http.Client? rpcClient;
 
   LoadState state = LoadState.idle;
   String? error;
@@ -79,7 +83,7 @@ class DrawController extends ChangeNotifier {
       winners = parseList(w['winners'], DrawWinner.tryParse);
       final rep = await _runner((raw: v, announced: [for (final x in winners) x.ticketNumber]));
       if (rep == null) throw ServerFaultException('Data verifikasi dari server tidak lengkap, jadi tidak bisa diperiksa.');
-      report = rep;
+      report = verifyOnly ? rep.withStep(await _anchorStep(v)) : rep;
       drawnAtMs = rep.drawnAtMs;
       totalTickets = rep.totalTickets;
       state = LoadState.loaded;
@@ -117,6 +121,26 @@ class DrawController extends ChangeNotifier {
       state = LoadState.error;
     }
     notifyListeners();
+  }
+
+  /// Langkah 5. Tidak pernah membuat Cek Keaslian gagal dimuat: galat apa pun menjadi peringatan di langkah ini.
+  Future<VerifyStep> _anchorStep(Map<String, dynamic> raw) async {
+    final data = VerificationData.tryParse(raw);
+    List<AnchorInfo>? infos;
+    var offline = false;
+    try {
+      infos = AnchorInfo.parseResponse(await _api.get('/giveaways/$giveawayId/anchors')); // backend lama: null
+    } on InvalidSessionException {
+      rethrow;
+    } on NetworkException catch (e) {
+      offline = e is! ServerFaultException;
+    } catch (_) {/* jawaban aneh: dianggap belum dijangkarkan */}
+    final client = rpcClient ?? http.Client();
+    try {
+      return await checkAnchors(data, infos, client, offline: offline);
+    } finally {
+      if (rpcClient == null) client.close();
+    }
   }
 }
 

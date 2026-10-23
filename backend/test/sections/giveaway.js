@@ -97,7 +97,9 @@ export function giveawaySections(ctx) {
       expect(await sqlstateOf(() => su.query('delete from draw_chain'))).toBe('42501');
     });
     it('draw_chain tidak bisa di-TRUNCATE', async () => {
-      expect(await sqlstateOf(() => su.query('truncate draw_chain'))).toBe('42501');
+      // Sejak 12_chain_anchors.sql, FK chain_anchors menolak lebih dulu (0A000); dengan cascade trigger tetap menolak.
+      expect(await sqlstateOf(() => su.query('truncate draw_chain'))).toBe('0A000');
+      expect(await sqlstateOf(() => su.query('truncate draw_chain cascade'))).toBe('42501');
     });
   });
 }

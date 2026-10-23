@@ -6,7 +6,9 @@ import 'package:code2ticket/core/api/api_client.dart';
 import 'package:code2ticket/core/api/authed_api.dart';
 import 'package:code2ticket/core/db/cache_store.dart';
 import 'package:code2ticket/core/db/rate_cache.dart' show SettingsStore;
+import 'package:code2ticket/core/open_link.dart';
 import 'package:code2ticket/core/theme/app_theme.dart';
+import 'package:code2ticket/core/verify/anchor_checker.dart';
 import 'package:code2ticket/core/verify/chain_verifier.dart';
 import 'package:code2ticket/features/auth/auth_controller.dart';
 import 'package:code2ticket/features/draw/draw_controller.dart';
@@ -27,6 +29,7 @@ import 'layout/screens_layout_test.dart' show sampleUser;
 import 'support/display.dart';
 import 'support/memory_cache.dart';
 import 'support/ui.dart';
+import 'verify/anchor_checker_test.dart' show FakeRpc, anchorsJson, honestRpc;
 
 late final Map<String, dynamic> vectors;
 late final String gid;
@@ -230,12 +233,16 @@ void main() {
     Map<String, dynamic> winners = {};
     List<Map<String, dynamic>> tickets = [];
     Object? failWith;
+    Map<String, dynamic>? anchors; // null = backend lama tanpa GET /anchors
+    Object? anchorsFailWith;
 
     setUp(() {
       verification = scen('valid');
       winners = winnersJson(winnersOf(verification));
       tickets = [];
       failWith = null;
+      anchors = null;
+      anchorsFailWith = null;
       settings = MemorySettings();
       cache = MemoryCacheStore();
       shakes = StreamController<void>.broadcast();
@@ -244,6 +251,10 @@ void main() {
         if (failWith != null) throw failWith!;
         if (p == '/tickets') return {'ok': true, 'data': tickets};
         if (p.endsWith('/winners')) return winners;
+        if (p.endsWith('/anchors')) {
+          if (anchorsFailWith != null) throw anchorsFailWith!;
+          return anchors ?? {'ok': false, 'error': 'not_found'};
+        }
         return {'ok': true, ...verification};
       });
       auth = FakeAuth(api)..user = sampleUser();
@@ -476,9 +487,9 @@ void main() {
       return (ys.keys.toList()..sort((a, b) => ys[a]!.compareTo(ys[b]!)));
     }
 
-    testWidgets('Cek keaslian: empat langkah berurutan, semua "Lulus" (teks + ikon), ringkasan Terverifikasi', (tester) async {
+    testWidgets('Cek keaslian: lima langkah berurutan, empat "Lulus" (teks + ikon), ringkasan Terverifikasi', (tester) async {
       await pump(tester, DrawVerifyScreen(giveawayId: gid, runner: syncRunner), height: 3200);
-      expect(orderOnScreen(tester), [VerifyStepId.commit, VerifyStepId.chain, VerifyStepId.seed, VerifyStepId.winners]);
+      expect(orderOnScreen(tester), [VerifyStepId.commit, VerifyStepId.chain, VerifyStepId.seed, VerifyStepId.winners, VerifyStepId.anchor]);
       expect(find.text('Lulus'), findsNWidgets(4));
       expect(find.byIcon(Icons.check_circle), findsNWidgets(4));
       expect(find.descendant(of: find.byKey(const Key('verify_summary')), matching: find.text('Terverifikasi')), findsOneWidget);
@@ -545,6 +556,80 @@ void main() {
       expect(find.text('Coba lagi'), findsOneWidget);
       expect(find.byKey(const Key('verify_summary')), findsNothing);
       expect(tester.takeException(), isNull);
+    });
+
+    // ---------------------------------------------------------- langkah 5: jangkar blockchain
+    Finder inAnchor(String text) => find.descendant(of: find.byKey(const Key('verify_step_anchor')), matching: find.text(text));
+    Finder inSummary(String text) => find.descendant(of: find.byKey(const Key('verify_summary')), matching: find.text(text));
+    VerificationData vd() => VerificationData.tryParse(verification)!;
+
+    testWidgets('jangkar cocok: langkah 5 Lulus, tiap blok "Cocok", tautan explorer lewat dialog konfirmasi', (tester) async {
+      anchors = anchorsJson(vd());
+      final opened = <Uri>[];
+      final prev = openExternal;
+      openExternal = (uri) async {
+        opened.add(uri);
+        return true;
+      };
+      addTearDown(() => openExternal = prev);
+      await pump(tester, DrawVerifyScreen(giveawayId: gid, runner: syncRunner, rpcClient: honestRpc(vd()).client), height: 4000);
+      expect(inAnchor('Lulus'), findsOneWidget);
+      expect(find.descendant(of: find.byKey(const Key('anchor_commit')), matching: find.text('Cocok')), findsOneWidget);
+      expect(find.descendant(of: find.byKey(const Key('anchor_result')), matching: find.text('Cocok')), findsOneWidget);
+      expect(inSummary('Terverifikasi'), findsOneWidget);
+      expect(find.textContaining('Semua pemeriksaan lulus'), findsOneWidget);
+      await tester.ensureVisible(find.byKey(const Key('anchor_link_result')));
+      await tester.tap(find.byKey(const Key('anchor_link_result')));
+      await settle(tester);
+      expect(find.text('Tujuan: amoy.polygonscan.com'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('confirm_open_anchor')));
+      await settle(tester);
+      expect(opened.single.toString(), startsWith('https://amoy.polygonscan.com/tx/0x'));
+    });
+
+    testWidgets('jangkar tidak cocok: langkah 5 Gagal dan ringkasan "Tidak cocok"', (tester) async {
+      anchors = anchorsJson(vd());
+      final rpc = honestRpc(vd())..txs.updateAll((k, v) => anchorDataHex('f' * 64));
+      await pump(tester, DrawVerifyScreen(giveawayId: gid, runner: syncRunner, rpcClient: rpc.client), height: 4000);
+      expect(inAnchor('Gagal'), findsOneWidget);
+      expect(inSummary('Tidak cocok'), findsOneWidget);
+      expect(find.text('Terverifikasi'), findsNothing);
+    });
+
+    testWidgets('jangkar menunggu: peringatan "Menunggu penjangkaran", hasil tetap Terverifikasi', (tester) async {
+      anchors = anchorsJson(vd(), status: 'pending');
+      await pump(tester, DrawVerifyScreen(giveawayId: gid, runner: syncRunner, rpcClient: honestRpc(vd(), mine: false).client), height: 4000);
+      expect(inAnchor('Menunggu penjangkaran'), findsNWidgets(3)); // chip langkah + 2 blok
+      expect(inAnchor('Gagal'), findsNothing);
+      expect(inSummary('Terverifikasi'), findsOneWidget);
+      expect(find.textContaining('Jangkar blockchain belum bisa dipastikan'), findsOneWidget);
+    });
+
+    testWidgets('RPC blockchain tidak terjangkau: "Tidak terhubung" dengan pesan jelas, bukan gagal', (tester) async {
+      anchors = anchorsJson(vd());
+      await pump(tester, DrawVerifyScreen(giveawayId: gid, runner: syncRunner, rpcClient: (FakeRpc()..offline = true).client), height: 4000);
+      expect(inAnchor('Tidak terhubung'), findsNWidgets(3));
+      expect(find.textContaining('Periksa koneksi internet'), findsOneWidget);
+      expect(find.text('Gagal'), findsNothing);
+      expect(inSummary('Terverifikasi'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('daftar jangkar gagal diambil (jaringan putus setelah verifikasi): layar tetap tampil, langkah 5 peringatan', (tester) async {
+      anchorsFailWith = NetworkException('Tidak ada koneksi internet.');
+      await pump(tester, DrawVerifyScreen(giveawayId: gid, runner: syncRunner, rpcClient: FakeRpc().client), height: 4000);
+      expect(inAnchor('Tidak terhubung'), findsWidgets);
+      expect(inSummary('Terverifikasi'), findsOneWidget);
+    });
+
+    testWidgets('giveaway lama tanpa jangkar: "Belum dijangkarkan", tanpa tautan, tanpa panggilan RPC', (tester) async {
+      anchors = anchorsJson(vd(), status: 'none', withTx: false);
+      final rpc = FakeRpc();
+      await pump(tester, DrawVerifyScreen(giveawayId: gid, runner: syncRunner, rpcClient: rpc.client), height: 4000);
+      expect(inAnchor('Belum dijangkarkan'), findsNWidgets(3));
+      expect(find.byKey(const Key('anchor_link_commit')), findsNothing);
+      expect(rpc.hosts, isEmpty);
+      expect(inSummary('Terverifikasi'), findsOneWidget);
     });
 
     test('shortHash: memotong yang panjang, membiarkan yang pendek', () {

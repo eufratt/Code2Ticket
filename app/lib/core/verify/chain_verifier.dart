@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:pointycastle/export.dart';
 
 import '../json.dart';
+import 'anchor_checker.dart' show BlockAnchor;
 
 // Implementasi ulang kontrak hash-chain commit-reveal di Dart, IDENTIK dengan backend\src\lib\chain.js dan
 // backend\test\reference\test_m1.py (verify). Jangan ubah format di sini tanpa mengubah kontrak di backend.
@@ -160,17 +161,21 @@ String ticketsHash(List<(int, String)> tickets) => sha256Hex(tickets.map((t) => 
 /// chain.js: ownerKey (dipakai tes vektor; app tidak membutuhkannya untuk verifikasi).
 String ownerKey(String userId, String giveawayId) => sha256Hex('$userId:$giveawayId').substring(0, 12);
 
-enum StepStatus { pass, fail, skipped }
+/// [warning] = belum bisa dipastikan tetapi bukan tanda kecurangan (hanya langkah 5, jangkar blockchain).
+enum StepStatus { pass, fail, skipped, warning }
 
-enum VerifyStepId { commit, chain, seed, winners }
+enum VerifyStepId { commit, chain, seed, winners, anchor }
 
 /// Satu langkah verifikasi untuk orang awam. [evidence] = nilai hash yang diperiksa (ditampilkan terpotong + salin).
 class VerifyStep {
-  const VerifyStep(this.id, this.status, this.detail, {this.evidence = const []});
+  const VerifyStep(this.id, this.status, this.detail, {this.evidence = const [], this.anchors = const []});
   final VerifyStepId id;
   final StepStatus status;
   final String detail;
   final List<({String label, String value})> evidence;
+
+  /// Hanya langkah [VerifyStepId.anchor]: hasil per blok (Commit, Hasil).
+  final List<BlockAnchor> anchors;
 }
 
 class VerificationReport {
@@ -186,8 +191,15 @@ class VerificationReport {
   final int? drawnAtMs;
 
   VerifyStep step(VerifyStepId id) => steps.firstWhere((s) => s.id == id);
-  bool get verified => drawn && steps.every((s) => s.status == StepStatus.pass);
+
+  /// Peringatan (jangkar belum ada/menunggu/tidak terhubung) tidak membatalkan Terverifikasi; gagal membatalkannya.
+  bool get verified => drawn && steps.every((s) => s.status == StepStatus.pass || s.status == StepStatus.warning);
   bool get mismatch => steps.any((s) => s.status == StepStatus.fail);
+  bool get hasWarning => steps.any((s) => s.status == StepStatus.warning);
+
+  /// Laporan yang sama ditambah satu langkah (langkah 5 dihitung di luar isolate karena butuh jaringan).
+  VerificationReport withStep(VerifyStep s) =>
+      VerificationReport(steps: [...steps, s], drawn: drawn, winningTickets: winningTickets, totalTickets: totalTickets, drawnAtMs: drawnAtMs);
 }
 
 /// Memverifikasi data server sepenuhnya di perangkat; mengikuti verify() di backend\test\reference\test_m1.py.
