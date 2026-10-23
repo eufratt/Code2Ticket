@@ -159,7 +159,7 @@ class _Body extends StatelessWidget {
             _InfoRow('Tiket saya', '$mine'),
             _InfoRow('Mulai', g.startAt == null ? '-' : context.when(g.startAt!)),
             _InfoRow('Berakhir', g.endAt == null ? '-' : context.when(g.endAt!)),
-            _InfoRow('Draw', g.drawAt == null ? '-' : context.when(g.drawAt!)),
+            _InfoRow('Draw', g.drawAt == null ? '-' : context.when(g.drawAt!), key: const Key('info_draw')),
             if (g.address != null && g.address!.isNotEmpty) _InfoRow('Lokasi', g.address!),
           ]),
         ),
@@ -260,7 +260,7 @@ class _GeoNotice extends StatelessWidget {
 }
 
 class _InfoRow extends StatelessWidget {
-  const _InfoRow(this.label, this.value);
+  const _InfoRow(this.label, this.value, {super.key});
   final String label, value;
 
   @override

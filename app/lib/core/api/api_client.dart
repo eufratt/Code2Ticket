@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 
 import '../config.dart';
+import '../time/server_clock.dart';
 
 /// Session tidak ada / kedaluwarsa (HTTP 401) -> aplikasi harus logout.
 class InvalidSessionException implements Exception {
@@ -140,8 +141,10 @@ class ApiClient {
             req.body = jsonEncode(body);
           }
 
+          final sent = DateTime.now();
           final streamed = await _http.send(req).timeout(_timeout);
           final res = await http.Response.fromStream(streamed);
+          recordServerDate(res.headers['date'], sent, DateTime.now());
 
           if (isGet && _isEdgeError(res) && attempt < _retryDelays.length) {
             await Future.delayed(_retryDelays[attempt]);

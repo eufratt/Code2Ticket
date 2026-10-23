@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'currency/currency.dart';
 import 'currency/rates_controller.dart';
 import 'settings/settings_controller.dart';
+import 'time/server_clock.dart';
 import 'time/zones.dart';
 
 /// Tampilan uang dan waktu sesuai pilihan pengguna (Pengaturan). Memantau perubahan pilihan dan kurs.
@@ -16,7 +17,8 @@ extension DisplayContext on BuildContext {
     return formatPrize(idr, watch<SettingsController>().currency, watch<RatesController>().rates);
   }
 
-  /// Waktu dalam zona pilihan: "19 Okt 2026, 03.29 WIB".
+  /// Satu-satunya jalur menampilkan waktu (draw, mulai, berakhir, dipakai, ...) di layar: zona pilihan, mis.
+  /// "19 Okt 2026, 03.29 WIB". Memantau SettingsController, jadi teks berubah langsung saat zona diganti.
   String when(DateTime t) => formatInZone(t, watch<SettingsController>().zone);
 }
 
@@ -41,7 +43,8 @@ class RateNote extends StatelessWidget {
   }
 }
 
-/// Hitung mundur ke [target], diperbarui tiap detik. Timer hanya berjalan saat widget terlihat: dihentikan saat
+/// Hitung mundur ke [target] (instan), dihitung terhadap [serverNow] (jam perangkat dikoreksi selisih jam server),
+/// diperbarui tiap detik. Timer hanya berjalan saat widget terlihat: dihentikan saat
 /// layar ditutup (dispose), saat tab/rute tersembunyi (TickerMode mati), dan saat aplikasi di latar belakang.
 class Countdown extends StatefulWidget {
   const Countdown({super.key, required this.target, this.now, this.style, this.prefix = 'Draw dalam ', this.builder});
@@ -64,7 +67,7 @@ class _CountdownState extends State<Countdown> with WidgetsBindingObserver {
   Timer? _timer;
   bool _resumed = true;
 
-  DateTime _now() => (widget.now ?? DateTime.now)();
+  DateTime _now() => (widget.now ?? serverNow)();
 
   @override
   void initState() {

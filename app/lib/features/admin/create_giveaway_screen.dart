@@ -3,8 +3,10 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/currency/currency.dart';
+import '../../core/display.dart';
 import '../../core/open_link.dart';
 import '../../core/rupiah_input.dart';
+import '../../core/settings/settings_controller.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/time/zones.dart';
@@ -13,11 +15,12 @@ import '../discover/discover_filters.dart' show categoryLabel;
 import 'admin_controller.dart';
 import 'admin_models.dart';
 
-/// Memilih tanggal + jam (waktu dinding WIB) -> instan; null = dibatalkan. Bisa diganti di tes.
+/// Memilih tanggal + jam (waktu dinding di zona pilihan pengguna) -> instan; null = dibatalkan. Bisa diganti di tes.
 typedef DateTimePicker = Future<DateTime?> Function(BuildContext context, DateTime initial);
 
 Future<DateTime?> _defaultPicker(BuildContext context, DateTime initial) async {
-  final wall = inZone(initial, AppZone.wib);
+  final zone = context.read<SettingsController>().zone;
+  final wall = inZone(initial, zone);
   final date = await showDatePicker(
     context: context,
     initialDate: DateTime(wall.year, wall.month, wall.day),
@@ -27,7 +30,7 @@ Future<DateTime?> _defaultPicker(BuildContext context, DateTime initial) async {
   if (date == null || !context.mounted) return null;
   final time = await showTimePicker(context: context, initialTime: TimeOfDay(hour: wall.hour, minute: wall.minute));
   if (time == null) return null;
-  return instantFromWallClock(AppZone.wib, date.year, date.month, date.day, time.hour, time.minute);
+  return instantFromWallClock(zone, date.year, date.month, date.day, time.hour, time.minute);
 }
 
 double? _num(String s) => double.tryParse(s.trim().replaceAll(',', '.'));
@@ -39,7 +42,7 @@ String? _required(String? v, {int max = 200, String label = 'Kolom ini'}) {
   return null;
 }
 
-/// Buat Giveaway (POST /admin/giveaways). Jadwal dalam WIB; draw harus di masa depan.
+/// Buat Giveaway (POST /admin/giveaways). Jadwal dalam zona pilihan pengguna (Pengaturan); draw harus di masa depan.
 class CreateGiveawayScreen extends StatefulWidget {
   const CreateGiveawayScreen({super.key, this.pickDateTime = _defaultPicker});
   final DateTimePicker pickDateTime;
@@ -364,7 +367,7 @@ class _DateTimeField extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
-      label: '$label, ${formatInZone(value, AppZone.wib)}',
+      label: '$label, ${context.when(value)}',
       excludeSemantics: true,
       child: InkWell(
         key: fieldKey,
@@ -372,7 +375,7 @@ class _DateTimeField extends StatelessWidget {
         borderRadius: Radii.inputAll,
         child: InputDecorator(
           decoration: InputDecoration(labelText: label, errorText: error, suffixIcon: const Icon(Icons.edit_calendar_outlined)),
-          child: Text(formatInZone(value, AppZone.wib)),
+          child: Text(context.when(value)),
         ),
       ),
     );
