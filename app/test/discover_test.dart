@@ -45,9 +45,9 @@ Map<String, String> queryOf(String path) => Uri.parse(path).queryParameters;
 
 void main() {
   group('DiscoverFilters.toQuery', () {
-    test('bawaan: tanpa status (server: aktif + akan datang / semua bila ada q), urutan deadline', () {
-      expect(const DiscoverFilters().toQuery(), {'sort': 'deadline', 'limit': '20'});
-      expect(const DiscoverFilters(query: 'kamera').toQuery(), {'q': 'kamera', 'sort': 'deadline', 'limit': '20'});
+    test('bawaan ("Semua"): status=all, urutan deadline', () {
+      expect(const DiscoverFilters().toQuery(), {'status': 'all', 'sort': 'deadline', 'limit': '20'});
+      expect(const DiscoverFilters(query: 'kamera').toQuery(), {'q': 'kamera', 'status': 'all', 'sort': 'deadline', 'limit': '20'});
       expect(const DiscoverFilters(query: 'kamera', status: GiveawayStatusFilter.finished).toQuery()['status'], 'finished');
     });
 
@@ -106,9 +106,14 @@ void main() {
     List<String> ids(DiscoverFilters f, {double? lat, double? lng}) =>
         f.applyLocal(all, lat: lat, lng: lng, now: now).map((g) => g.id).toList();
 
-    test('bawaan: aktif (deadline terdekat) lalu akan datang; selesai/menunggu draw tidak ikut',
-        () => expect(ids(const DiscoverFilters()), ['c', 'a', 'b', 'u']));
-    test('ada kata kunci tanpa status: semua status, urut aktif, akan datang, menunggu draw, selesai', () {
+    test('"Semua": aktif (deadline terdekat), akan datang, menunggu draw, selesai',
+        () => expect(ids(const DiscoverFilters()), ['c', 'a', 'b', 'u', 'w', 'f']));
+    test('chip tiap status berisi kelompoknya saja', () {
+      expect(ids(const DiscoverFilters(status: GiveawayStatusFilter.active)), ['c', 'a', 'b']);
+      expect(ids(const DiscoverFilters(status: GiveawayStatusFilter.upcoming)), ['u']);
+      expect(ids(const DiscoverFilters(status: GiveawayStatusFilter.finished)), ['w', 'f']);
+    });
+    test('pencarian lintas status', () {
       expect(ids(const DiscoverFilters(query: 'hadiah')), ['c', 'a', 'u', 'w', 'f']);
       expect(ids(const DiscoverFilters(query: 'selesai')), ['f']);
       // kelompok status tetap di depan, sort lain hanya berlaku di dalam kelompok
@@ -127,19 +132,19 @@ void main() {
     test('kategori dan rentang nilai', () {
       expect(ids(const DiscoverFilters(category: 'travel')), ['b']);
       expect(ids(const DiscoverFilters(minValueIdr: 10000000)), ['b']);
-      expect(ids(const DiscoverFilters(maxValueIdr: 5000000)), ['c', 'a', 'u']);
+      expect(ids(const DiscoverFilters(maxValueIdr: 5000000)), ['c', 'a', 'u', 'w', 'f']);
     });
-    test('deadline dalam N hari', () => expect(ids(const DiscoverFilters(deadlineDays: 1)), ['c', 'a', 'u']));
+    test('deadline dalam N hari', () => expect(ids(const DiscoverFilters(deadlineDays: 1)), ['c', 'a', 'u', 'w', 'f']));
     test('status akan datang dan selesai', () {
       expect(ids(const DiscoverFilters(status: GiveawayStatusFilter.upcoming)), ['u']);
       expect(ids(const DiscoverFilters(status: GiveawayStatusFilter.finished)), ['w', 'f']); // menunggu draw dulu
     });
     test('urutan nilai dan terbaru', () {
-      expect(ids(const DiscoverFilters(sort: GiveawaySort.value)), ['b', 'c', 'a', 'u']);
+      expect(ids(const DiscoverFilters(sort: GiveawaySort.value)), ['b', 'c', 'a', 'u', 'w', 'f']);
     });
     test('terdekat: jarak dihitung lokal, tanpa koordinat di akhir, radius menyaring', () {
       const near = DiscoverFilters(sort: GiveawaySort.nearest);
-      expect(ids(near, lat: -6.2, lng: 106.8), ['a', 'b', 'c', 'u']);
+      expect(ids(near, lat: -6.2, lng: 106.8), ['a', 'b', 'c', 'u', 'w', 'f']);
       final first = near.applyLocal(all, lat: -6.2, lng: 106.8, now: now).first;
       expect(first.distanceKm, 0);
       expect(ids(const DiscoverFilters(sort: GiveawaySort.nearest, nearbyRadiusKm: 25), lat: -6.2, lng: 106.8), ['a']);
@@ -231,16 +236,16 @@ void main() {
       c.dispose();
     });
 
-    test('status: bawaan tanpa parameter status; pilihan eksplisit dikirim; null kembali ke bawaan', () async {
+    test('status: bawaan status=all; pilihan eksplisit dikirim; null kembali ke all', () async {
       final c = make();
       await c.search();
-      expect(requests.last.containsKey('status'), isFalse);
+      expect(requests.last['status'], 'all');
       await c.setFilters(c.filters.copyWith(status: GiveawayStatusFilter.finished));
       expect(requests.last['status'], 'finished');
       await c.submitQuery('laptop');
       expect([requests.last['q'], requests.last['status']], ['laptop', 'finished']);
       await c.setFilters(c.filters.copyWith(status: null));
-      expect(requests.last.containsKey('status'), isFalse);
+      expect(requests.last['status'], 'all');
       c.dispose();
     });
 
@@ -260,7 +265,7 @@ void main() {
       c.dispose();
     });
 
-    test('offline: cache mengikuti aturan status yang sama (bawaan aktif + akan datang, kata kunci semua status)', () async {
+    test('offline: cache mengikuti aturan status yang sama ("Semua" = semua status)', () async {
       final now = DateTime.now();
       api = FakeApi((m, p, b) async {
         if (!online) throw NetworkException('Tidak ada koneksi internet.');
@@ -276,7 +281,7 @@ void main() {
       online = false;
       await c.search();
       expect(c.offline, isTrue);
-      expect(c.items.map((g) => g.id), ['a', 'u']);
+      expect(c.items.map((g) => g.id), ['a', 'u', 'f']);
       await c.submitQuery('kamera');
       expect(c.items.map((g) => g.id), ['a', 'u', 'f']);
       await c.setFilters(c.filters.copyWith(status: GiveawayStatusFilter.finished));
@@ -521,12 +526,12 @@ void main() {
       ChoiceChip chip(String k) => tester.widget<ChoiceChip>(find.byKey(Key(k)));
       for (final k in ['all', 'active', 'upcoming', 'finished']) {
         expect(tester.getSize(find.byKey(Key('status_chip_$k'))).height, greaterThanOrEqualTo(48));
-        expect(chip('status_chip_$k').showCheckmark, isTrue); // terpilih ditandai centang, bukan hanya warna
+        expect(chip('status_chip_$k').showCheckmark, isFalse); // terpilih dibedakan warna, tanpa centang
       }
       expect(find.text('Semua'), findsOneWidget);
       expect(find.text('Akan datang'), findsOneWidget);
       expect(chip('status_chip_all').selected, isTrue);
-      expect(queries.last.containsKey('status'), isFalse);
+      expect(queries.last['status'], 'all');
 
       await tester.tap(find.byKey(const Key('status_chip_finished')));
       await tester.pumpAndSettle();
@@ -549,7 +554,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('reset_filter')));
       await tester.pumpAndSettle();
-      expect(queries.last.containsKey('status'), isFalse);
+      expect(queries.last['status'], 'all');
       expect(chip('status_chip_all').selected, isTrue);
       expect(find.text('1'), findsNothing);
       expect(find.textContaining('Coba pilih status lain.'), findsNothing);
@@ -558,14 +563,11 @@ void main() {
     testWidgets('pencarian menampilkan giveaway selesai dengan lencana status berteks', (tester) async {
       final now = DateTime.now();
       api = FakeApi((m, p, b) async {
-        final q = queryOf(p);
         return listOf([
           gw('a', title: 'Kamera Aktif'),
           gw('u', title: 'Kamera Segera', start: now.add(const Duration(hours: 2)), end: now.add(const Duration(hours: 5))),
-          if (q['q'] != null) ...[
-            gw('w', title: 'Kamera Tunggu', start: now.subtract(const Duration(hours: 3)), end: now.subtract(const Duration(hours: 1))),
-            gw('f', title: 'Kamera Lama', status: 'drawn'),
-          ],
+          gw('w', title: 'Kamera Tunggu', start: now.subtract(const Duration(hours: 3)), end: now.subtract(const Duration(hours: 1))),
+          gw('f', title: 'Kamera Lama', status: 'drawn'),
         ]);
       });
       tester.view.physicalSize = const Size(1080, 4000);
@@ -574,7 +576,9 @@ void main() {
       await pump(tester);
       await tester.pumpAndSettle();
       Finder badge(String t) => find.descendant(of: find.byType(GiveawayCard), matching: find.text(t));
-      expect(find.text('Kamera Lama'), findsNothing);
+      // "Semua" menampilkan keempat status, urut aktif, akan datang, menunggu draw, selesai
+      final order = [for (final t in ['Kamera Aktif', 'Kamera Segera', 'Kamera Tunggu', 'Kamera Lama']) tester.getTopLeft(find.text(t)).dy];
+      expect(order, orderedEquals([...order]..sort()));
       expect(badge('Aktif'), findsOneWidget);
       expect(badge('Segera dimulai'), findsOneWidget);
       await tester.enterText(find.byKey(const Key('search_field')), 'kamera');

@@ -132,7 +132,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
 }
 
 /// Status di bawah kolom cari, sinkron dengan sheet filter (sumbernya sama: `filters.status`). "Semua" = bawaan:
-/// tanpa kata kunci aktif + akan datang, dengan kata kunci semua status. Terpilih = centang + warna.
+/// semua status (`status=all`). Terpilih dibedakan warna isi/border saja, tanpa centang.
 class _StatusBar extends StatelessWidget {
   const _StatusBar({required this.controller});
   final DiscoverController controller;
@@ -152,7 +152,7 @@ class _StatusBar extends StatelessWidget {
               ChoiceChip(
                 key: Key('status_chip_${s?.name ?? 'all'}'),
                 label: Text(s?.label ?? 'Semua'),
-                showCheckmark: true,
+                showCheckmark: false,
                 selected: f.status == s,
                 onSelected: (_) => controller.setFilters(f.copyWith(status: s)),
               ),

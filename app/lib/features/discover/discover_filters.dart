@@ -23,7 +23,7 @@ enum GiveawaySort {
 }
 
 /// Status giveaway pilihan eksplisit; nilai [api] = parameter `status`. Selesai = menunggu draw + sudah diundi.
-/// Tanpa pilihan (null = "Semua"): tanpa kata kunci aktif + akan datang, dengan kata kunci semua status.
+/// Tanpa pilihan (null = "Semua"): semua status, dikirim sebagai `status=all`.
 enum GiveawayStatusFilter {
   active('active', 'Aktif'),
   upcoming('upcoming', 'Akan datang'),
@@ -58,7 +58,7 @@ class DiscoverFilters {
 
   /// Deadline (end_at) dalam N hari ke depan; null = semua.
   final int? deadlineDays;
-  /// null = perilaku bawaan (lihat [GiveawayStatusFilter]).
+  /// null = semua status (lihat [GiveawayStatusFilter]).
   final GiveawayStatusFilter? status;
   final GiveawaySort sort;
 
@@ -105,7 +105,7 @@ class DiscoverFilters {
       if (minValueIdr != null) 'min_value': '$minValueIdr',
       if (maxValueIdr != null) 'max_value': '$maxValueIdr',
       if (deadlineDays != null) 'deadline_days': '$deadlineDays',
-      'status': ?status?.api,
+      'status': status?.api ?? 'all',
       'sort': sort.api,
       if (lat != null && lng != null) ...{
         'lat': '$lat',
@@ -126,7 +126,7 @@ class DiscoverFilters {
     bool statusOk(Giveaway g) {
       final p = g.phaseAt(at);
       return switch (status) {
-        null => q.isNotEmpty || p == GiveawayPhase.active || p == GiveawayPhase.upcoming,
+        null => true,
         GiveawayStatusFilter.active => p == GiveawayPhase.active,
         GiveawayStatusFilter.upcoming => p == GiveawayPhase.upcoming,
         GiveawayStatusFilter.finished => p == GiveawayPhase.drawn || p == GiveawayPhase.waitingDraw,
