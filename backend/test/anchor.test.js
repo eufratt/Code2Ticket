@@ -14,10 +14,10 @@ const WALLET = privateKeyToAccount(KEY).address;
 const RPC_KEY = 'SECRETRPCKEY0123456789';
 const RPC_URL = `https://rpc.example.test/v2/${RPC_KEY}`;
 const env = (over = {}) => ({
-  ANCHOR_ENABLED: 'true', ANCHOR_RPC_URL: RPC_URL, ANCHOR_CHAIN_ID: '80002', ANCHOR_PRIVATE_KEY: KEY, ...over,
+  ANCHOR_ENABLED: 'true', ANCHOR_RPC_URL: RPC_URL, ANCHOR_CHAIN_ID: '11155111', ANCHOR_PRIVATE_KEY: KEY, ...over,
 });
 
-function mockRpc(chainId = 80002) {
+function mockRpc(chainId = 11155111) {
   const st = { down: false, drop: false, pending: 0, latest: 0, txs: new Map(), mined: new Set(), sent: [], calls: [] };
   async function handle(method, p) {
     st.calls.push(method);
@@ -97,6 +97,8 @@ describe('jangkar blockchain', () => {
     expect(anchorSettings(env({ ANCHOR_RPC_URL: '' }))).toBeNull();
     expect(anchorSettings(env({ ANCHOR_CHAIN_ID: 'abc' }))).toBeNull();
     expect(anchorSettings(env({ ANCHOR_PRIVATE_KEY: KEY.slice(2) })).privateKey).toBe(KEY);
+    expect(anchorSettings(env({ ANCHOR_CHAIN_ID: '' })).chainId).toBe(11155111); // bawaan Ethereum Sepolia
+    expect(publicLinks(env({ ANCHOR_CHAIN_ID: '' }), 11155111).explorer('0xab')).toBe('https://sepolia.etherscan.io/tx/0xab');
     const l = [];
     expect(startAnchor({ pool: real.pool, config: env({ ANCHOR_PRIVATE_KEY: '' }), log: (x) => l.push(x) })).toBeNull();
     expect(l.join('\n')).toContain('tidak lengkap');
@@ -122,10 +124,10 @@ describe('jangkar blockchain', () => {
     expect(tx.to.toLowerCase()).toBe(WALLET.toLowerCase());
     expect(from.toLowerCase()).toBe(WALLET.toLowerCase());
     expect(tx.value ?? 0n).toBe(0n);
-    expect(tx.chainId).toBe(80002);
+    expect(tx.chainId).toBe(11155111);
     await vi.waitFor(async () => expect((await rowOf(gid, 'commit'))?.tx_hash).toBe(hash));
     const row = await rowOf(gid, 'commit');
-    expect(row).toMatchObject({ status: 'pending', attempts: 1, block_hash: commit.block_hash, chain_id: 80002 });
+    expect(row).toMatchObject({ status: 'pending', attempts: 1, block_hash: commit.block_hash, chain_id: 11155111 });
 
     rpc.mine();
     await real.su.query('update chain_anchors set next_attempt_at = now()');
@@ -135,8 +137,8 @@ describe('jangkar blockchain', () => {
 
     const a = (await api.get(`/giveaways/${gid}/anchors`)).anchors[0];
     expect(a).toEqual({
-      block_index: commit.block_index, block_type: 'commit', block_hash: commit.block_hash, tx_hash: hash, chain_id: 80002,
-      status: 'confirmed', explorer_url: `https://amoy.polygonscan.com/tx/${hash}`, rpc_url: 'https://rpc-amoy.polygon.technology',
+      block_index: commit.block_index, block_type: 'commit', block_hash: commit.block_hash, tx_hash: hash, chain_id: 11155111,
+      status: 'confirmed', explorer_url: `https://sepolia.etherscan.io/tx/${hash}`, rpc_url: 'https://ethereum-sepolia-rpc.publicnode.com',
     });
   });
 
@@ -152,19 +154,19 @@ describe('jangkar blockchain', () => {
     expect(rpc.sent.at(-1).tx.data).toBe(anchorData(block.block_hash));
     const r = (await api.get(`/giveaways/${gid}/anchors`)).anchors;
     expect(r.map((a) => a.block_type)).toEqual(['commit', 'result']);
-    expect(r[1]).toMatchObject({ tx_hash: result.tx_hash, status: 'pending', chain_id: 80002 });
+    expect(r[1]).toMatchObject({ tx_hash: result.tx_hash, status: 'pending', chain_id: 11155111 });
   });
 
   it('tautan publik: env menimpa bawaan; RPC ber-key/berkredensial/http tidak pernah dikirim ke klien', () => {
     const c = env({ ANCHOR_EXPLORER_TX_URL: 'https://explorer.example.test/tx/{tx}', ANCHOR_PUBLIC_RPC_URL: 'https://public-rpc.example.test' });
-    expect(publicLinks(c, 80002).rpcUrl).toBe('https://public-rpc.example.test/');
-    expect(publicLinks(c, 80002).explorer('0xab')).toBe('https://explorer.example.test/tx/0xab');
-    expect(publicLinks(env(), 80002).rpcUrl).toBe('https://rpc-amoy.polygon.technology'); // bukan ANCHOR_RPC_URL ber-key
-    expect(publicLinks(env({ ANCHOR_PUBLIC_RPC_URL: 'https://u:p@rpc.example.test' }), 80002).rpcUrl).toBe('https://rpc-amoy.polygon.technology');
-    expect(publicLinks(env({ ANCHOR_PUBLIC_RPC_URL: 'http://rpc.example.test' }), 80002).rpcUrl).toBe('https://rpc-amoy.polygon.technology');
+    expect(publicLinks(c, 11155111).rpcUrl).toBe('https://public-rpc.example.test/');
+    expect(publicLinks(c, 11155111).explorer('0xab')).toBe('https://explorer.example.test/tx/0xab');
+    expect(publicLinks(env(), 11155111).rpcUrl).toBe('https://ethereum-sepolia-rpc.publicnode.com'); // bukan ANCHOR_RPC_URL ber-key
+    expect(publicLinks(env({ ANCHOR_PUBLIC_RPC_URL: 'https://u:p@rpc.example.test' }), 11155111).rpcUrl).toBe('https://ethereum-sepolia-rpc.publicnode.com');
+    expect(publicLinks(env({ ANCHOR_PUBLIC_RPC_URL: 'http://rpc.example.test' }), 11155111).rpcUrl).toBe('https://ethereum-sepolia-rpc.publicnode.com');
     expect(publicLinks(env({ ANCHOR_CHAIN_ID: '1234' }), 1234)).toMatchObject({ rpcUrl: null });
     expect(publicLinks(env({ ANCHOR_CHAIN_ID: '1234' }), 1234).explorer('0xab')).toBeNull();
-    expect(publicLinks(env({ ANCHOR_EXPLORER_TX_URL: 'javascript:alert({tx})' }), 80002).explorer('0xab')).toBeNull();
+    expect(publicLinks(env({ ANCHOR_EXPLORER_TX_URL: 'javascript:alert({tx})' }), 11155111).explorer('0xab')).toBeNull();
   });
 
   it('idempoten: putaran berulang/bersamaan dan antrean ganda tidak mengirim transaksi kedua untuk blok yang sama', async () => {
@@ -179,9 +181,9 @@ describe('jangkar blockchain', () => {
     expect(mine).toHaveLength(1);
     // Antre ulang blok yang sama (mis. dua proses) tidak membuat baris baru.
     const blockId = (await rowOf(gid, 'commit')).chain_block_id;
-    await real.su.query('insert into chain_anchors(chain_block_id, block_hash, chain_id) select id, block_hash, 80002 from draw_chain where id = $1 on conflict (chain_block_id) do nothing', [blockId]);
+    await real.su.query('insert into chain_anchors(chain_block_id, block_hash, chain_id) select id, block_hash, 11155111 from draw_chain where id = $1 on conflict (chain_block_id) do nothing', [blockId]);
     expect((await real.su.query('select count(*)::int as n from chain_anchors where chain_block_id = $1', [blockId])).rows[0].n).toBe(1);
-    await expect(real.su.query('insert into chain_anchors(chain_block_id, block_hash, chain_id) select id, block_hash, 80002 from draw_chain where id = $1', [blockId]))
+    await expect(real.su.query('insert into chain_anchors(chain_block_id, block_hash, chain_id) select id, block_hash, 11155111 from draw_chain where id = $1', [blockId]))
       .rejects.toMatchObject({ code: '23505' });
   });
 

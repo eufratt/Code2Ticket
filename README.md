@@ -171,7 +171,7 @@ Berikut adalah daftar nama variabel lingkungan yang digunakan backend saat di-de
 | `TRUST_PROXY` | Jumlah lapis reverse proxy di depan server (wajib `1` di Render agar rate limit mendeteksi IP asli klien) |
 | `ANCHOR_ENABLED` | `true` menyalakan jangkar hash blok ke blockchain testnet; selain itu mati (lihat `backend/README.md` "Jangkar blockchain") |
 | `ANCHOR_RPC_URL` | URL JSON-RPC pengirim transaksi jangkar (boleh memuat API key; rahasia) |
-| `ANCHOR_CHAIN_ID` | Chain id tujuan (bawaan `80002`, Polygon Amoy) |
+| `ANCHOR_CHAIN_ID` | Chain id tujuan (bawaan `11155111`, Ethereum Sepolia; jaringan lain lewat env) |
 | `ANCHOR_PRIVATE_KEY` | Kunci privat dompet testnet khusus jangkar (rahasia; buat dengan perintah di `backend/README.md`, jangan disimpan di repo) |
-| `ANCHOR_EXPLORER_TX_URL` | Templat tautan explorer transaksi, mis. `https://amoy.polygonscan.com/tx/{tx}` |
-| `ANCHOR_PUBLIC_RPC_URL` | RPC https tanpa key yang boleh dilihat aplikasi (bawaan RPC publik Amoy) |
+| `ANCHOR_EXPLORER_TX_URL` | Templat tautan explorer transaksi, mis. `https://sepolia.etherscan.io/tx/{tx}` |
+| `ANCHOR_PUBLIC_RPC_URL` | RPC https tanpa key yang boleh dilihat aplikasi (bawaan RPC publik Sepolia) |

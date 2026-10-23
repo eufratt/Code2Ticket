@@ -1,6 +1,6 @@
 -- =====================================================================
 -- Code2Ticket - 12_chain_anchors.sql
--- Jangkar (anchor) hash blok draw_chain ke blockchain publik testnet (Polygon Amoy secara bawaan).
+-- Jangkar (anchor) hash blok draw_chain ke blockchain publik testnet (Ethereum Sepolia secara bawaan).
 -- Jalankan SETELAH 01 dan 11. Aditif dan idempotent: aman dijalankan ulang.
 --
 -- draw_chain TIDAK diubah (tetap append-only). Tabel ini hanya catatan pengiriman: satu baris per blok,

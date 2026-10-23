@@ -45,10 +45,10 @@ Map<String, dynamic> anchorsJson(VerificationData d, {String status = 'confirmed
             'block_type': b.blockType,
             'block_hash': b.blockHash,
             'tx_hash': withTx ? txOf(i + 1) : null,
-            'chain_id': 80002,
+            'chain_id': 11155111,
             'status': status,
-            'explorer_url': withTx ? 'https://amoy.polygonscan.com/tx/${txOf(i + 1)}' : null,
-            'rpc_url': 'https://rpc-amoy.polygon.technology',
+            'explorer_url': withTx ? 'https://sepolia.etherscan.io/tx/${txOf(i + 1)}' : null,
+            'rpc_url': 'https://ethereum-sepolia-rpc.publicnode.com',
           },
       ],
     };
@@ -78,8 +78,8 @@ void main() {
     expect(step.id, VerifyStepId.anchor);
     expect(step.status, StepStatus.pass);
     expect(step.anchors.map((a) => (a.blockType, a.state)), [('commit', AnchorState.anchored), ('result', AnchorState.anchored)]);
-    expect(step.anchors.first.explorer.toString(), 'https://amoy.polygonscan.com/tx/${txOf(1)}');
-    expect(rpc.hosts.toSet(), {'rpc-amoy.polygon.technology'});
+    expect(step.anchors.first.explorer.toString(), 'https://sepolia.etherscan.io/tx/${txOf(1)}');
+    expect(rpc.hosts.toSet(), {'ethereum-sepolia-rpc.publicnode.com'});
   });
 
   test('tidak cocok: data transaksi berbeda dari hash lokal -> Gagal', () async {
@@ -171,7 +171,7 @@ void main() {
     final rpc = honestRpc(d);
     final step = await checkAnchors(d, AnchorInfo.parseResponse(json), rpc.client);
     expect(step.anchors.single.explorer, isNull);
-    expect(rpc.hosts.toSet(), {'rpc-amoy.polygon.technology'});
+    expect(rpc.hosts.toSet(), {'ethereum-sepolia-rpc.publicnode.com'});
 
     a['chain_id'] = 1234; // chain tak dikenal: rpc_url server dipakai bila https
     rpc.hosts.clear();

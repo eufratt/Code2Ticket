@@ -16,7 +16,10 @@ const anchorPrefix = 'C2T:';
 
 /// RPC publik bawaan per chain_id. Dipakai lebih dulu daripada rpc_url dari server, supaya pemeriksaan tidak
 /// bergantung pada alamat yang diberikan server kita sendiri.
-const knownPublicRpc = <int, String>{80002: 'https://rpc-amoy.polygon.technology'};
+const knownPublicRpc = <int, String>{
+  11155111: 'https://ethereum-sepolia-rpc.publicnode.com', // Ethereum Sepolia (bawaan backend)
+  80002: 'https://rpc-amoy.polygon.technology', // Polygon Amoy
+};
 
 const _hex = '0123456789abcdef';
 

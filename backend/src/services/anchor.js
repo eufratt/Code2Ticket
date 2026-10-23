@@ -12,9 +12,11 @@ const BATCH = 20;
 const MEMPOOL_WAIT_S = 30; // jeda cek berikutnya selama transaksi belum ditambang
 const LOST_AFTER_MS = 5 * 60_000; // transaksi tak dikenal node selama ini = hilang, kirim ulang
 
-// RPC publik tanpa key dan explorer bawaan per chain; env ANCHOR_PUBLIC_RPC_URL / ANCHOR_EXPLORER_TX_URL menimpanya.
-const PUBLIC_RPC = { 80002: 'https://rpc-amoy.polygon.technology' };
-const EXPLORER_TX = { 80002: 'https://amoy.polygonscan.com/tx/{tx}' };
+// RPC publik tanpa key dan explorer bawaan per chain (Sepolia = bawaan, Amoy = contoh jaringan lain);
+// env ANCHOR_PUBLIC_RPC_URL / ANCHOR_EXPLORER_TX_URL menimpanya, jaringan lain cukup lewat env.
+export const DEFAULT_CHAIN_ID = 11155111; // Ethereum Sepolia
+const PUBLIC_RPC = { 11155111: 'https://ethereum-sepolia-rpc.publicnode.com', 80002: 'https://rpc-amoy.polygon.technology' };
+const EXPLORER_TX = { 11155111: 'https://sepolia.etherscan.io/tx/{tx}', 80002: 'https://amoy.polygonscan.com/tx/{tx}' };
 
 export const anchorData = (blockHash) => toHex(`C2T:${blockHash}`);
 
@@ -22,7 +24,7 @@ export const anchorData = (blockHash) => toHex(`C2T:${blockHash}`);
 export const backoffSeconds = (attempts) => Math.min(30 * 2 ** Math.max(attempts - 1, 0), 3600);
 
 const chainIdOf = (config) => {
-  const n = Number(config.ANCHOR_CHAIN_ID || 80002);
+  const n = Number(config.ANCHOR_CHAIN_ID || DEFAULT_CHAIN_ID);
   return Number.isInteger(n) && n > 0 ? n : null;
 };
 
@@ -72,7 +74,7 @@ export function redact(text, settings) {
 export function viemClient({ rpcUrl, chainId, privateKey, fetchFn, retryCount = 1, timeout = 15_000 }) {
   const account = privateKeyToAccount(privateKey);
   const chain = defineChain({
-    id: chainId, name: `chain-${chainId}`, nativeCurrency: { name: 'POL', symbol: 'POL', decimals: 18 },
+    id: chainId, name: `chain-${chainId}`, nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
     rpcUrls: { default: { http: [rpcUrl] } },
   });
   const rpc = createPublicClient({ chain, transport: http(rpcUrl, { fetchFn, retryCount, timeout }) });

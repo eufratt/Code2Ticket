@@ -141,7 +141,7 @@ Urutan deploy: (1) jalankan `11_organizer_contact.sql`, (2) isi nilai email lewa
 ## Jangkar blockchain
 
 Hash blok Commit (saat giveaway dibuat) dan blok Hasil (saat draw) dijangkarkan ke blockchain publik testnet
-(bawaan Polygon Amoy, chain id 80002), supaya bukti tidak hanya ada di database kita. Tanpa smart contract: tiap blok =
+(bawaan Ethereum Sepolia, chain id 11155111; jaringan EVM lain bisa dipakai lewat environment), supaya bukti tidak hanya ada di database kita. Tanpa smart contract: tiap blok =
 satu transaksi value 0 dari dompet backend ke alamatnya sendiri dengan data = hex UTF-8 `"C2T:" + block_hash`
 (`src/services/anchor.js`, tabel `chain_anchors` dari `db/12_chain_anchors.sql`). `draw_chain` tidak diubah.
 
@@ -163,10 +163,10 @@ Variabel environment (kosong / tidak valid = fitur mati dengan aman, server teta
 |---|---|
 | `ANCHOR_ENABLED` | `true` untuk menyalakan; nilai lain = mati |
 | `ANCHOR_RPC_URL` | URL JSON-RPC untuk mengirim (boleh memuat API key; RAHASIA) |
-| `ANCHOR_CHAIN_ID` | bawaan `80002` (Polygon Amoy) |
+| `ANCHOR_CHAIN_ID` | bawaan `11155111` (Ethereum Sepolia); mis. `80002` untuk Polygon Amoy |
 | `ANCHOR_PRIVATE_KEY` | kunci privat dompet testnet khusus (64 hex, boleh diawali 0x; RAHASIA) |
-| `ANCHOR_EXPLORER_TX_URL` | templat tautan explorer, mis. `https://amoy.polygonscan.com/tx/{tx}` (bawaan untuk 80002) |
-| `ANCHOR_PUBLIC_RPC_URL` | RPC https tanpa key yang boleh dilihat klien (bawaan 80002: `https://rpc-amoy.polygon.technology`) |
+| `ANCHOR_EXPLORER_TX_URL` | templat tautan explorer, mis. `https://sepolia.etherscan.io/tx/{tx}` (bawaan untuk 11155111 dan 80002; chain lain wajib diisi) |
+| `ANCHOR_PUBLIC_RPC_URL` | RPC https tanpa key yang boleh dilihat klien (bawaan 11155111: `https://ethereum-sepolia-rpc.publicnode.com`; 80002: `https://rpc-amoy.polygon.technology`) |
 
 Membuat dompet testnet tanpa menaruh kunci di repo (jalankan di `backend/`, keluaran hanya di terminal):
 
@@ -175,7 +175,7 @@ node -e "import('viem/accounts').then(({generatePrivateKey:g,privateKeyToAccount
 ```
 
 Salin `ANCHOR_PRIVATE_KEY` langsung ke env Render (atau `.env` lokal yang di-gitignore), jangan ke file lain. Isi alamatnya
-dengan POL testnet dari faucet Polygon Amoy. Pakai dompet khusus ini saja: jangan pernah memakai dompet yang memegang aset
+dengan ETH Sepolia dari faucet Sepolia (atau token testnet jaringan yang dipilih). Pakai dompet khusus ini saja: jangan pernah memakai dompet yang memegang aset
 mainnet. Alamat dompet juga jangan ditulis di repo.
 
 `GET /giveaways/:id/anchors` (publik) menjawab `{"ok":true,"anchors":[{block_index, block_type, block_hash, tx_hash,

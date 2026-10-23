@@ -581,10 +581,10 @@ void main() {
       await tester.ensureVisible(find.byKey(const Key('anchor_link_result')));
       await tester.tap(find.byKey(const Key('anchor_link_result')));
       await settle(tester);
-      expect(find.text('Tujuan: amoy.polygonscan.com'), findsOneWidget);
+      expect(find.text('Tujuan: sepolia.etherscan.io'), findsOneWidget);
       await tester.tap(find.byKey(const Key('confirm_open_anchor')));
       await settle(tester);
-      expect(opened.single.toString(), startsWith('https://amoy.polygonscan.com/tx/0x'));
+      expect(opened.single.toString(), startsWith('https://sepolia.etherscan.io/tx/0x'));
     });
 
     testWidgets('jangkar tidak cocok: langkah 5 Gagal dan ringkasan "Tidak cocok"', (tester) async {

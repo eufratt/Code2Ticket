@@ -26,7 +26,7 @@ const schema = z.object({
   // ANCHOR_PRIVATE_KEY dan ANCHOR_RPC_URL (bisa memuat API key) JANGAN pernah di-log atau dikirim ke klien.
   ANCHOR_ENABLED: z.string().default('false'),
   ANCHOR_RPC_URL: z.string().default(''),
-  ANCHOR_CHAIN_ID: z.string().default('80002'),
+  ANCHOR_CHAIN_ID: z.string().default('11155111'), // Ethereum Sepolia
   ANCHOR_PRIVATE_KEY: z.string().default(''),
   ANCHOR_EXPLORER_TX_URL: z.string().default(''),
   ANCHOR_PUBLIC_RPC_URL: z.string().default(''),
