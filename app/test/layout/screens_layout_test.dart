@@ -298,7 +298,7 @@ void main() {
     'Pengaturan': (() => const SettingsScreen(), 'Mata uang default'),
     'Untuk Penyelenggara': (() => const OrganizerScreen(), 'Cara kerjanya'),
     'Saran & Kesan': (() => const FeedbackScreen(), 'Riwayat kirimanmu'),
-    'Discover': (() => const DiscoverScreen(), 'Terdekat'),
+    'Discover': (() => const DiscoverScreen(), 'Discover'),
     'Input Code': (() => const InputCodeScreen(), 'Tukar kode'),
   };
 

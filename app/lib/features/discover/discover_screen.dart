@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/currency/currency.dart';
 import '../../core/currency/rates_controller.dart';
+import '../../core/display.dart';
 import '../../core/format.dart';
 import '../../core/location/location_service.dart';
 import '../../core/rupiah_input.dart';
@@ -111,8 +112,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
               },
             ),
           ),
-          _StatusBar(controller: c),
-          _SortBar(controller: c),
+          _ActiveSummary(controller: c),
           if (c.locationProblem != null) _LocationBanner(controller: c),
           if (c.offline) OfflineBanner(cachedAt: c.cachedAt),
           Expanded(child: showHistory ? _History(controller: c, onPick: (q) => _useHistory(c, q)) : _Results(controller: c)),
@@ -125,116 +125,86 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
     final result = await showModalBottomSheet<DiscoverFilters>(
       context: context,
       isScrollControlled: true,
-      builder: (_) => FilterSheet(initial: c.filters),
+      builder: (_) => FilterSheet(initial: c.filters, locationKnown: c.position != null, onUseLocation: c.enableNearby),
     );
     if (result != null) await c.setFilters(result);
   }
 }
 
-/// Status di bawah kolom cari, sinkron dengan sheet filter (sumbernya sama: `filters.status`). "Semua" = bawaan:
-/// semua status (`status=all`). Terpilih dibedakan warna isi/border saja, tanpa centang.
-class _StatusBar extends StatelessWidget {
-  const _StatusBar({required this.controller});
+/// Pilihan deadline di sheet filter dan baris ringkas (hari; null = semua).
+const _deadlineOptions = [('Semua', null), ('Hari ini', 1), ('7 hari', 7), ('30 hari', 30)];
+
+/// Urutan tampil pilihan "Urutkan" di sheet filter.
+const _sortOrder = [GiveawaySort.deadline, GiveawaySort.nearest, GiveawaySort.value, GiveawaySort.newest];
+
+/// Baris ringkas di bawah kolom cari: HANYA filter/urutan yang bukan bawaan, masing-masing chip dengan tombol hapus
+/// (langsung memperbarui daftar). Semua bawaan = tidak tampil. Lokasi manual dan radius Terdekat ikut di sini karena
+/// ikut menyaring daftar.
+class _ActiveSummary extends StatelessWidget {
+  const _ActiveSummary({required this.controller});
   final DiscoverController controller;
 
   @override
   Widget build(BuildContext context) {
-    final f = controller.filters;
-    return SizedBox(
-      height: kMinTap + Spacing.s8,
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: Spacing.screen, vertical: Spacing.s4),
-        child: Row(
-          children: [
-            for (final s in <GiveawayStatusFilter?>[null, ...GiveawayStatusFilter.values]) ...[
-              if (s != null) const SizedBox(width: Spacing.s8),
-              ChoiceChip(
-                key: Key('status_chip_${s?.name ?? 'all'}'),
-                label: Text(s?.label ?? 'Semua'),
-                showCheckmark: false,
-                selected: f.status == s,
-                onSelected: (_) => controller.setFilters(f.copyWith(status: s)),
-              ),
-            ],
-          ],
+    final c = controller;
+    final f = c.filters;
+    Widget chip(Key key, String label, VoidCallback onDeleted, String tooltip) => Padding(
+          padding: const EdgeInsets.only(right: Spacing.s8),
+          child: InputChip(key: key, label: Text(label), deleteButtonTooltipMessage: tooltip, onDeleted: onDeleted),
+        );
+    String? valueLabel() {
+      final lo = f.minValueIdr, hi = f.maxValueIdr;
+      if (lo == null && hi == null) return null;
+      if (lo != null && hi != null) return 'Nilai: ${context.money(lo)} - ${context.money(hi)}';
+      return lo != null ? 'Nilai: min. ${context.money(lo)}' : 'Nilai: maks. ${context.money(hi)}';
+    }
+
+    final value = valueLabel();
+    final chips = <Widget>[
+      if (c.locating)
+        const Padding(
+          padding: EdgeInsets.only(right: Spacing.s12),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+            SizedBox(width: Spacing.s8),
+            Text('Mencari lokasi...'),
+          ]),
         ),
-      ),
-    );
-  }
-}
-
-class _SortBar extends StatelessWidget {
-  const _SortBar({required this.controller});
-  final DiscoverController controller;
-
-  @override
-  Widget build(BuildContext context) {
-    final f = controller.filters;
-    return SizedBox(
-      height: 44,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        children: [
-          FilterChip(
-            key: const Key('nearby_chip'),
-            avatar: controller.locating
-                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                : const Icon(Icons.near_me, size: 18),
-            label: const Text('Terdekat'),
-            selected: f.nearby,
-            onSelected: controller.locating ? null : (on) => on ? controller.enableNearby() : controller.disableNearby(),
+      if (f.status != null) chip(const Key('summary_status'), f.status!.label, () => c.setFilters(f.copyWith(status: null)), 'Hapus filter status'),
+      if (f.sort != GiveawaySort.deadline)
+        chip(const Key('summary_sort'), 'Urut: ${f.sort.label}', () => c.setFilters(f.copyWith(sort: GiveawaySort.deadline)), 'Hapus urutan'),
+      if (f.category != null)
+        chip(const Key('summary_category'), categoryLabel(f.category!), () => c.setFilters(f.copyWith(category: null)), 'Hapus filter kategori'),
+      if (f.deadlineDays != null)
+        chip(
+          const Key('summary_deadline'),
+          'Deadline: ${_deadlineOptions.firstWhere((o) => o.$2 == f.deadlineDays, orElse: () => ('${f.deadlineDays} hari', null)).$1}',
+          () => c.setFilters(f.copyWith(deadlineDays: null)),
+          'Hapus filter deadline',
+        ),
+      if (value != null) chip(const Key('summary_value'), value, () => c.setFilters(f.copyWith(minValueIdr: null, maxValueIdr: null)), 'Hapus filter nilai hadiah'),
+      if (f.nearby) chip(const Key('summary_radius'), 'Radius ${f.nearbyRadiusKm} km', c.disableNearby, 'Matikan Terdekat'),
+      if (c.manualLabel != null)
+        Padding(
+          padding: const EdgeInsets.only(right: Spacing.s8),
+          child: InputChip(
+            key: const Key('manual_chip'),
+            deleteButtonTooltipMessage: 'Hapus lokasi manual',
+            avatar: const Icon(Icons.place, size: 18),
+            label: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 160),
+              child: Text(c.manualLabel!, overflow: TextOverflow.ellipsis),
+            ),
+            onDeleted: c.disableNearby,
           ),
-          if (f.nearby)
-            for (final km in const [5, 10, 25]) ...[
-              const SizedBox(width: 8),
-              ChoiceChip(
-                key: Key('radius_$km'),
-                label: Text('$km km'),
-                selected: f.nearbyRadiusKm == km,
-                onSelected: (_) => controller.setNearbyRadius(km),
-              ),
-            ],
-          if (controller.manualLabel != null) ...[
-            const SizedBox(width: 8),
-            InputChip(
-              key: const Key('manual_chip'),
-              deleteButtonTooltipMessage: 'Hapus lokasi manual',
-              avatar: const Icon(Icons.place, size: 18),
-              label: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 160),
-                child: Text(controller.manualLabel!, overflow: TextOverflow.ellipsis),
-              ),
-              onDeleted: controller.disableNearby,
-            ),
-          ],
-          const SizedBox(width: 8),
-          PopupMenuButton<GiveawaySort>(
-            key: const Key('sort_menu'),
-            tooltip: 'Urutkan',
-            initialValue: f.sort,
-            onSelected: (s) => controller.setFilters(f.copyWith(sort: s)),
-            itemBuilder: (_) => [
-              for (final s in GiveawaySort.values)
-                if (s != GiveawaySort.nearest || controller.position != null)
-                  PopupMenuItem(value: s, child: Text(s.label)),
-            ],
-            child: Chip(
-              avatar: const Icon(Icons.sort, size: 18),
-              label: Text(f.sort.label),
-            ),
-          ),
-          if (f.category != null) ...[
-            const SizedBox(width: 8),
-            InputChip(
-              deleteButtonTooltipMessage: 'Hapus filter kategori',
-              label: Text(categoryLabel(f.category!)),
-              onDeleted: () => controller.setFilters(f.copyWith(category: null)),
-            ),
-          ],
-        ],
-      ),
+        ),
+    ];
+    if (chips.isEmpty) return const SizedBox.shrink();
+    return SingleChildScrollView(
+      key: const Key('filter_summary'),
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: Spacing.screen, vertical: Spacing.s4),
+      child: Row(children: chips),
     );
   }
 }
@@ -382,10 +352,14 @@ class _Results extends StatelessWidget {
   }
 }
 
-/// Bottom sheet filter: kategori, rentang nilai hadiah (mata uang tampilan, dikonversi ke rupiah saat diterapkan), deadline, dan status.
+/// Satu-satunya tempat status dan urutan: Status, Urutkan, lalu kategori, deadline, rentang nilai hadiah (mata uang
+/// tampilan, dikonversi ke rupiah saat diterapkan), dan radius bila mode Terdekat aktif. "Terdekat" butuh lokasi:
+/// tanpa [locationKnown] nonaktif ("Butuh lokasi"), dan [onUseLocation] (alur izin lokasi yang sudah ada) ditawarkan.
 class FilterSheet extends StatefulWidget {
-  const FilterSheet({super.key, required this.initial});
+  const FilterSheet({super.key, required this.initial, this.locationKnown = false, this.onUseLocation});
   final DiscoverFilters initial;
+  final bool locationKnown;
+  final Future<void> Function()? onUseLocation;
   @override
   State<FilterSheet> createState() => _FilterSheetState();
 }
@@ -459,10 +433,55 @@ class _FilterSheetState extends State<FilterSheet> {
                 children: [
                 Text('Filter', style: theme.textTheme.titleLarge),
                 section(
+                  'Status',
+                  Wrap(spacing: 8, children: [
+                    for (final s in <GiveawayStatusFilter?>[null, ...GiveawayStatusFilter.values])
+                      ChoiceChip(
+                        key: Key('sheet_status_${s?.name ?? 'all'}'),
+                        label: Text(s?.label ?? 'Semua'),
+                        showCheckmark: false,
+                        selected: _f.status == s,
+                        onSelected: (_) => setState(() => _f = _f.copyWith(status: s)),
+                      ),
+                  ]),
+                ),
+                section(
+                  'Urutkan',
+                  Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Wrap(spacing: 8, children: [
+                      for (final s in _sortOrder)
+                        ChoiceChip(
+                          key: Key('sheet_sort_${s.name}'),
+                          label: Text(s.label),
+                          showCheckmark: false,
+                          selected: _f.sort == s,
+                          // Terdekat tanpa lokasi: nonaktif (abu-abu).
+                          onSelected: s == GiveawaySort.nearest && !widget.locationKnown ? null : (_) => setState(() => _f = _f.copyWith(sort: s)),
+                        ),
+                    ]),
+                    if (!widget.locationKnown) ...[
+                      const SizedBox(height: 4),
+                      Wrap(crossAxisAlignment: WrapCrossAlignment.center, spacing: 8, children: [
+                        Text('Terdekat: Butuh lokasi', key: const Key('sort_nearest_hint'), style: theme.textTheme.bodyMedium?.copyWith(color: context.colors.muted)),
+                        if (widget.onUseLocation != null)
+                          TextButton(
+                            key: const Key('sheet_use_location'),
+                            onPressed: () {
+                              Navigator.pop(context);
+                              widget.onUseLocation!();
+                            },
+                            child: const Text('Gunakan lokasi saya'),
+                          ),
+                      ]),
+                    ],
+                  ]),
+                ),
+                section(
                   'Kategori',
                   Wrap(spacing: 8, runSpacing: 4, children: [
                     ChoiceChip(
                       label: const Text('Semua'),
+                      showCheckmark: false,
                       selected: _f.category == null,
                       onSelected: (_) => setState(() => _f = _f.copyWith(category: null)),
                     ),
@@ -470,8 +489,21 @@ class _FilterSheetState extends State<FilterSheet> {
                       ChoiceChip(
                         key: Key('cat_$c'),
                         label: Text(categoryLabel(c)),
+                        showCheckmark: false,
                         selected: _f.category == c,
                         onSelected: (_) => setState(() => _f = _f.copyWith(category: c)),
+                      ),
+                  ]),
+                ),
+                section(
+                  'Deadline',
+                  Wrap(spacing: 8, children: [
+                    for (final (label, days) in _deadlineOptions)
+                      ChoiceChip(
+                        label: Text(label),
+                        showCheckmark: false,
+                        selected: _f.deadlineDays == days,
+                        onSelected: (_) => setState(() => _f = _f.copyWith(deadlineDays: days)),
                       ),
                   ]),
                 ),
@@ -499,29 +531,20 @@ class _FilterSheetState extends State<FilterSheet> {
                     ),
                   ]),
                 ),
-                section(
-                  'Deadline',
-                  Wrap(spacing: 8, children: [
-                    for (final (label, days) in const [('Semua', null), ('Hari ini', 1), ('7 hari', 7), ('30 hari', 30)])
-                      ChoiceChip(
-                        label: Text(label),
-                        selected: _f.deadlineDays == days,
-                        onSelected: (_) => setState(() => _f = _f.copyWith(deadlineDays: days)),
-                      ),
-                  ]),
-                ),
-                section(
-                  'Status',
-                  Wrap(spacing: 8, children: [
-                    for (final s in <GiveawayStatusFilter?>[null, ...GiveawayStatusFilter.values])
-                      ChoiceChip(
-                        key: Key('sheet_status_${s?.name ?? 'all'}'),
-                        label: Text(s?.label ?? 'Semua'),
-                        selected: _f.status == s,
-                        onSelected: (_) => setState(() => _f = _f.copyWith(status: s)),
-                      ),
-                  ]),
-                ),
+                if (_f.nearby)
+                  section(
+                    'Radius',
+                    Wrap(spacing: 8, children: [
+                      for (final km in const [5, 10, 25])
+                        ChoiceChip(
+                          key: Key('radius_$km'),
+                          label: Text('$km km'),
+                          showCheckmark: false,
+                          selected: _f.nearbyRadiusKm == km,
+                          onSelected: (_) => setState(() => _f = _f.copyWith(nearbyRadiusKm: km)),
+                        ),
+                    ]),
+                  ),
                 if (_error != null) ...[
                   const SizedBox(height: 12),
                   InlineMessage(_error!),
@@ -531,8 +554,9 @@ class _FilterSheetState extends State<FilterSheet> {
           ),
         ),
         const SizedBox(height: Spacing.s16),
-        Row(children: [
-          PrimaryButton(
+        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+          Flexible(
+            child: PrimaryButton(
             key: const Key('reset_filter'),
             label: 'Atur ulang',
             variant: ButtonVariant.text,
@@ -541,12 +565,13 @@ class _FilterSheetState extends State<FilterSheet> {
               context,
               widget.initial.copyWith(
                 category: null, minValueIdr: null, maxValueIdr: null, deadlineDays: null,
-                status: null,
+                status: null, sort: GiveawaySort.deadline,
               ),
             ),
+            ),
           ),
-          const Spacer(),
-          PrimaryButton(key: const Key('apply_filter'), label: 'Terapkan', expand: false, onPressed: _apply),
+          const SizedBox(width: Spacing.s8),
+          Flexible(child: PrimaryButton(key: const Key('apply_filter'), label: 'Terapkan', expand: false, onPressed: _apply)),
         ]),
       ],
     ),

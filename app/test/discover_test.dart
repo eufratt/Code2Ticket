@@ -25,6 +25,7 @@ import 'input_code_test.dart' show FakeApi, FakeAuth, json;
 import 'models_test.dart' show giveawayJson;
 import 'support/fake_location.dart';
 import 'support/display.dart';
+import 'support/ui.dart';
 import 'support/memory_cache.dart';
 
 Map<String, dynamic> listOf(List<Giveaway> gs, {double? distance}) => {
@@ -515,7 +516,70 @@ void main() {
       expect(find.widgetWithText(InputChip, 'Gaming'), findsOneWidget);
     });
 
-    testWidgets('chip status di bawah kolom cari: Semua terpilih bawaan, >= 48 dp, sinkron dengan sheet dan lencana', (tester) async {
+    testWidgets('layar hanya kolom cari + daftar: tanpa chip status/urutan, baris ringkas tersembunyi saat semua bawaan', (tester) async {
+      api = FakeApi((m, p, b) async => {'ok': true, 'data': []});
+      await pump(tester);
+      await tester.pumpAndSettle();
+      for (final k in ['status_chip_all', 'status_chip_active', 'nearby_chip', 'sort_menu', 'filter_summary']) {
+        expect(find.byKey(Key(k)), findsNothing, reason: k);
+      }
+      expect(find.byType(ChoiceChip), findsNothing);
+      expect(find.byType(FilterChip), findsNothing);
+      expect(find.text('Deadline terdekat'), findsNothing);
+      expect(find.text('Semua'), findsNothing);
+    });
+
+    testWidgets('sheet: Status lalu Urutkan lalu filter lama; bawaan Semua + Deadline terdekat; tanpa centang; kolom >= 56 dp', (tester) async {
+      api = FakeApi((m, p, b) async => {'ok': true, 'data': []});
+      await pump(tester);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('open_filter')));
+      await tester.pumpAndSettle();
+      double y(String t) => tester.getTopLeft(find.text(t).first).dy;
+      expect(y('Status') < y('Urutkan') && y('Urutkan') < y('Kategori') && y('Kategori') < y('Deadline'), isTrue);
+      ChoiceChip chip(String k) => tester.widget<ChoiceChip>(find.byKey(Key(k)));
+      for (final k in ['sheet_status_all', 'sheet_status_active', 'sheet_status_upcoming', 'sheet_status_finished', 'sheet_sort_deadline', 'sheet_sort_nearest', 'sheet_sort_value', 'sheet_sort_newest']) {
+        expect(chip(k).showCheckmark, isFalse, reason: k);
+        expect(tester.getSize(find.byKey(Key(k))).height, greaterThanOrEqualTo(48), reason: k);
+      }
+      expect([chip('sheet_status_all').selected, chip('sheet_sort_deadline').selected], [true, true]);
+      for (final l in ['Aktif', 'Akan datang', 'Selesai', 'Deadline terdekat', 'Terdekat', 'Nilai hadiah tertinggi', 'Terbaru']) {
+        expect(find.text(l), findsOneWidget, reason: l);
+      }
+      await tester.scrollUntilVisible(find.byKey(const Key('min_value')), 100, scrollable: find.byType(Scrollable).last);
+      expect(tester.getSize(find.byKey(const Key('min_value'))).height, greaterThanOrEqualTo(56));
+      expect(tester.getSize(find.byKey(const Key('max_value'))).height, greaterThanOrEqualTo(56));
+    });
+
+    testWidgets('Terdekat nonaktif tanpa lokasi + keterangan "Butuh lokasi"; tidak bisa dipilih', (tester) async {
+      api = FakeApi((m, p, b) async => {'ok': true, 'data': []});
+      await pump(tester);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('open_filter')));
+      await tester.pumpAndSettle();
+      expect(tester.widget<ChoiceChip>(find.byKey(const Key('sheet_sort_nearest'))).onSelected, isNull);
+      expect(find.text('Terdekat: Butuh lokasi'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('sheet_sort_nearest')), warnIfMissed: false);
+      await tester.tap(find.byKey(const Key('apply_filter')));
+      await tester.pumpAndSettle();
+      expect(controller.filters.sort, GiveawaySort.deadline);
+    });
+
+    testWidgets('Terdekat aktif bila lokasi diketahui: bisa dipilih, tanpa keterangan, radius di sheet', (tester) async {
+      api = FakeApi((m, p, b) async => {'ok': true, 'data': []});
+      await pump(tester);
+      await tester.pumpAndSettle();
+      await controller.setPosition((lat: -6.2, lng: 106.8));
+      await controller.setFilters(controller.filters.copyWith(nearbyRadiusKm: 10));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('open_filter')));
+      await tester.pumpAndSettle();
+      expect(tester.widget<ChoiceChip>(find.byKey(const Key('sheet_sort_nearest'))).onSelected, isNotNull);
+      expect(find.text('Terdekat: Butuh lokasi'), findsNothing);
+      expect(find.byKey(const Key('radius_10')), findsOneWidget);
+    });
+
+    testWidgets('status + urutan dari sheet: query, baris ringkas, lencana; hapus chip memperbarui daftar; Atur ulang', (tester) async {
       final queries = <Map<String, String>>[];
       api = FakeApi((m, p, b) async {
         queries.add(queryOf(p));
@@ -523,41 +587,87 @@ void main() {
       });
       await pump(tester);
       await tester.pumpAndSettle();
-      ChoiceChip chip(String k) => tester.widget<ChoiceChip>(find.byKey(Key(k)));
-      for (final k in ['all', 'active', 'upcoming', 'finished']) {
-        expect(tester.getSize(find.byKey(Key('status_chip_$k'))).height, greaterThanOrEqualTo(48));
-        expect(chip('status_chip_$k').showCheckmark, isFalse); // terpilih dibedakan warna, tanpa centang
-      }
-      expect(find.text('Semua'), findsOneWidget);
-      expect(find.text('Akan datang'), findsOneWidget);
-      expect(chip('status_chip_all').selected, isTrue);
       expect(queries.last['status'], 'all');
-
-      await tester.tap(find.byKey(const Key('status_chip_finished')));
-      await tester.pumpAndSettle();
-      expect(queries.last['status'], 'finished');
-      expect([chip('status_chip_finished').selected, chip('status_chip_all').selected], [true, false]);
-      expect(find.text('1'), findsOneWidget); // lencana filter
-      expect(find.text('Coba kata kunci atau filter lain.\nCoba pilih status lain.'), findsOneWidget);
+      expect(find.text('1'), findsNothing);
 
       await tester.tap(find.byKey(const Key('open_filter')));
       await tester.pumpAndSettle();
-      expect(chip('sheet_status_finished').selected, isTrue);
-      await tester.tap(find.byKey(const Key('sheet_status_upcoming')));
-      await tester.pump();
+      await tester.tap(find.byKey(const Key('sheet_status_finished')));
+      await tester.tap(find.byKey(const Key('sheet_sort_newest')));
       await tester.tap(find.byKey(const Key('apply_filter')));
       await tester.pumpAndSettle();
-      expect(queries.last['status'], 'upcoming');
-      expect(chip('status_chip_upcoming').selected, isTrue);
+      expect([queries.last['status'], queries.last['sort']], ['finished', 'newest']);
+      expect(find.byKey(const Key('filter_summary')), findsOneWidget);
+      expect(find.widgetWithText(InputChip, 'Selesai'), findsOneWidget);
+      expect(find.widgetWithText(InputChip, 'Urut: Terbaru'), findsOneWidget);
+      expect(find.text('2'), findsOneWidget); // lencana: status + urutan
+      expect(find.text('Coba kata kunci atau filter lain.\nCoba pilih status lain.'), findsOneWidget);
 
+      await tester.tap(find.descendant(of: find.byKey(const Key('summary_status')), matching: find.byIcon(Icons.clear)));
+      await tester.pumpAndSettle();
+      expect(queries.last['status'], 'all');
+      expect(queries.last['sort'], 'newest');
+      expect(find.byKey(const Key('summary_status')), findsNothing);
+      expect(find.text('1'), findsOneWidget);
+
+      await tester.tap(find.descendant(of: find.byKey(const Key('summary_sort')), matching: find.byIcon(Icons.clear)));
+      await tester.pumpAndSettle();
+      expect(queries.last['sort'], 'deadline');
+      expect(find.byKey(const Key('filter_summary')), findsNothing); // semua bawaan
+      expect(find.text('1'), findsNothing);
+
+      await controller.setFilters(controller.filters.copyWith(status: GiveawayStatusFilter.active, sort: GiveawaySort.value, category: 'tech', deadlineDays: 7, minValueIdr: 1000000));
+      await tester.pumpAndSettle();
+      expect(find.text('Aktif'), findsOneWidget);
+      expect(find.text('Urut: Nilai hadiah tertinggi'), findsOneWidget);
+      expect(find.text('Tech'), findsOneWidget);
+      expect(find.text('Deadline: 7 hari'), findsOneWidget);
+      expect(find.textContaining('Nilai: min.'), findsOneWidget);
+      expect(find.text('5'), findsOneWidget);
       await tester.tap(find.byKey(const Key('open_filter')));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('reset_filter')));
       await tester.pumpAndSettle();
-      expect(queries.last['status'], 'all');
-      expect(chip('status_chip_all').selected, isTrue);
-      expect(find.text('1'), findsNothing);
-      expect(find.textContaining('Coba pilih status lain.'), findsNothing);
+      expect([queries.last['status'], queries.last['sort']], ['all', 'deadline']);
+      expect(find.byKey(const Key('filter_summary')), findsNothing);
+    });
+
+    testWidgets('kompatibel dengan pencarian dan paginasi: status/urutan ikut di tiap halaman, pencarian lintas status', (tester) async {
+      final queries = <Map<String, String>>[];
+      api = FakeApi((m, p, b) async {
+        queries.add(queryOf(p));
+        final offset = int.tryParse(queryOf(p)['offset'] ?? '0') ?? 0;
+        return listOf([for (var i = 0; i < 20; i++) gw('g${offset + i}', title: 'Kamera ${offset + i}')]);
+      });
+      await pump(tester);
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(const Key('search_field')), 'kamera');
+      await tester.pump(const Duration(milliseconds: 450));
+      await tester.pumpAndSettle();
+      expect([queries.last['q'], queries.last['status']], ['kamera', 'all']);
+      await tester.tap(find.byKey(const Key('open_filter')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('sheet_status_active')));
+      await tester.tap(find.byKey(const Key('sheet_sort_value')));
+      await tester.tap(find.byKey(const Key('apply_filter')));
+      await tester.pumpAndSettle();
+      expect([queries.last['q'], queries.last['status'], queries.last['sort']], ['kamera', 'active', 'value']);
+      await tester.scrollUntilVisible(find.byKey(const Key('load_more')), 400, scrollable: find.byType(Scrollable).last);
+      await tester.tap(find.byKey(const Key('load_more')));
+      await tester.pumpAndSettle();
+      expect([queries.last['offset'], queries.last['status'], queries.last['sort'], queries.last['q']], ['20', 'active', 'value', 'kamera']);
+    });
+
+    testWidgets('font 1,3x gelap: sheet dan baris ringkas tanpa overflow', (tester) async {
+      await setViewport(tester, textScale: 1.3, brightness: Brightness.dark);
+      api = FakeApi((m, p, b) async => {'ok': true, 'data': []});
+      await pump(tester);
+      await tester.pumpAndSettle();
+      await controller.setFilters(controller.filters.copyWith(status: GiveawayStatusFilter.upcoming, sort: GiveawaySort.value, category: 'gaming', deadlineDays: 30, minValueIdr: 1000000, maxValueIdr: 99000000));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('open_filter')));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
     });
 
     testWidgets('pencarian menampilkan giveaway selesai dengan lencana status berteks', (tester) async {

@@ -67,12 +67,13 @@ class DiscoverFilters {
 
   bool get nearby => nearbyRadiusKm != null;
 
-  /// Filter selain kata kunci/urutan yang sedang aktif (untuk lencana tombol filter).
+  /// Filter dan urutan non-bawaan selain kata kunci (untuk lencana tombol filter).
   int get activeFilterCount =>
       (category != null ? 1 : 0) +
       (minValueIdr != null || maxValueIdr != null ? 1 : 0) +
       (deadlineDays != null ? 1 : 0) +
-      (status != null ? 1 : 0);
+      (status != null ? 1 : 0) +
+      (sort != GiveawaySort.deadline ? 1 : 0);
 
   /// Nilai [Object?] bernilai _keep = tidak diubah; null = dikosongkan.
   DiscoverFilters copyWith({

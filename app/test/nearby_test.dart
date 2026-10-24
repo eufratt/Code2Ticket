@@ -136,23 +136,29 @@ void main() {
       await tester.pumpAndSettle();
     }
 
+    /// Terdekat dimulai dari sheet filter: "Gunakan lokasi saya" menjalankan alur izin lokasi yang sudah ada.
+    Future<void> useLocation(WidgetTester tester) async {
+      await tester.tap(find.byKey(const Key('open_filter')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('sheet_use_location')));
+      await tester.pumpAndSettle();
+    }
+
     testWidgets('izin ditolak: pesan jelas + opsi mengizinkan / cari tempat', (tester) async {
       gateway = FakeGateway(afterRequest: GatewayPermission.denied);
       await pump(tester);
-      await tester.tap(find.byKey(const Key('nearby_chip')));
-      await tester.pumpAndSettle();
+      await useLocation(tester);
       expect(find.byKey(const Key('location_banner')), findsOneWidget);
       expect(find.textContaining('Izin lokasi ditolak'), findsOneWidget);
       expect(find.text('Izinkan lokasi'), findsOneWidget);
       expect(find.text('Cari tempat'), findsOneWidget);
-      expect(find.byKey(const Key('radius_10')), findsNothing); // mode Terdekat belum aktif
+      expect(find.byKey(const Key('summary_radius')), findsNothing); // mode Terdekat belum aktif
     });
 
     testWidgets('ditolak permanen: tombol membuka pengaturan aplikasi', (tester) async {
       gateway = FakeGateway(permission: GatewayPermission.deniedForever);
       await pump(tester);
-      await tester.tap(find.byKey(const Key('nearby_chip')));
-      await tester.pumpAndSettle();
+      await useLocation(tester);
       expect(find.textContaining('ditolak permanen'), findsOneWidget);
       await tester.tap(find.text('Buka pengaturan'));
       await tester.pumpAndSettle();
@@ -162,8 +168,7 @@ void main() {
     testWidgets('layanan lokasi mati: pesan + tombol pengaturan lokasi', (tester) async {
       gateway = FakeGateway(service: false);
       await pump(tester);
-      await tester.tap(find.byKey(const Key('nearby_chip')));
-      await tester.pumpAndSettle();
+      await useLocation(tester);
       expect(find.textContaining('Layanan lokasi di perangkat mati'), findsOneWidget);
       await tester.tap(find.text('Buka pengaturan lokasi'));
       await tester.pumpAndSettle();
@@ -173,17 +178,21 @@ void main() {
     testWidgets('izin diberikan: jarak tampil di kartu, radius bisa diganti, bisa dimatikan', (tester) async {
       gateway = FakeGateway(permission: GatewayPermission.granted);
       await pump(tester);
-      await tester.tap(find.byKey(const Key('nearby_chip')));
-      await tester.pumpAndSettle();
+      await useLocation(tester);
       expect(find.byKey(const Key('location_banner')), findsNothing);
       expect(find.text('2,3 km'), findsOneWidget);
-      expect(find.byKey(const Key('radius_5')), findsOneWidget);
+      expect(find.byKey(const Key('summary_radius')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('open_filter')));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.byKey(const Key('radius_25')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('radius_25')));
+      await tester.tap(find.byKey(const Key('apply_filter')));
       await tester.pumpAndSettle();
       expect(requests.last['radius_km'], '25');
-      await tester.tap(find.byKey(const Key('nearby_chip')));
+      await tester.tap(find.byTooltip('Matikan Terdekat'));
       await tester.pumpAndSettle();
-      expect(find.byKey(const Key('radius_5')), findsNothing);
+      expect(find.byKey(const Key('summary_radius')), findsNothing);
       expect(requests.last.containsKey('lat'), isFalse);
     });
 
@@ -192,8 +201,7 @@ void main() {
       final geo = MockClient((r) async => http.Response(
           '[{"lat":"-6.9175","lon":"107.6191","display_name":"Bandung, Jawa Barat, Indonesia"}]', 200));
       await pump(tester, geoClient: geo);
-      await tester.tap(find.byKey(const Key('nearby_chip')));
-      await tester.pumpAndSettle();
+      await useLocation(tester);
       await tester.tap(find.byKey(const Key('manual_location')));
       await tester.pumpAndSettle();
       await tester.enterText(find.byKey(const Key('place_field')), 'ba'); // terlalu pendek
