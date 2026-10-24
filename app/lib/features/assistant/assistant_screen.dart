@@ -8,6 +8,7 @@ import '../../core/widgets/widgets.dart';
 import '../giveaways/giveaway_card.dart';
 import 'assistant_controller.dart';
 import 'assistant_models.dart';
+import '../chat/inline_markdown.dart';
 
 const _welcome = 'Halo! Aku Asisten Code2Ticket. Tanya cara kerja aplikasi (kode, tiket, draw, cek keaslian) atau minta aku carikan giveaway yang sedang aktif.';
 const _quickQuestions = [
@@ -191,7 +192,13 @@ class _Bubble extends StatelessWidget {
             ),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: Spacing.s12, vertical: Spacing.s8 + 2),
-              child: Text(text, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: mine ? c.onPrimary : c.onBackground)),
+              child: Builder(builder: (context) {
+                final style = Theme.of(context).textTheme.bodyMedium?.copyWith(color: mine ? c.onPrimary : c.onBackground);
+                if (mine) return Text(text, style: style);
+                return Text.rich(TextSpan(style: style, children: [
+                  for (final s in parseInlineBold(text)) TextSpan(text: s.text, style: s.bold ? const TextStyle(fontWeight: FontWeight.bold) : null),
+                ]));
+              }),
             ),
           ),
         ),
