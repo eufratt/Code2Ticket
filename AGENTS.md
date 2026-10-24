@@ -6,7 +6,7 @@ pemenang dapat diverifikasi lewat hash-chain (commit-reveal). Bahasa antarmuka d
 
 ## Arsitektur
 Flutter (app\) -> HTTPS -> Express (backend\, di Render: https://code2ticket.onrender.com) -> Postgres (Supabase, hanya sebagai database).
-Aplikasi tidak memakai Supabase Auth, anon key, maupun akses tabel langsung. SQLite lokal di app untuk cache, riwayat pencarian, pengaturan, dan riwayat chat Asisten (tabel chat_messages, DB lokal v4: cache giveaway memakai prize_value_idr, how_to_participate, organizer_url).
+Aplikasi tidak memakai Supabase Auth, anon key, maupun akses tabel langsung. SQLite lokal di app untuk cache, riwayat pencarian, pengaturan, dan riwayat chat Asisten (tabel chat_messages, DB lokal v6: cache giveaway memakai prize_value_idr, how_to_participate, organizer_url; tabel cached_draw_results untuk hasil draw offline).
 Login/session dibuat sendiri (bukan Firebase/Supabase Auth). Scheduler draw: node-cron + endpoint /internal/tick yang dipanggil tiap menit (Render free bisa tertidur).
 
 ## Struktur
@@ -18,7 +18,7 @@ Login/session dibuat sendiri (bukan Firebase/Supabase Auth). Scheduler draw: nod
 ## Perintah
 - Flutter (di app\): flutter pub get ; flutter analyze --no-pub ; flutter test ;
   flutter run --dart-define=API_BASE_URL=https://code2ticket.onrender.com
-- Backend (di backend\): npm ci ; npm test (butuh Postgres uji dan Python 3, lihat backend\README.md) ; npm run demo-seed (env ADMIN_USERNAME/ADMIN_PASSWORD/API_BASE_URL)
+- Backend (di backend\): npm ci ; npm test (butuh Postgres uji dan Python 3, lihat backend\README.md; saat ini 1127 tes Flutter dan 374 tes backend) ; npm run demo-seed (env ADMIN_USERNAME/ADMIN_PASSWORD/API_BASE_URL)
 - Kontrol Maze: logika kemiringan murni di app\lib\features\game\tilt_filter.dart (parameter tiltTau/zona mati/gain/batas didokumentasikan di sana, tesnya app\test\game\tilt_filter_test.dart); adaptor sensor_plus di tilt.dart. Jangan menaruh logika filter di layar.
 - Buru Kode (Maze bertema kode -> tiket -> draw): narasi murni tampilan. Logika kode latihan/target ada di app\lib\features\game\code_hunt.dart (tes app\test\game\code_hunt_test.dart), widget di code_hunt_widgets.dart. Tiket latihan BUKAN tiket asli: jangan dikirim ke server, jangan disimpan, kode latihan tidak boleh bisa lolos sebagai kode redeem. Payload POST /game/scores tidak boleh berubah.
 - Rakit Rantai (game kedua, edukasi hash-chain): logika murni + progres di app\lib\features\game\chain_puzzle.dart (generator deterministik per level, checkChain, ChainProgressStore di app_settings `chain_progress` per pengguna), layar chain_levels_screen.dart / chain_play_screen.dart, tes app\test\game\chain_test.dart. Memakai sha256Hex dan genesisHash dari chain_verifier.dart tanpa mengubahnya. Tanpa XP, lencana, skor, atau jaringan; data latihan bukan data draw asli. Mode Periksa: tepat satu sambungan putus (brokenAfter, linkIntact). Rute: /game = pemilih game (game_chooser_screen.dart), /game/codehunt = hub Buru Kode, /game/chain = level Rakit Rantai; rekor lokal Buru Kode di code_hunt_record.dart (app_settings `codehunt_best`, hanya tampilan).
@@ -145,4 +145,4 @@ M8 pengujian dan data demo; M9 laporan.
 
 ## Peta kode (graphify)
 Bila graphify-out\GRAPH_REPORT.md ada, baca dulu sebelum mencari file satu per satu. Perbarui dengan "graphify update ." setelah perubahan besar
-(hook git sudah memperbarui otomatis setelah commit). graphify-out\ tidak di-commit.
+(hook git sudah memperbarui otomatis setelah commit). graphify-out\ dan .claude\ tidak di-commit (di-gitignore).

@@ -1,3 +1,3 @@
-# code2ticket
+# code2ticket (app)
 
-A new Flutter project.
+Aplikasi Flutter Code2Ticket. Cara menjalankan, build APK, dan tes: lihat [../README.md](../README.md).

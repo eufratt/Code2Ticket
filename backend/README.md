@@ -1,14 +1,16 @@
 # Code2Ticket Backend
 
 Flutter -> **Express** -> **Postgres** (`DATABASE_URL` langsung, tanpa Supabase client/anon key).
-Seluruh logic fungsi SQL lama (`02_functions.sql`, `03_cron.sql`) ada di Node.js. Skema memakai
-`01_schema.sql` apa adanya, ditambah migrasi `db/06_backend.sql`.
+Logika bisnis (auth, redeem, draw, hash-chain, jangkar) ada di Node.js. Skema memakai
+`01_schema.sql` ditambah migrasi `db/06_backend.sql` sampai `db/12_chain_anchors.sql`. Ringkasan proyek: [../README.md](../README.md).
 
 ## Menjalankan
 
+Prasyarat: Node.js >= 20 dan Postgres dengan ekstensi `pgcrypto` dan `pg_trgm`. Migrasi dijalankan berurutan 01, 06, 07, 08, 09, 10, 11, 12.
+
 ```bash
-npm install
-cp .env.example .env            # isi DATABASE_URL, TICK_SECRET, dst.
+npm ci
+cp .env.example .env            # isi DATABASE_URL, TICK_SECRET, dst. (daftar variabel: bagian "Variabel environment")
 psql "$DATABASE_URL" -f db/01_schema.sql
 psql "$DATABASE_URL" -f db/06_backend.sql
 psql "$DATABASE_URL" -f db/07_user_photos.sql   # foto profil (Supabase: tempel di SQL Editor)
@@ -24,12 +26,27 @@ npm start
 - Postgres non-Supabase: jalankan dulu `db/00_supabase_shim.sql`
   (membuat role `anon`/`authenticated` dan schema `extensions` yang dirujuk `01_schema.sql`).
 - Backend harus terhubung sebagai **pemilik tabel** (mis. `postgres`): RLS aktif tanpa policy.
-- `02_functions.sql`, `03_cron.sql`, `05_bootstrap_admin.sql`, `make_admin_sql.py` tidak dipakai lagi
-  (memanggil `rpc_*`). Pakai `npm run create-admin`.
+- `db/04_storage.sql` (bucket Supabase untuk foto profil lama) tidak dipakai lagi: foto lewat `PUT /me/photo` (migrasi 07).
+- Admin dibuat dengan `npm run create-admin`.
 - Scheduler: `node-cron` di dalam proses (`SCHEDULER_ENABLED=true`), atau matikan dan panggil
   `POST /internal/tick` dengan header `X-Tick-Secret` dari cron host. Aman dijalankan bersamaan
   (draw dikunci per baris giveaway dan idempotent).
 - `npm run verify-chain` mengaudit seluruh hash-chain.
+
+## Variabel environment
+
+Hanya nama; nilai di `.env` lokal (di-gitignore) atau env Render. Templat: `.env.example`. Sumber kebenaran: `src/config.js`.
+
+| Kelompok | Variabel |
+|---|---|
+| Server | `NODE_ENV`, `PORT`, `TRUST_PROXY`, `CORS_ORIGINS` |
+| Database | `DATABASE_URL` (rahasia), `DATABASE_SSL`, `DB_POOL_MAX` |
+| Scheduler | `SCHEDULER_ENABLED`, `TICK_SECRET` (rahasia, minimal 16 karakter) |
+| Rate limit | `RATE_LIMIT_MAX`, `AUTH_RATE_LIMIT_MAX`, `UPLOAD_RATE_LIMIT_MAX` |
+| Asisten AI | `OPENAI_API_KEY` (rahasia), `OPENAI_MODEL`, `AI_DAILY_LIMIT_PER_USER`, `AI_DAILY_LIMIT_GLOBAL`, `AI_RATE_PER_MINUTE`, `OPENAI_TIMEOUT_MS` |
+| Jangkar blockchain | `ANCHOR_ENABLED`, `ANCHOR_RPC_URL` (rahasia), `ANCHOR_CHAIN_ID`, `ANCHOR_PRIVATE_KEY` (rahasia), `ANCHOR_EXPLORER_TX_URL`, `ANCHOR_PUBLIC_RPC_URL` |
+
+Urutan deploy umum: SQL migrasi di database -> env di Render -> `git push` -> APK baru.
 
 ## Nilai hadiah (rupiah)
 
@@ -190,7 +207,9 @@ APK baru dengan backend lama = langkah 5 "Belum dijangkarkan".
 ## Tes
 
 Butuh Postgres dengan ekstensi `pgcrypto` dan `pg_trgm`, serta Python 3 (tes kontrak memuat
-`test/reference/test_m1.py` sebagai implementasi acuan). Tiap file tes membuat database sendiri.
+`test/reference/test_m1.py` sebagai implementasi acuan). Tiap file tes membuat database sendiri (17 file, 374 tes).
+Pada klaster Postgres yang baru dibuat, jalankan satu file tes dulu (mis. `npx vitest run test/game-score.test.js`)
+supaya role bersama dibuat sebelum file tes lain berjalan paralel.
 
 ```bash
 TEST_PG_URL=postgres://postgres@127.0.0.1:5432 npm test     # default 127.0.0.1:54329
