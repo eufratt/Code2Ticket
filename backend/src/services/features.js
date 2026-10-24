@@ -100,7 +100,7 @@ const scoreSchema = z.object({
   duration_sec: z.int().min(0).max(600),
 });
 
-// Tingkat labirin di app (app\libeatures\game\maze.dart, MazeLevel): bintang dan batas waktu detik.
+// Tingkat labirin di app (app\lib\features\game\maze.dart, MazeLevel): bintang dan batas waktu detik.
 // Mudah 5/60, Sedang 8/55, Sulit 12/50. Hasil yang tidak cocok dengan satu pun tingkat = tidak masuk akal.
 const MAZE_LEVELS = [{ stars: 5, seconds: 60 }, { stars: 8, seconds: 55 }, { stars: 12, seconds: 50 }];
 const DURATION_SLACK = 2; // pembulatan elapsed/timeLeft di klien
