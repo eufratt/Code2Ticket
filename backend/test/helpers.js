@@ -28,15 +28,23 @@ export async function createTestDb(name, migrations = [BACKEND_SQL, PHOTOS_SQL, 
   const admin = new pg.Client({ connectionString: `${BASE_URL}/postgres` });
   await admin.connect();
   await admin.query(`drop database if exists ${dbName} with (force)`);
-  await admin.query(`create database ${dbName}`);
-  await admin.end();
+  await admin.query(`create database ${dbName} template template0 encoding 'UTF8'`); // tes memakai emoji: wajib UTF-8 walau klaster SQL_ASCII
   const url = `${BASE_URL}/${dbName}`;
   const c = new pg.Client({ connectionString: url });
   await c.connect();
   const shim = fs.existsSync(path.join(SCHEMA_DIR, '00_supabase_shim.sql'))
     ? path.join(SCHEMA_DIR, '00_supabase_shim.sql')
     : path.join(SCHEMA_DIR, 'tests/00_supabase_shim.sql');
-  for (const f of [shim, path.join(SCHEMA_DIR, '01_schema.sql'), ...migrations]) {
+  // Shim membuat role tingkat klaster dengan cek-lalu-buat: file tes paralel di klaster baru bentrok (pg_authid_rolname_index).
+  // Kunci advisory dipegang di koneksi admin (db postgres) selama shim berjalan.
+  await admin.query('select pg_advisory_lock(7240001)');
+  try {
+    await c.query(fs.readFileSync(shim, 'utf8'));
+  } finally {
+    await admin.query('select pg_advisory_unlock(7240001)');
+    await admin.end();
+  }
+  for (const f of [path.join(SCHEMA_DIR, '01_schema.sql'), ...migrations]) {
     await c.query(fs.readFileSync(f, 'utf8'));
   }
   await c.end();

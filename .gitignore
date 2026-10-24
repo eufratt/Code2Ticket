@@ -32,3 +32,4 @@ graphify-out/
 
 # Berkas kerja lokal
 report_excerpts.json
+.vitest/
