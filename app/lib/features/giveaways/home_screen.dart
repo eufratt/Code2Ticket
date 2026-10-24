@@ -14,6 +14,7 @@ import '../notifications/notifications_controller.dart';
 import '../profile/user_avatar.dart';
 import '../tickets/tickets_controller.dart';
 import 'affinity_controller.dart';
+import 'recommendation.dart';
 import 'giveaway_card.dart';
 import 'giveaway_models.dart';
 import 'giveaways_controller.dart';
@@ -114,7 +115,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           ..sort((a, b) => a.distanceKm!.compareTo(b.distanceKm!)));
     final soon = soonestDraws(visible, now);
     final affinityScores = context.watch<AffinityController?>()?.scores ?? const {};
-    final forYou = recommendFor(visible, affinityScores, now);
+    // Jarak dari mode Terdekat (bila ada) dipakai sebagai faktor kedekatan; tanpa lokasi faktor itu dibuang.
+    final distances = {for (final g in discover?.activeByDefault ?? const <Giveaway>[]) if (g.distanceKm != null) g.id: g.distanceKm!};
+    final forYou = recommend([for (final g in visible) g.distanceKm == null && distances[g.id] != null ? g.withDistance(distances[g.id]) : g], affinityScores, now);
     void open(Giveaway g) => context.push('/giveaway/${g.id}', extra: g);
 
     return CustomScrollView(
@@ -136,9 +139,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           ),
           SliverToBoxAdapter(
             child: _Carousel(
-              items: forYou,
+              items: [for (final r in forYou) r.giveaway],
               onOpen: open,
-              reasonsFor: (g) => recommendationReasons(g, affinityScores, now),
+              reasonsFor: (g) => forYou.firstWhere((r) => r.giveaway.id == g.id).reasons,
             ),
           ),
         ],

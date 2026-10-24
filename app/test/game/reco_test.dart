@@ -55,70 +55,6 @@ void main() {
     });
   });
 
-  group('recommendationReasons', () {
-    final now = DateTime.now();
-
-    test('kategori teratas: "Karena kamu sering ikut kategori {kategori}"', () {
-      final g = gw('1', 'gaming', drawHours: 48, clearDistance: true);
-      final r = recommendationReasons(g, {'gaming': 5, 'tech': 2}, now);
-      expect(r, ['Karena kamu sering ikut kategori Gaming']);
-    });
-
-    test('bukan teratas: "Sesuai minatmu di {kategori}"', () {
-      final g = gw('2', 'tech', drawHours: 48, clearDistance: true);
-      final r = recommendationReasons(g, {'gaming': 5, 'tech': 2}, now);
-      expect(r, ['Sesuai minatmu di Tech']);
-    });
-
-    test('kosong: afinitas kosong -> tidak ada alasan', () {
-      final g = gw('3', 'gaming', drawHours: 5, distanceKm: 2.3);
-      expect(recommendationReasons(g, const {}, now), isEmpty);
-    });
-
-    test('kategori tanpa skor minat -> kosong', () {
-      final g = gw('4', 'food', drawHours: 5, distanceKm: 2.3);
-      expect(recommendationReasons(g, {'gaming': 5}, now), isEmpty);
-    });
-
-    test('alasan kedua: draw < 24 jam -> "Draw segera"', () {
-      final g = gw('5', 'gaming', drawHours: 12, clearDistance: true);
-      final r = recommendationReasons(g, {'gaming': 5}, now);
-      expect(r, ['Karena kamu sering ikut kategori Gaming', 'Draw segera']);
-    });
-
-    test('draw >= 24 jam -> tidak memuat "Draw segera"', () {
-      final g = gw('6', 'gaming', drawHours: 30, clearDistance: true);
-      final r = recommendationReasons(g, {'gaming': 5}, now);
-      expect(r, ['Karena kamu sering ikut kategori Gaming']);
-      expect(r, isNot(contains('Draw segera')));
-    });
-
-    test('alasan kedua: jarak diketahui -> "{n} km dari kamu"', () {
-      final g1 = gw('7', 'gaming', drawHours: 48, distanceKm: 3.5);
-      final r1 = recommendationReasons(g1, {'gaming': 5}, now);
-      expect(r1, ['Karena kamu sering ikut kategori Gaming', '3,5 km dari kamu']);
-
-      // Jarak bulat
-      final g2 = gw('8', 'gaming', drawHours: 48, distanceKm: 5.0);
-      final r2 = recommendationReasons(g2, {'gaming': 5}, now);
-      expect(r2, ['Karena kamu sering ikut kategori Gaming', '5 km dari kamu']);
-
-      // Jarak sangat dekat
-      final g3 = gw('9', 'gaming', drawHours: 48, distanceKm: 0.05);
-      final r3 = recommendationReasons(g3, {'gaming': 5}, now);
-      expect(r3, ['Karena kamu sering ikut kategori Gaming', '<0,1 km dari kamu']);
-    });
-
-    test('maksimal 2 alasan dengan urutan afinitas dulu', () {
-      // Ada afinitas, draw < 24h, dan jarak: hanya 2 alasan pertama yang diambil
-      final g = gw('10', 'gaming', drawHours: 6, distanceKm: 2.3);
-      final r = recommendationReasons(g, {'gaming': 5}, now);
-      expect(r.length, 2);
-      expect(r[0], 'Karena kamu sering ikut kategori Gaming');
-      expect(r[1], 'Draw segera');
-    });
-  });
-
   group('AffinityController', () {
     late FakeApi api;
     late FakeAuth auth;
@@ -187,16 +123,18 @@ void main() {
       await tester.pumpWidget(const SizedBox());
     });
 
-    testWidgets('affinity kosong: bagian disembunyikan', (tester) async {
+    testWidgets('affinity kosong (cold start): bagian tetap tampil dengan alasan "Sedang populer"', (tester) async {
       final env = await pumpHome(tester, {});
-      expect(find.text('Untuk kamu'), findsNothing);
+      expect(find.text('Untuk kamu'), findsOneWidget);
+      expect(find.text('Sedang populer'), findsAtLeastNWidgets(1));
       expect(gets(env), 1);
       await tester.pumpWidget(const SizedBox());
     });
 
-    testWidgets('kategori tanpa giveaway yang cocok: bagian disembunyikan', (tester) async {
+    testWidgets('kategori minat tanpa giveaway: tetap tampil lewat faktor lain, tanpa alasan afinitas', (tester) async {
       await pumpHome(tester, {'fashion': 9});
-      expect(find.text('Untuk kamu'), findsNothing);
+      expect(find.text('Untuk kamu'), findsOneWidget);
+      expect(find.textContaining('kategori'), findsNothing);
       await tester.pumpWidget(const SizedBox());
     });
 
@@ -250,14 +188,12 @@ void main() {
       expect(forYouFinder, findsOneWidget);
 
       expect(find.text('Karena kamu sering ikut kategori Travel'), findsOneWidget);
-      expect(find.text('Sesuai minatmu di Gaming'), findsOneWidget);
-      expect(find.text('Draw segera'), findsAtLeastNWidgets(1));
+      expect(find.text('Batas ikut segera berakhir'), findsAtLeastNWidgets(1));
 
       expect(find.bySemanticsLabel('Alasan rekomendasi: Karena kamu sering ikut kategori Travel'), findsOneWidget);
 
       // Hanya tampil satu kali di layar (hanya di Untuk kamu, bukan di Segera draw atau Semua giveaway)
       expect(find.text('Karena kamu sering ikut kategori Travel'), findsExactly(1));
-      expect(find.text('Sesuai minatmu di Gaming'), findsExactly(1));
 
       await tester.pumpWidget(const SizedBox());
     });

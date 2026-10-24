@@ -31,10 +31,11 @@ void main() {
 
   group('Home', () {
     testWidgets('sapaan, ringkasan tiket, carousel, dan daftar semua giveaway', (tester) async {
-      await setViewport(tester, height: 1400);
+      await setViewport(tester, height: 2000);
       final env = SampleEnv();
       await tester.pumpWidget(routed(env, const HomeScreen(), []));
       await tester.pumpAndSettle();
+      expect(find.text('Untuk kamu'), findsOneWidget); // cold start: tetap tampil
       expect(find.text('Nama'), findsOneWidget); // nama depan pengguna
       expect(find.text('Kamu punya 4 tiket'), findsOneWidget);
       expect(find.text('Segera draw'), findsOneWidget);

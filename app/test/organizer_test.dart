@@ -219,7 +219,7 @@ void main() {
     });
 
     testWidgets('Home: kartu di bawah daftar, "Pelajari" membuka layar', (tester) async {
-      await setViewport(tester, height: 1800);
+      await setViewport(tester, height: 2400);
       await pumpRouted(tester, SampleEnv(), '/home');
       final card = find.byKey(const Key('home_organizer_card'));
       await tester.scrollUntilVisible(card, 300, scrollable: find.byType(Scrollable).first);
