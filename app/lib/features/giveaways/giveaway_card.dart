@@ -17,8 +17,6 @@ AppStatus statusOfPhase(GiveawayPhase p) => switch (p) {
       GiveawayPhase.drawn => AppStatus.giveawayFinished,
     };
 
-String phaseLabel(GiveawayPhase p) => statusOfPhase(p).label;
-
 /// list = kartu penuh di daftar; carousel = lebar ditentukan induk (kartu horizontal Home); compact = ringkas (Peta).
 enum GiveawayCardVariant { list, carousel, compact }
 

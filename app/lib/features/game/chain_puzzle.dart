@@ -21,7 +21,6 @@ class ChainBlock {
 
   /// Hash yang dihitung ulang dari previous_hash dan payload saat ini.
   String get recomputed => compute(previousHash, payload);
-  String get shortRecomputed => recomputed.substring(0, 8);
   bool get hashMatches => recomputed == hash;
 }
 
