@@ -1,8 +1,34 @@
+# Rahasia dan konfigurasi lokal
 .env
 .env.*
 !.env.example
+*.jks
+*.keystore
+key.properties
+local.properties
+
+# Dependensi dan hasil build
 node_modules/
+build/
+.dart_tool/
+coverage/
+__pycache__/
+*.pyc
+
+# Basis data dan log lokal
+*.db
+*.sqlite
 *.log
+
+# Editor dan agent lokal
+.idea/
+.vscode/
+*.iml
+.DS_Store
+.claude/
+
+# Keluaran graphify (dibuat ulang lewat "graphify update .")
 graphify-out/
-.claude/settings.local.json
+
+# Berkas kerja lokal
 report_excerpts.json
