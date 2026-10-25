@@ -14,6 +14,13 @@ Flutter (app/)  --HTTPS-->  Express (backend/)  -->  PostgreSQL
 
 Struktur dan aturan kerja: [AGENTS.md](AGENTS.md). Panduan UI: [DESIGN.md](DESIGN.md). Detail backend dan API: [backend/README.md](backend/README.md).
 
+## Cara menjalankan
+
+- **Backend produksi**: https://code2ticket.onrender.com. Layanan gratis Render bisa tertidur; buka URL itu dulu dan tunggu sekitar satu menit sebelum memakai aplikasi.
+- **Aplikasi**: `cd app`, `flutter pub get`, `flutter run`. Bawaan memakai backend produksi; backend lokal lewat `--dart-define=API_BASE_URL=...` (lihat di bawah).
+- **Backend lokal** (opsional): `cd backend`, `npm install`, salin `.env.example` ke `.env` dan isi, lalu `npm start`. Butuh PostgreSQL dan migrasi SQL (lihat "Menjalankan backend").
+- Tidak ada akun atau kata sandi di repositori; daftar lewat layar **Daftar** di aplikasi.
+
 ## Prasyarat
 
 - Flutter SDK dengan Dart `^3.12.2` dan toolchain Android (untuk APK).
